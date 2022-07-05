@@ -25,19 +25,18 @@ taxonomies = [
 highlight_code = true
 
 [extra]
-home_subtitle = "Some profound and catchy statement"
-
-footer_copyright = ' &#183; <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">CC BY-NC 4.0</a>'
+home_subtitle = "Software built well."
+logo = "logo.svg"
+footer_copyright = ''
 
 hermit_menu = [
-    { link = "/posts", name = "Posts" },
-    { link = "/about", name = "About" }
+    { link = "/about", name = "About" },
 ]
 
 hermit_social = [
-    { name = "github", link = "https://github.com" },
-    { name = "linkedin", link = "https://github.com" },
-    { name = "email", link = "mailto:author@domain.com" }
+    { name = "github", link = "https://github.com/MathiasPius" },
+    { name = "linkedin", link = "https://www.linkedin.com/in/mathias-pius/" },
+    { name = "email", link = "mailto:mathias@datavirke.dk" }
 ]
 
 [extra.highlightjs]
@@ -46,5 +45,5 @@ clipboard = true
 theme = "vs2015"
 
 [extra.author]
-name = "The Author"
-email = "author@domain.com"
+name = "Mathias Pius"
+email = "mathias@datavirke.dk"
