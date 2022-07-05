@@ -6,7 +6,8 @@ title="About"
 
 My name is Mathias Pius and I'm a freelance IT-Consultant with more than 5 years professional experience writing software, deploying it into production, as well as building & maintaining the infrastructure on which it runs.
 
-## Career
+--- 
+
 I started my career as a Software Developer for a Managed Service Provider where I, Working closely with Infrastructure and Network Engineers, quickly learned that the field of IT is infinitely wide and equally deep, as long as you have the curiosity to dive in.
 
 Wanting to see how far the rabbit-hole went, I was eager to move on down the stack and quickly found myself working as a DevOps Engineer in an Operations department for a creative bureau, where my duties centered around making developers' lives easier, while improving the stability, performance and scalability of the in-house deployment tool, as well as both the physical and virtual infrastructure it targeted.
