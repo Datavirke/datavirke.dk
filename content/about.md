@@ -12,4 +12,4 @@ I started my career as a Software Developer for a Managed Service Provider where
 
 Wanting to see how far the rabbit-hole went, I was eager to move on down the stack and quickly found myself working as a DevOps Engineer in an Operations department for a creative bureau, where my duties centered around making developers' lives easier, while improving the stability, performance and scalability of the in-house deployment tool, as well as both the physical and virtual infrastructure it targeted.
 
-From this vantage point, my awareness of all the things I didn't know only grew, and with it my curiosity. I realized then, that the most efficient way of satisfying my curiosity, while expanding the horizons of my knowledge, would be to transition into a career as an IT-Consultant.
+My awareness of all the things I didn't know only grew, and with it my curiosity. I decided to move into the IT Consultancy business, hoping to maximize my exposure to the many different ways of building, deploying and maintaining software and infrastructure, as well as getting to work alongside people who share my enthusiasm for learning new things and applying that knowledge.
