@@ -23,7 +23,7 @@ A completely segregated persistence suite (S3, RDS, CloudFront) within any regio
 namespace within the Kubernetes cluster, using the aforementioned OIDC Service Account/AWS IAM mapping.
 
 This enabled the customer to offer complete segregation of at-rest data storage to their own customers,
-in accordance with whatever data-locality compliance requirements they wre subject to, while minimizing the
+in accordance with whatever data-locality compliance requirements they were subject to, while minimizing the
 blast radius, even for customers who resided within the same region.
 
 This design meant that deploying to specific regions as customers were onboarded was more or less
@@ -46,9 +46,9 @@ deploying their containers to a new namespace "just works", at least as far as t
 ---
 
 ## AWS Control Tower & SSO using Google Workspace
-For this project, I set out to define an AWS Control Tower account structure which could then be used
-to migrate the existing 10-15 AWS accounts used for both internal and external customers, which we had
- access to.
+For this project, I deployed and configured an AWS Control Tower account structure which could then be
+used to migrate the existing 10-15 AWS accounts used for both internal and external customers, which 
+we had access to.
 
 For internal accounts, as well as external accounts owned by customers who had agreed to consolidated
 billing, the process involved preparing their accounts for enrollment, enrolling them, and cleaning up
@@ -161,7 +161,7 @@ the unfortunate resignation of the Operations team lead, who had been a big advo
 [GitLab CI/CD](https://docs.gitlab.com/ee/ci/)
 
 
-**Customers** Creative Bureau
+**Customers** Creative bureau
 
 **Duration** 1.5 years
 
