@@ -108,7 +108,7 @@ unnecessary exposure from either side.
 
 ---
 
-## In-House Kubernetes Deployment for hosting wide range of customer web applications
+## On-premise Kubernetes deployment for hosting wide range of customer web applications
 While employed at a creative bureau as a DevOps Engineer I identified Kubernetes as a possible solution
 to an organizational hurdle within the company.
 
