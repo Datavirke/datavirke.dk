@@ -158,7 +158,8 @@ the unfortunate resignation of the Operations team lead, who had been a big advo
 **Technologies**
 [Kubernetes](https://kubernetes.io/),
 [HashiCorp Packer](https://www.packer.io/),
-[GitLab CI/CD](https://docs.gitlab.com/ee/ci/).
+[GitLab CI/CD](https://docs.gitlab.com/ee/ci/),
+[VMWare vSphere](https://www.vmware.com/products/vsphere.html).
 
 
 **Customers** Creative bureau
@@ -222,7 +223,7 @@ until our Ansible configuration matched reality.
 [Nginx](https://www.nginx.com/),
 [Varnish](https://varnish-cache.org/),
 [HAProxy](https://www.haproxy.org/),
-[vSphere](https://www.vmware.com/products/vsphere.html).
+[VMWare vSphere](https://www.vmware.com/products/vsphere.html).
 
 **Customers** Danish Institutions, Grocery Store chain, Real Estate company, and more.
 
