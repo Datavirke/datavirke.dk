@@ -31,6 +31,7 @@ footer_copyright = ''
 
 hermit_menu = [
     { link = "/about", name = "About" },
+    { link = "/experience", name = "Experience" },
 ]
 
 hermit_social = [
