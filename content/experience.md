@@ -6,7 +6,7 @@ as well as a description of my responsibilities within the project.
 
 ---
 
-## Terraform-based EKS deployment for Startup.
+## Terraform-based EKS deployment for Startup
 This project was two-fold, and involved designing and deploying an AWS EKS setup for the customer, 
 which allowed them to easily deploy so-called "ringfenced" namespaces to specific AWS regions.
 
@@ -37,7 +37,7 @@ deploying their containers to a new namespace "just works", at least as far as t
 [AWS S3](https://aws.amazon.com/s3/),
 [Terraform](https://www.terraform.io/),
 [Helm](https://helm.sh/docs/topics/charts/),
-[OpenID Connect](https://openid.net/connect/)
+[OpenID Connect](https://openid.net/connect/).
 
 **Customers** SaaS Startup in the child-care space.
 
@@ -156,9 +156,9 @@ even if plenty of compute was available, which we observed but were unable to di
 the unfortunate resignation of the Operations team lead, who had been a big advocate of the project.
   
 **Technologies**
-[Kubernetes](https://kubernetes.io/)
-[HashiCorp Packer](https://www.packer.io/)
-[GitLab CI/CD](https://docs.gitlab.com/ee/ci/)
+[Kubernetes](https://kubernetes.io/),
+[HashiCorp Packer](https://www.packer.io/),
+[GitLab CI/CD](https://docs.gitlab.com/ee/ci/).
 
 
 **Customers** Creative bureau
@@ -167,7 +167,7 @@ the unfortunate resignation of the Operations team lead, who had been a big advo
 
 ---
 
-## Migrating web application to AWS ECS using Terraform.
+## Migrating web application to AWS ECS using Terraform
 This project involved __Containerizing__ and lifting an existing PHP website hosted directly
 on EC2 instances into ECS, while moving to AWS-native services for databases (RDS) and
 session caching (AWS ElastiCache).
@@ -201,7 +201,7 @@ possibility.
 
 ---
 
-## Ansible-defined configuration management for webhosting.
+## Ansible-defined configuration management for webhosting
 During my employment at a creative burau I helped improve and harden Ansible-managed web host
 configuration which was responsible for routing, caching and serving multiple 
 interactive websites across on-prem (VMWare vSphere) and AWS EC2 instances.
