@@ -27,7 +27,7 @@ highlight_code = true
 [extra]
 home_subtitle = "Software built well."
 logo = "logo.svg"
-footer_copyright = ''
+footer_copyright = ' &mdash; CVR: 43033336'
 
 hermit_menu = [
     { link = "/about", name = "About" },
