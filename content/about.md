@@ -1,5 +1,6 @@
 +++
 title="About"
+description="My name is Mathias Pius and I'm a freelance IT-Consultant with more than 5 years professional experience writing software, deploying it into production, as well as building & maintaining the infrastructure on which it runs."
 +++
 
 <img src="/mathias-circle.png" style="max-width: 380px;" />

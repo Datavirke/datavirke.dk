@@ -1,5 +1,6 @@
 +++
 title="Experience"
+description="List of some of the more notable projects I've been involved with over the years, as well as a description of my responsibilities within the project."
 +++
 
 Below you'll find a list of some of the more notable projects I've been involved with over the years,
