@@ -11,10 +11,10 @@
     <!-- Google / Search Engine Tags -->
 
 	{% if page.title %}
-    <title>{{page.title}}</title>
-	<meta itemprop="name" content="{{page.title}}">
-	<meta property="og:title" content="{{page.title}}">
-	<meta name="twitter:title" content="{{page.title}}">
+    <title>{{page.title}} - {{config.title}}</title>
+	<meta itemprop="name" content="{{page.title}} - {{config.title}}">
+	<meta property="og:title" content="{{page.title}} - {{config.title}}">
+	<meta name="twitter:title" content="{{page.title}} - {{config.title}}">
     {% else %}
     <title>{{config.title}}</title>
 	<meta itemprop="name" content="{{config.title}}">
