@@ -9,23 +9,36 @@
     <meta name="description" content="{{config.description}}">
   
     <!-- Google / Search Engine Tags -->
-    <meta itemprop="name" content="{{config.title}}">
-    <meta itemprop="description" content="{{config.description}}">
-    <meta itemprop="image" content="{{get_url(path=config.extra.logo)}}">
-    
-    <!-- Facebook Meta Tags -->
+
+	{% if page.title %}
+    <title>{{page.title}}</title>
+	<meta itemprop="name" content="{{page.title}}">
+	<meta property="og:title" content="{{page.title}}">
+	<meta name="twitter:title" content="{{page.title}}">
+    {% else %}
+    <title>{{config.title}}</title>
+	<meta itemprop="name" content="{{config.title}}">
+	<meta property="og:title" content="{{config.title}}">
+	<meta name="twitter:title" content="{{config.title}}">
+    {% endif %}
+
+	{% if page.description %}
+	<meta itemprop="description" content="{{page.description}}">
+	<meta property="og:description" content="{{page.description}}">
+	<meta name="twitter:description" content="{{page.description}}">
+	{% else %}
+	<meta itemprop="description" content="{{config.description}}">
+	<meta property="og:description" content="{{config.description}}">
+	<meta name="twitter:description" content="{{config.description}}">
+	{% endif %}
+
+	<meta name="twitter:card" content="summary_large_image">    
+    <meta name="twitter:image" content="{{get_url(path=config.extra.logo)}}">
+	<meta itemprop="image" content="{{get_url(path=config.extra.logo)}}">
+	<meta property="og:image" content="{{get_url(path=config.extra.logo)}}">
     <meta property="og:url" content="{{config.base_url}}">
     <meta property="og:type" content="website">
-    <meta property="og:title" content="{{config.title}}">
-    <meta property="og:description" content="{{config.description}}">
-    <meta property="og:image" content="{{get_url(path=config.extra.logo)}}">
     
-    <!-- Twitter Meta Tags -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="{{config.title}}">
-    <meta name="twitter:description" content="{{config.description}}">
-    <meta name="twitter:image" content="{{get_url(path=config.extra.logo)}}">
-  
     <link rel="apple-touch-icon" sizes="180x180" href="{{get_url(path="apple-touch-icon.png")}}"/>
     <link rel="icon" type="image/png" sizes="32x32" href="{{get_url(path="favicon-32x32.png")}}" />
     <link
@@ -39,12 +52,7 @@
       href="{{get_url(path="favicon.ico")}}"
     />
     <link rel="stylesheet" href="{{get_url(path="style.css")}}"/>
-    {% if page.title %}
-    <title>{{page.title}}</title>
-    {% else %}
-    <title>{{config.title}}</title>
-    {% endif %}
-  
+    
     {% if config.generate_feed %}
     <link rel="alternate" type="application/rss+xml" title="RSS" href="{{ get_url(path=config.feed_filename, trailing_slash=false) }}">
     {% endif %}
