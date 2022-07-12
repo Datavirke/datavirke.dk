@@ -95,8 +95,9 @@ Like `NetworkManager`, `systemd-networkd` is a system service for managing netwo
 Configuration files for `systemd-networkd` are primarily found in `/etc/systemd/network/`. Like `NetworkManager`, some programs might add per-boot configurations to the *run* counterpart: `/run/systemd/network`.
 
 # Addendum 
-
+Resources, lists, indices and other resources which might be relevant when debugging domain name resolution.
 ## List of Services and Files {#list-of-services-and-files}
+I've tried to list some of the services, files and tools which are commonly used when configuring or troubleshooting domain name resolution, even if I don't explicitly cover them in this guide.
 ### Files
 * [/etc/resolv.conf](https://www.man7.org/linux/man-pages/man5/resolv.conf.5.html)
 * [/etc/systemd/resolved.conf](https://manpages.debian.org/testing/systemd/resolved.conf.5.en.html)
