@@ -33,6 +33,7 @@ footer_copyright = ' &mdash; CVR: 43033336'
 hermit_menu = [
     { link = "/about", name = "About" },
     { link = "/experience", name = "Experience" },
+    { link = "/posts", name = "Blog" },
 ]
 
 hermit_social = [
