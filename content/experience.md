@@ -12,9 +12,9 @@ as well as a description of my responsibilities within the project.
 This project was two-fold, and involved designing and deploying an AWS EKS setup for the customer, 
 which allowed them to easily deploy so-called "ringfenced" namespaces to specific AWS regions.
 
-The **Core EKS Setup** involved provisisoning a "batteries included" EKS cluster with an OpenID Connect
+The **Core EKS Setup** involved provisioning a "batteries included" EKS cluster with an OpenID Connect
 provider configuration to link in-cluster Service Accounts to AWS IAM Roles, and a completely automated Ingress-stack, made up of:
-* [AWS ALB Controller](https://github.com/kubernetes-sigs/aws-load-balancer-controller) for automatic Load Balancer provisioning when Ingress-resources are deployed,
+* [AWS ALB Controller](https://github.com/kubernetes-sigs/aws-load-balancer-controller) for automatic Load Balancer provisioning when Ingress-resources are deployed.
 * [ExternalDNS](https://github.com/kubernetes-sigs/external-dns) for configuring Route53 domain records according to Ingress resource definitions.
 * [cert-manager](https://cert-manager.io/v0.14-docs/installation/kubernetes/) controller for automatic certificate acquisition and renewal, again based on Ingress definitions.
 
