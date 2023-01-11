@@ -23,7 +23,7 @@ and [Option](https://doc.rust-lang.org/std/option/enum.Option.html) are probably
 and they're amazing tools! Sum-types enable performant error handling, and language attributes like
 [`#[must_use]`](https://rust-lang.github.io/rfcs/1940-must-use-functions.html) ensures errors are not left unaddressed.
 
-But you will also almost certainly have encountered or written a function which could produces either
+But you will also almost certainly have encountered or written a function which could produce either
 an error *or* side-effects, with no actual return value in the successful case.
 
 A great example of this is the [`std::fmt::Display`](https://doc.rust-lang.org/std/fmt/trait.Display.html) trait. 
@@ -55,7 +55,7 @@ fn do_thing() -> Option<OtherError> {
     None
 }
 ```
-Clearly `Option` is a dead end, but `Result` is still misleading!
+Clearly `Option` is a dead end, but `Result` is still misleading..
 
 What we *really* want is the intention of `Option` with the `Try`-semantics of `Result`!
 
@@ -101,13 +101,14 @@ And that's it, the best of both worlds!
 More practical and in-depth information about how to use this library can be found in the [docs](https://docs.rs/errable/latest/errable/)
 
 ---
-Feedback and comments are extremely welcome on the GitHub [issues](https://github.com/MathiasPius/errable/issues) page for the [project](https://github.com/MathiasPius/errable). It wouldn't be first time I dedicated hours of my life to fulfilling a niche, only to find out
-afterwards that the problem I was solving didn't exist, and by the way my solution doesn't *actually* solve it, so please shoot this down!
+Feedback and comments are extremely welcome on the GitHub [issues](https://github.com/MathiasPius/errable/issues) page for the project.
+It wouldn't be first time I dedicated hours of my life to fulfilling a niche, only to find out afterwards that the problem I was solving didn't exist,
+and by the way my solution doesn't *actually* solve it, so please shoot this down!
 
 ## So why isn't this in the standard library/not already a thing?
 I don't know. And I'm definitely not saying it should be!
 
-It's incredible hard to google why something *doesn't* exist and it was pretty hard to explain why I didn't just use `Result<(), E>` like literally everybody else.
+It's incredibly hard to google why something *doesn't* exist and it was pretty hard to explain why I didn't just use `Result<(), E>` like literally everybody else.
 
 That being said, I can think of a couple of decent reasons off the top of my head:
 
@@ -133,4 +134,5 @@ That being said, I can think of a couple of decent reasons off the top of my hea
 I think it comes down to the 80/20 rule, or perhaps more like 95/5 rule in this case. 95% of use cases can be covered by Result and Option,
 and introducing 500+ lines of code to cover the 5% case, and then forcing it down the Rust population's collective throats is wildly disproportionate.
 
+--- 
 It's been said that perfection is achieved when there's nothing left to take away, and that feckin' `()` needs to *go*!
