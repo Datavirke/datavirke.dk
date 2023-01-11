@@ -39,7 +39,8 @@ hermit_menu = [
 hermit_social = [
     { name = "github", link = "https://github.com/MathiasPius" },
     { name = "linkedin", link = "https://www.linkedin.com/in/mathias-pius/" },
-    { name = "email", link = "mailto:mathias@datavirke.dk" }
+    { name = "email", link = "mailto:mathias@datavirke.dk" },
+    { name = "twitter", link = "https://fosstodon.org/@MathiasPius" }
 ]
 
 [extra.highlightjs]
