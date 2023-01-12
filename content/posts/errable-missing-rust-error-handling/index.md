@@ -1,21 +1,21 @@
 +++
-title = "Errable - The Lost Sibling of Result and Option"
+title = "Fallible - The Lost Sibling of Result and Option"
 date = 2023-01-11
 draft = false
 [taxonomies]
-tags = ["rust", "error handling", "errable"]
+tags = ["rust", "error handling", "fallible"]
 +++
 
-<a href="https://crates.io/crates/errable" style="box-shadow: none">
-    <img src="https://img.shields.io/crates/v/errable" style="display: inline;" />
+<a href="https://crates.io/crates/fallible-option" style="box-shadow: none">
+    <img src="https://img.shields.io/crates/v/fallible-option" style="display: inline;" />
 </a>
 
-<a href="https://docs.rs/errable/latest/errable/" style="box-shadow: none">
-    <img src="https://docs.rs/errable/badge.svg" style="display: inline;" />
+<a href="https://docs.rs/fallible-option/latest/fallible-option/" style="box-shadow: none">
+    <img src="https://docs.rs/fallible-option/badge.svg" style="display: inline;" />
 </a>
 
-<a href="https://github.com/MathiasPius/errable" style="box-shadow: none">
-    <img src="https://img.shields.io/badge/GitHub-errable-blue" style="display: inline;" />
+<a href="https://github.com/MathiasPius/fallible-option" style="box-shadow: none">
+    <img src="https://img.shields.io/badge/GitHub-fallible--option-blue" style="display: inline;" />
 </a>
 
 If you're familiar with Rust, then [Result](https://doc.rust-lang.org/std/result/enum.Result.html)
@@ -59,8 +59,8 @@ Clearly `Option` is a dead end, but `Result` is still misleading..
 
 What we *really* want is the intention of `Option` with the `Try`-semantics of `Result`!
 
-## Introducing Errable
-[Errable](https://docs.rs/errable/latest/errable/) is to quote the crate documentation:
+## Introducing Fallible
+[Fallible](https://docs.rs/fallible-option/latest/fallible-option/) is to quote the crate documentation:
 > an Option with inverted Try-semantics.
 
 It fills the gap left by `Option` and `Result` by providing a type that signifies either the successful completion of an operation *or* an error.
@@ -79,16 +79,16 @@ It fills the gap left by `Option` and `Result` by providing a type that signifie
         </tr>
         <tr>
             <td>Option&lt;T&gt;</td>
-            <td><b>Errable&lt;E&gt;</b></td>
+            <td><b>Fallible&lt;E&gt;</b></td>
         </tr>
     </tbody>
 </table>
 
 This means that we can rewrite our example above as succinctly as:
 ```rust
-fn might_fail() -> Errable<Error> { /* ... */ }
+fn might_fail() -> Fallible<Error> { /* ... */ }
 
-fn do_thing() -> Errable<OtherError> {
+fn do_thing() -> Fallible<OtherError> {
     might_fail()?;
     might_fail()?;
     might_fail()?;
@@ -98,10 +98,10 @@ fn do_thing() -> Errable<OtherError> {
 ```
 And that's it, the best of both worlds!
 
-More practical and in-depth information about how to use this library can be found in the [docs](https://docs.rs/errable/latest/errable/)
+More practical and in-depth information about how to use this library can be found in the [docs](https://docs.rs/fallible-option/latest/fallible-option/)
 
 ---
-Feedback and comments are extremely welcome on the GitHub [issues](https://github.com/MathiasPius/errable/issues) page for the project.
+Feedback and comments are extremely welcome on the GitHub [issues](https://github.com/MathiasPius/fallible-option/issues) page for the project.
 It wouldn't be first time I dedicated hours of my life to fulfilling a niche, only to find out afterwards that the problem I was solving didn't exist,
 and by the way my solution doesn't *actually* solve it, so please shoot this down!
 
