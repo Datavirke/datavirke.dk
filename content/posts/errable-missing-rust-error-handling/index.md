@@ -10,7 +10,7 @@ tags = ["rust", "error handling", "fallible"]
     <img src="https://img.shields.io/crates/v/fallible-option" style="display: inline;" />
 </a>
 
-<a href="https://docs.rs/fallible-option/latest/fallible-option/" style="box-shadow: none">
+<a href="https://docs.rs/fallible-option/latest/fallible_option" style="box-shadow: none">
     <img src="https://docs.rs/fallible-option/badge.svg" style="display: inline;" />
 </a>
 
