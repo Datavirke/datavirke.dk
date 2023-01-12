@@ -60,7 +60,7 @@ Clearly `Option` is a dead end, but `Result` is still misleading..
 What we *really* want is the intention of `Option` with the `Try`-semantics of `Result`!
 
 ## Introducing Fallible
-[Fallible](https://docs.rs/fallible-option/latest/fallible-option/) is to quote the crate documentation:
+[Fallible](https://docs.rs/fallible-option/latest/fallible_option/) is to quote the crate documentation:
 > an Option with inverted Try-semantics.
 
 It fills the gap left by `Option` and `Result` by providing a type that signifies either the successful completion of an operation *or* an error.
