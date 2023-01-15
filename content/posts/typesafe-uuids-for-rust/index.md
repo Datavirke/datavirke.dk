@@ -39,7 +39,7 @@ a `Uuid`, as well as the type-safety expected of a good API.
 for every single uniquely identifiable object in your domain becomes a bit of a chore, and if it wasn't for the relative simplicity
 of those trait implementations, probably an error-prone one too.
 
-This is where [`typed-uuid`](https://crates.io/crates/typed-uuid)s come in.
+This is where [typed-uuids](https://crates.io/crates/typed-uuid) come in.
 
 `typed_uuid::Id<T>` is a generic wrapper around the `Uuid`-type with all the bells and whistles of the newtype solution, but without the code duplication. It allows you to differentiate unique identifiers for different types, letting the compiler keep track of it for you.
 
