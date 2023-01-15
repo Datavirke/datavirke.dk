@@ -173,9 +173,14 @@ Compiler saves what would have been just another generic Uuid committed to the d
 ```
 I omitted some `typed_uuid::` prefixes to fit the lines within the page, so the compiler error is a bit messier than shown above, but a compiler error nonetheless!
 
----
+# Caveats
+
 Obviously you can still mess up. There's nothing stopping you from accidentally deriving the `article_id` from the session instead of the post form, but by explicitly defining the type of `Id` you're working with *at the perimeter*, you only have to do it right once, instead of on every single subsequent call you make using that variable.
 
 If you're using a modern web framework like [axum](https://docs.rs/axum/latest/axum/) for example, you can even move the `user_id` derivation from the function call itself into an extractor, reducing the times you have to write correct code down from *once per handler* to just **once**!
 
 The types of errors produced by mixing up `Uuid`s are usually pretty trivial to catch. In our case it would hopefully have been caught by a foreign key constraint on our database. In other use-cases it might manifest as missing content or obviously invalid behavior by the program, but these are all runtime errors, meaning someone has to actually run the code to be discover them. If we can push discovery of this error right into the software engineer's field of view as they're writing the code, all the better!
+
+I'm also not entirely happy about the verbosity of the error messages caused by the flexibility required for the `Id` type to cover all the different versions. I almost always use `v4` anyway, so it is tempting to simply discard the whole `Version` parameter and simplify the interface a bit. In the future I might choose to create an `Idv4` newtype around `Id<T, V4>`, or perhaps default the `Version` parameter to an `Unversioned` struct which disregards the `Uuid` version number when constructing an `Id` from a generic uuid.
+
+
