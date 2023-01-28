@@ -35,7 +35,7 @@ Now you can't use `Uuid` and `UserId` interchangeably, and you're being explicit
 This solves the problem, and with a few implementations and derives you've practically got all the usability of
 a `Uuid`, as well as the type-safety expected of a good API.
 
-... But if you're writing an application past a certain scale, implementing and re-implementing `Deref`, `AsRef`, and so on,
+... But if you're writing an application past a certain scale, implementing and re-implementing `Hash`, `AsRef`, and so on,
 for every single uniquely identifiable object in your domain becomes a bit of a chore, and if it wasn't for the relative simplicity
 of those trait implementations, probably an error-prone one too.
 
