@@ -8,6 +8,29 @@ as well as a description of my responsibilities within the project.
 
 ---
 
+## Managed Kubernetes for highly sensitive European startup
+The client in question develops election software for organizations across the world, and therefore had very
+strict requirements for security, locality (for compliance reasons) and up-time. For this reason, [Exoscale](https://www.exoscale.com/) was chosen as
+the provider of a Managed Kubernetes solution, being able to also provide managed databases as well as persistent storage.
+
+The core setup was similar to the [Terraform-based EKS deployment for Startup](#terraform-based-eks-deployment-for-startup), making use of
+[ExternalDNS](https://github.com/kubernetes-sigs/external-dns) for dns record management and in conjunction with [cert-manager](https://cert-manager.io/v0.14-docs/installation/kubernetes/), automatic certificate provisioning for exposed services. One point at which it differed, was in
+the use of [Cilium](https://cilium.io/) as the CNI provider, allowing us to design very narrow network policies to limit traffic between nodes
+and namespaces, adding an extra layer of security for the most sensitive services.
+
+**Technologies**
+[Argo CD](https://argoproj.github.io/cd/),
+[Exoscale](https://www.exoscale.com/),
+[Terraform](https://www.terraform.io/),
+[Helm](https://helm.sh/docs/topics/charts/),
+[OpenID Connect](https://openid.net/connect/).
+
+**Customers** Startup in the electronic voting space.
+
+**Duration** 2 months
+
+---
+
 ## Terraform-based EKS deployment for Startup
 This project was two-fold, and involved designing and deploying an AWS EKS setup for the customer, 
 which allowed them to easily deploy so-called "ringfenced" namespaces to specific AWS regions.
