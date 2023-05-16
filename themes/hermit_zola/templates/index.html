@@ -56,6 +56,17 @@
     {% if config.generate_feed %}
     <link rel="alternate" type="application/rss+xml" title="RSS" href="{{ get_url(path=config.feed_filename, trailing_slash=false) }}">
     {% endif %}
+
+	<script src="{{ get_url(path="mermaid.min.js") }}"></script>
+	<script>
+		let config = { 
+			startOnLoad: true, 
+
+			darkMode: true
+		};
+		mermaid.initialize(config);
+	
+	</script>
   </head>
   <body id="page">
 
