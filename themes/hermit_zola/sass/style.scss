@@ -63,8 +63,10 @@ code {
   color: #eee;
   background: $highlight-grey;
   border-radius: 3px;
-  padding: 0 3px;
-  margin: 0 4px;
+  background: #2b303b;
+  color: #DCDCDC;
+  padding: 2px 2px;
+  margin: -2px -2px;
   letter-spacing: normal;
 }
 
@@ -119,7 +121,7 @@ table {
 
   th,
   td {
-    padding: 1.5%;
+    padding: 1%;
     border: 1px solid;
   }
 
