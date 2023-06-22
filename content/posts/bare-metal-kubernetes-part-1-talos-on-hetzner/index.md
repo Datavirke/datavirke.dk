@@ -54,7 +54,7 @@ Having read through the documentation for Talos Linux, I really like their appro
 Based on that very subjective feeling, my past experience, and of course a healthy dose of grass always being greener, Talos Linux is my choice for this cluster.
 
 # Installing Talos on a Dedicated Server
-Their [Quickstart](https://www.talos.dev/v1.4/introduction/quickstart/) and [Getting Started](https://www.talos.dev/v1.4/introduction/getting-started/) guides provide can get you started with local Docker-based, or for installing it on one of the supported providers, but deploying it to a Hetzner dedicated server takes some extra steps.
+Their [Quickstart](https://www.talos.dev/v1.4/introduction/quickstart/) and [Getting Started](https://www.talos.dev/v1.4/introduction/getting-started/) guides can get you started with a local Docker-based cluster, or with installing it on one of the supported providers, but deploying it to a Hetzner dedicated server takes some extra steps.
 
 We can't provide the dedicated server with a custom ISO to boot from, but we can boot into Hetzner's rescue system and write the Talos ISO directly to a hard drive which means that next time we reboot the server (providing no other disks have valid boot configurations and take precedence) our server will boot into an unconfigured Talos instance running in Maintenance mode. This was the script I used to install Talos v1.4.4 onto my dedicated server from the Linux rescue system:
 
@@ -101,7 +101,7 @@ After another hardware reset (without the rescue system) Talos is still respondi
 # Configuring Talos
 In order to build a Kubernetes cluster from Talos, you must first configure Talos. This is done in two steps, first by generating a `talosconfig` which similarly to `kubeconfig` contains the definition of a collection of Talos endpoints and credentials to access them with. With Kubernetes you generally configure the cluster first and then extract the kubeconfig, but with Talos, you instead generate the configuration first and then *imprint* it on the individual nodes.
 
-Following along in the [Getting Started](https://www.talos.dev/v1.4/introduction/getting-started/) we first have to decide on a cluster name and endpoint. My intention is to run this cluster purely on bare metal, so I don't want to put a load balancer in front of the cluster, although that particular configuration was worked well for me in the past. I want to get as close to a DIY setup as I can, so it can potentially be migrated or extended to on-premise at a later date. For the same reason, and because of the high cost associated with it, using vSwitch and floating IPs is off the table as well.
+Following along in the [Getting Started](https://www.talos.dev/v1.4/introduction/getting-started/) guide we first have to decide on a cluster name and endpoint. My intention is to run this cluster purely on bare metal, so I don't want to put a load balancer in front of the cluster, although that particular configuration was worked well for me in the past. I want to get as close to a DIY setup as I can, so it can potentially be migrated or extended to on-premise at a later date. For the same reason, and because of the high cost associated with it, using vSwitch and floating IPs is off the table as well.
 
 I've chosen to use DNS load balancing, since I don't expect a lot of churn in control plane/talos nodes, nor heavy load.
 
@@ -218,7 +218,7 @@ I'm using the size-based disk selector since both the basic device path `/dev/sd
 
 I'm also (temporarily) hard-coding the image to use Talos v1.4.4 so we can try out the upgrade procedure once it's up and running. You should omit this line (`image: ghcr...`) from your configuration, if you don't care about that.
 
-With all that done, it's time to generate the actual machine config for our node:
+With all that done, it's time to generate the actual machine config for our node[^1]:
 
 ```bash
 [mpd@ish]$ talosctl gen config \
@@ -247,7 +247,9 @@ Rather anticlimactically we get absolutely no response. Luckily, we can use Talo
 [mpd@ish]$ talosctl -n 159.69.60.182 dashboard
 rpc error: code = Unavailable desc = connection error: desc = "transport: Error while dialing: dial tcp 127.0.0.1:50000: connect: connection refused"
 ```
-Right. Our `talosconfig` doesn't know about the node, so it just assumed 127.0.0.1 as its endpoint, let's fix that. In `~/.talos/config` find the `endpoints` array...
+Right. Our `talosconfig` doesn't know about the endpoint, so it just put in 127.0.0.1, let's fix that.
+
+In `~/.talos/config` find the `endpoints` array...
 
 ```yaml
 # ~/.talos/config (before)
@@ -297,9 +299,9 @@ This will launch a nice dynamic display of the status of the reboot, which is pr
 
 The node will show as green, go red as it becomes unavailable, switch to yellow as it boots and then finally... Oh.
 
-It never transitions back to green. Interesting. All the Kubernetes services are up, so let's extract the kubeconfig and see for ourselves.
+It never transitions back to green. Interesting. Talos dashboard works, and all the Kubernetes services are up, so let's extract the kubeconfig and see for ourselves.
 
-The following command will create an systems administrator kubeconfig for our new cluster and merge it with our current `~/.kube/config` if one exists, and automatically set our cluster as the currently selected context.
+The following command will create a systems administrator kubeconfig for our new cluster, merge it with our current `~/.kube/config` if one exists, and automatically set our cluster as the currently selected context.
 ```bash
 [mpd@ish]$ talosctl -n 159.69.60.182 kubeconfig
 ```
@@ -310,7 +312,7 @@ NAME   STATUS     ROLES           AGE   VERSION
 n1     NotReady   control-plane   14m   v1.27.2
 ```
 
-Our node *exists* so that's good, but it's not ready! Why?!
+Our node *exists* so that's good, but it's `NotReady`, why?
 
 ```bash
 [mpd@ish]$ kubectl describe node n1 | grep NotReady
@@ -323,9 +325,5 @@ We'll consider the job done for now, and tackle CNI-installation in the next pos
 # Epilogue
 Here I've gathered some of my reflections and learnings from the process.
 
-## Diffing machine configurations
-My intuition regarding diffing of machineconfigs was partially correct. When fetching machineconfigs from Talos, they do in fact contain comments, but the returned document is similar to that of a custom resource where the configuration is nested inside `.spec` which means you need to pipe the config through a tool like `yq` to get the document itself, a process which also strips comments.
-
-The yaml document generated by `talosctl gen config` uses 4-space indents, wheres the configuration as extract from `talosctl` uses 2-space indents, meaning the original rendered config should be passed through `yq` (like the other is) to ensure identical formatting, otherwise the diff becomes useless.
-
-I think the safest way to interact with machineconfigs is a combination of using the built-in tools for common actions like upgrades where images are replaced, and then using `talosctl edit machineconfig` for everything else, making sure to take backups before and after each change.
+[^1]: Diffing machine configurations
+My intuition regarding diffing of machineconfigs was partially correct. When fetching machineconfigs from Talos, they do in fact contain comments, but the returned document is similar to that of a custom resource where the configuration is nested inside `.spec` which means you need to pipe the config through a tool like `yq` to get the document itself, a process which also strips comments. The yaml document generated by `talosctl gen config` uses 4-space indents, wheres the configuration as extract from `talosctl` uses 2-space indents, meaning the original rendered config should be passed through `yq` (like the other is) to ensure identical formatting, otherwise the diff becomes useless. I think the safest way to interact with machineconfigs is a combination of using the built-in tools for common actions like upgrades where images are replaced, and then using `talosctl edit machineconfig` for everything else, making sure to take backups before and after each change.
