@@ -12,7 +12,7 @@ To rectify this, and to get a chance to play with some tools I wasn't aware of a
 
 I have a rough sketch of the end product on my mind, which I plan to materialize through these steps/posts:
 
-* **[Part I: Talos on Hetzner](@content/posts/bare-metal-kubernetes-part-1-talos-on-hetzner)**
+* **[Part I: Talos on Hetzner](@/posts/bare-metal-kubernetes-part-1-talos-on-hetzner/index.md)**
     Covers provisioning of the first server, installation of Talos Linux and configuration and bootstrapping
 
 * **Part II: Cilium CNI & Firewalls** Choosing a CNI and implementing network policies and firewall rules without locking ourselves out.
