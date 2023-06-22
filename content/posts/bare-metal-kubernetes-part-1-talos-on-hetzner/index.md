@@ -149,6 +149,8 @@ contexts:
     crt: LS0t...
     key: LS0t...
 ```
+Neither the `crt` or `ca` field certificate contain references to this endpoint either, and I suppose they wouldn't since it's for Kubernetes, and this relates to the Talos API.
+
 Like the `secrets.yaml` file, this client configuration is also sensitive.
 
 You can either copy this config file to `~/.talos/config` or use the `talosctl` merge command, which doesn't destroy any existing configurations you might have:
