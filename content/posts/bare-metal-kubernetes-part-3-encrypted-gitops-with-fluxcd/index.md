@@ -508,7 +508,149 @@ LAST SEEN   REASON        OBJECT                          MESSAGE
 
 If we never had the need to store secrets in our cluster, we'd practically be done by now, but that's not the case.
 
-Let's take a look at integrating FluxCD with [Mozilla SOPS](https://github.com/mozilla/sops)
+Let's take a look at integrating FluxCD with [Mozilla SOPS](https://fluxcd.io/flux/guides/mozilla-sops/)
+
+# In-repository encryption with SOPS
+Encrypting files in git repositories is nothing new and can be done manually or with projects like [git-crypt](https://github.com/AGWA/git-crypt).
+
+The problem with this approach is that it works on entire files, meaning you completely lose the ability to diff changes, and when your project is often defined in one long multi-document yaml file, this becomes super inconvenient, not to mention wasteful, as the entire file is changed whenever a small part of it changes.
+
+Tools like [Mozilla SOPS](https://github.com/mozilla/sops) instead natively supports and works withyaml files, the files that make up most of our infrastructure. This allows it to encrypt individual values instead of entire files, enabling diffs and redacted sharing of infrastructure documents, without the risk of exposure, while simultaneously removing the need for secrets management infrastructure which is notoriously hard to self-host.
+
+# Setting up
+Using [Flux's own guide](https://fluxcd.io/flux/guides/mozilla-sops/), we create a gpg key which will be owned by our flux installation, however since we're cool guys we'll generate an ed25519 key instead of RSA4096.
+
+```bash
+[mpd@ish]$ gpg --expert --full-generate-key
+Please select what kind of key you want:
+   (...)
+   (8) RSA (set your own capabilities)
+   (9) ECC and ECC
+  (10) ECC (sign only)
+   (...)
+Your selection? 9
+Please select which elliptic curve you want:
+   (1) Curve 25519
+   (3) NIST P-256
+   (...)
+Your selection? 1
+Please specify how long the key should be valid.
+
+Key is valid for? (0) 
+Key does not expire at all
+
+Is this correct? (y/N) y
+
+GnuPG needs to construct a user ID to identify your key.
+
+Real name: flux.kronform.pius.dev
+Email address: 
+Comment: 
+You selected this USER-ID:
+    "flux.kronform.pius.dev"
+```
+When asked to password protect the key, decline.
+
+Finally, our key is generated:
+```bash
+pub   ed25519 2023-06-23 [SC]
+      BD995FEE3775172B56BF652CF10FF7F3F7265919
+uid                      flux.kronform.pius.dev
+```
+
+The string that starts with `BD99..` is the key's fingerprint. Export that, so we don't have to copy-paste it repeatedly.
+```bash
+[mpd@ish]$ export KEY_FP=BD995FEE3775172B56BF652CF10FF7F3F7265919
+``` 
+
+Next, as per the guide we export the secret part of this key and put it directly into a Kubernetes secret in the `flux-system` namespace:
+
+```bash
+[mpd@ish]$ gpg --export-secret-keys --armor "${KEY_FP}" |
+  kubectl create secret generic sops-gpg \
+  --namespace=flux-system \
+  --from-file=sops.asc=/dev/stdin
+secret/sops-gpg created
+```
+
+## Configuring Flux to use the key
+The guide assumes that you're configuring a new repository and therefore wants you to create a new source, but what we want is to allow our existing repository to support decryption.
+
+Decryption is a feature of Flux Kustomizations, so we'll have to specify the decryption secret as part of that resource. In the mean time we can ensure that secrets created with `sops` in our flux repository are automatically encrypted in a way that both flux and I can decrypt it. For this purpose we'll add a `.sops.yaml` file to the root of the repository:
+```yaml
+# .sops.yaml
+---
+creation_rules:
+  - path_regex: ./manifests/*.yaml
+    encrypted_regex: ^(data|stringData)$
+    pgp: >-
+      BD995FEE3775172B56BF652CF10FF7F3F7265919,
+      7668061D49BB2B7BA19118B4031734BEBE51F818
+```
+Where `BD99..` is Flux's public key and `7668..` is my own public key.
+
+For convenience, we'll also export flux's public key into the repository as `.flux.pub.asc`:
+```bash
+[mpd@ish]$ gpg --export --armor "BD995FEE3775172B56BF652CF10FF7F3F7265919" > .flux.pub.asc
+```
+
+With both of those files committed, let's go ahead and preserve some of the sensitive files we produced when setting up the cluster, like the Talos `secrets.yaml`, the `talosconfig` as well as the administrator `kubeconfig`.
+
+## Encrypting all the things
+We'll add a few `creation_rules` to our sops config, ensuring that `talosconfig`, `kubeconfig` and `secrets.yaml` all get encrypted using only our won public key, since we don't need nor want Flux to know them:
+```yaml
+# .sops.yaml
+---
+creation_rules:
+  - path_regex: ./manifests/*.yaml
+    encrypted_regex: ^(data|stringData)$
+    pgp: >-
+      BD995FEE3775172B56BF652CF10FF7F3F7265919,
+      7668061D49BB2B7BA19118B4031734BEBE51F818
+
+  - path_regex: talosconfig
+    encrypted_regex: ^key$
+    pgp: 7668061D49BB2B7BA19118B4031734BEBE51F818
+
+  - path_regex: kubeconfig
+    encrypted_regex: ^client-key-data$
+    pgp: 7668061D49BB2B7BA19118B4031734BEBE51F818
+
+  - path_regex: secrets.yaml
+    encrypted_regex: ^(secret|bootstraptoken|secretboxencryptionsecret|token|key)$
+    pgp: 7668061D49BB2B7BA19118B4031734BEBE51F818
+
+```
+
+Now encrypt (`-e`) the files in-place (`-i`):
+
+```bash
+[mpd@ish]$ sops -e -i secrets.yaml
+
+# For talosconfig and kubeconfig, we need to explicitly specify that we're working with yaml.
+[mpd@ish]$ sops -e -i --input-type yaml --output-type yaml talosconfig
+
+[mpd@ish]$ talosctl -n 159.69.60.182 kubeconfig kubeconfig
+[mpd@ish]$ sops -e -i --input-type yaml --output-type yaml kubeconfig
+```
+
+And there we go. After going over all the now-encrypted files to ensure no sensitive data is included, we can go ahead and commit it to git.
+
+
+
+We don't want nor need Flux to have access to these though, so we'll only encrypt them using our own key:
+```bash
+[mpd@ish]$ mkdir secrets
+[mpd@ish]$ sops -p 7668061D49BB2B7BA19118B4031734BEBE51F818 -e secrets.yaml > secrets/secrets.enc.yaml
+```
+
+Next up is our `talosconfig`. Since our sops-config only tracks .yaml files, it's easiest to just rename it, especially since it's yaml anyway.
+```bash
+[mpd@ish]$ cp talosconfig talosconfig.yaml
+[mpd@ish]$ sops -p 7668061D49BB2B7BA19118B4031734BEBE51F818 -e talosconfig.yaml > secrets/talosconfig.enc.yaml
+```
+
+Go over all of the new encrypted files and make sure that no sensitive information has 
 
 # Epilogue
 [^1]: It looks like this has been fixed, at least as a beta-test [since 2.6](https://argo-cd.readthedocs.io/en/stable/user-guide/multiple_sources/#helm-value-files-from-external-git-repository).
