@@ -15,7 +15,7 @@ I have a rough sketch of the end product on my mind, which I plan to materialize
 * **[Part I: Talos on Hetzner](@/posts/bare-metal-kubernetes-part-1-talos-on-hetzner/index.md)**
     Covers provisioning of the first server, installation of Talos Linux and configuration and bootstrapping
 
-* **Part II: Cilium CNI & Firewalls** Choosing a CNI and implementing network policies and firewall rules without locking ourselves out.
+* **[Part II: Cilium CNI & Firewalls](@/posts/bare-metal-kubernetes-part-2-cilium-and-firewalls/index.md)** Choosing a CNI and implementing network policies and firewall rules without locking ourselves out.
 
 * **Part III: Encrypted GitOps with FluxCD** Keeping track of deployed resources, using [SOPS](https://github.com/mozilla/sops) to store secrets in the same repository.
 
@@ -72,7 +72,7 @@ wget -O /tmp/talos.tar.gz https://github.com/siderolabs/talos/releases/download/
 tar -xvf /tmp/talos.tar.gz
 # Write the raw disk image directly to the hard drive.
 dd if=disk.raw of=$TARGET_DISK && sync
-shutdown -h now
+shutdown -r now
 ```
 
 After a while the server should come back up, so let's see if it worked by using the `talosctl` command line utility to interact with the (hopefully up) talos API on the node:
@@ -96,7 +96,7 @@ DEV        MODEL            TYPE    MODALIAS      SIZE     BUS_PATH       SYSTEM
 
 I've run into problems magically being solved by Hetzner's [vKVM system](https://docs.hetzner.com/robot/dedicated-server/virtualization/vkvm/) before, so I'm not convinced we're out of the woods yet. If we can boot the system without the vKVM system, I'll put it down to a random fluke and continue configuration.
 
-After another hardware reset (without the rescue system) Talos is still responding to our requests. I'm still not sure of the cause, but let's get on with it.
+After another hardware reset (without the rescue system) Talos is still responding to our requests. I'm still not sure of the cause, but let's get on with it[^1].
 
 # Configuring Talos
 In order to build a Kubernetes cluster from Talos, you must first configure Talos. This is done in two steps, first by generating a `talosconfig` which similarly to `kubeconfig` contains the definition of a collection of Talos endpoints and credentials to access them with. With Kubernetes you generally configure the cluster first and then extract the kubeconfig, but with Talos, you instead generate the configuration first and then *imprint* it on the individual nodes.
@@ -218,20 +218,20 @@ I'm using the size-based disk selector since both the basic device path `/dev/sd
 
 I'm also (temporarily) hard-coding the image to use Talos v1.4.4 so we can try out the upgrade procedure once it's up and running. You should omit this line (`image: ghcr...`) from your configuration, if you don't care about that.
 
-With all that done, it's time to generate the actual machine config for our node[^1]:
+With all that done, it's time to generate the actual machine config for our node[^2]:
 
 ```bash
 [mpd@ish]$ talosctl gen config \
-        --output rendered/n1.yaml                                   \
-        --output-types controlplane                                 \
-        --dns-domain local.$CLUSTER_NAME                            \
-        --with-cluster-discovery=false                              \
-        --with-secrets secrets.yaml                                 \
-        --config-patch @patches/cluster-name.yaml                   \
-        --config-patch @patches/disable-kube-proxy-and-cni.yaml     \
-        --config-patch @patches/allow-controlplane-workloads.yaml   \
-        --config-patch @nodes/n1.yaml                               \
-        $CLUSTER_NAME                                               \
+        --output rendered/n1.yaml                                 \
+        --output-types controlplane                               \
+        --dns-domain local.$CLUSTER_NAME                          \
+        --with-cluster-discovery=false                            \
+        --with-secrets secrets.yaml                               \
+        --config-patch @patches/cluster-name.yaml                 \
+        --config-patch @patches/disable-kube-proxy-and-cni.yaml   \
+        --config-patch @patches/allow-controlplane-workloads.yaml \
+        --config-patch @nodes/n1.yaml                             \
+        $CLUSTER_NAME                                             \
         $API_ENDPOINT
 ```
 Configuration can now be found in `nodes/n1.yaml`
@@ -279,7 +279,7 @@ Sweet! Scrolling back up the logs a bit we can see that the configuration was ap
 More recently in the logs we can see a warning indicating that `etcd` is waiting to join a cluster. This is our cue to initiate the cluster bootstrap, so let's go ahead:
 
 ```bash
-[mpd@ish]$ lalosctl --nodes 159.69.60.182 bootstrap
+[mpd@ish]$ talosctl --nodes 159.69.60.182 bootstrap
 ```
 
 Watching the dashboard logs scroll by, talos will start spewing out a ton of warnings as it starts to reconcile the desired state of the newly bootstrapped cluster, bringing up services.
@@ -320,10 +320,12 @@ Our node *exists* so that's good, but it's `NotReady`, why?
 ```
 Duh. We haven't installed a CNI yet!
 
-We'll consider the job done for now, and tackle CNI-installation in the next post: **Part II: Cilium CNI & Firewalls**
+We'll consider the job done for now, and tackle CNI-installation in the next post: **[Part II: Cilium CNI & Firewalls](@/posts/bare-metal-kubernetes-part-2-cilium-and-firewalls/index.md)**
 
 # Epilogue
 Here I've gathered some of my reflections and learnings from the process.
 
-[^1]: Diffing machine configurations
+[^1]: After locking myself out of the cluster while writing Part II of this series, I encountered the problem again and noticed that the server *was turned off* because I used `shutdown -h` instead of `shutdown -r`. I seem to recall trying to start the server again as part of my troubleshooting the first time around, but I can't be sure of course.
+
+[^2]: Diffing machine configurations
 My intuition regarding diffing of machineconfigs was partially correct. When fetching machineconfigs from Talos, they do in fact contain comments, but the returned document is similar to that of a custom resource where the configuration is nested inside `.spec` which means you need to pipe the config through a tool like `yq` to get the document itself, a process which also strips comments. The yaml document generated by `talosctl gen config` uses 4-space indents, wheres the configuration as extract from `talosctl` uses 2-space indents, meaning the original rendered config should be passed through `yq` (like the other is) to ensure identical formatting, otherwise the diff becomes useless. I think the safest way to interact with machineconfigs is a combination of using the built-in tools for common actions like upgrades where images are replaced, and then using `talosctl edit machineconfig` for everything else, making sure to take backups before and after each change.
