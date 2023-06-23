@@ -338,4 +338,4 @@ Endpoint 555 configuration updated successfully
 ```
 Running our Talos and Kubectl tests from before again proves we still have access. Meanwhile all the `action audit` entries in our cilium monitor output have turned into `audit deny`, which means traffic is actually getting dropped.
 
-In Part III, we'll setup FluxCD and try to get as much of our code (machineconfigs, helm releases, network policies, etc.) shoved into Git so we can be all ***~GitOpsy~***
+In [Part III: Encrypted GitOps with FluxCD](@/posts/bare-metal-kubernetes-part-3-encrypted-gitops-with-fluxcd/index.md), we'll setup FluxCD and try to get as much of our code (machineconfigs, helm releases, network policies, etc.) shoved into Git so we can be all ***~GitOpsy~***
