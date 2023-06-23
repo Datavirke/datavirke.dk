@@ -17,7 +17,7 @@ I have a rough sketch of the end product on my mind, which I plan to materialize
 
 * **[Part II: Cilium CNI & Firewalls](@/posts/bare-metal-kubernetes-part-2-cilium-and-firewalls/index.md)** Choosing a CNI and implementing network policies and firewall rules without locking ourselves out.
 
-* **Part III: Encrypted GitOps with FluxCD** Keeping track of deployed resources, using [SOPS](https://github.com/mozilla/sops) to store secrets in the same repository.
+* **[Part III: Encrypted GitOps with FluxCD](@/posts/bare-metal-kubernetes-part-3-encrypted-gitops-with-fluxcd/index.md)** Keeping track of deployed resources with FluxCD, using [SOPS](https://github.com/mozilla/sops) to store encrypt secrets in-repository.
 
 * **Part IV: Ingress, DNS and Certificates** Installing an ingress controller (nginx), DNS controller (externaldns), and certificate manager for automating routing.
 

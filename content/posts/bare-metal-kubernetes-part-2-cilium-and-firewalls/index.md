@@ -13,7 +13,7 @@ We've got a brand new cluster exposed directly to the internet, and it doesn't e
 *Series Index*
 * [Part I: Talos on Hetzner](@/posts/bare-metal-kubernetes-part-1-talos-on-hetzner/index.md)
 * **[Part II: Cilium CNI & Firewalls](@/posts/bare-metal-kubernetes-part-2-cilium-and-firewalls/index.md)**
-* Part III: Encrypted GitOps with FluxCD
+* [Part III: Encrypted GitOps with FluxCD](@/posts/bare-metal-kubernetes-part-3-encrypted-gitops-with-fluxcd/index.md)
 * Part IV: Ingress, DNS and Certificates
 * Part V: Scaling Up
 * Part VI: Persistent Storage with Rook Ceph
