@@ -35,7 +35,7 @@ I have a rough sketch of the end product on my mind, which I plan to materialize
 
 # Choosing a Kubernetes Distribution
 
-I've deployed Kubernetes clusters in a myiad ways over the years, with all sorts of combinations of k8s|k3s|k0s using kubeadm|[the hard way](https://github.com/kelseyhightower/kubernetes-the-hard-way)|managed(EKS & Exoscale) packaged using both Docker and Hashicorp's Packer and deployed with Ansible or Terraform, or more recently [syself](https://syself.com/)'s [Cluster API Provider for Hetzner](https://github.com/syself/cluster-api-provider-hetzner).
+I've deployed Kubernetes clusters in a myriad ways over the years, with all sorts of combinations of k8s|k3s|k0s using kubeadm|[the hard way](https://github.com/kelseyhightower/kubernetes-the-hard-way)|managed(EKS & Exoscale) packaged using both Docker and Hashicorp's Packer and deployed with Ansible or Terraform, or more recently [syself](https://syself.com/)'s [Cluster API Provider for Hetzner](https://github.com/syself/cluster-api-provider-hetzner).
 
 My conclusion at this point is that if you can afford it, both in terms of privacy/GDPR and dollarinos then *managed* is the way to go. If you can't, then you have a bit of investigative work ahead of you.
 
