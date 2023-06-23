@@ -581,7 +581,7 @@ Decryption is a feature of Flux Kustomizations, so we'll have to specify the dec
 # .sops.yaml
 ---
 creation_rules:
-  - path_regex: ./manifests/*.yaml
+  - path_regex: manifests/*.yaml
     encrypted_regex: ^(data|stringData)$
     pgp: >-
       BD995FEE3775172B56BF652CF10FF7F3F7265919,
@@ -602,7 +602,7 @@ We'll add a few `creation_rules` to our sops config, ensuring that `talosconfig`
 # .sops.yaml
 ---
 creation_rules:
-  - path_regex: ./manifests/*.yaml
+  - path_regex: manifests/*.yaml
     encrypted_regex: ^(data|stringData)$
     pgp: >-
       BD995FEE3775172B56BF652CF10FF7F3F7265919,
@@ -636,21 +636,76 @@ Now encrypt (`-e`) the files in-place (`-i`):
 
 And there we go. After going over all the now-encrypted files to ensure no sensitive data is included, we can go ahead and commit it to git.
 
+# Encrypted Test
+Let's see if this all works, by creating a Kustomization which makes use of this key.
 
+We'll need it eventually so why not create a Docker Hub pull secret in the `default`.
 
-We don't want nor need Flux to have access to these though, so we'll only encrypt them using our own key:
+First, add the kustomization reference in `manifests/cluster/flux-system/pull-secrets.yaml`:
+```yaml
+# manifests/cluster/flux-system/pull-secrets.yaml
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: pull-secrets
+  namespace: flux-system
+spec:
+  interval: 10m0s
+  path: ./manifests/infrastructure/pull-secrets
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  decryption:
+    provider: sops
+    secretRef:
+      name: sops-gpg
+```
+Not the `decryption` field pointing to our flux GPG secret we exported and created earlier, and don't forget to add it to the cluster's `kustomization.yaml`.
+
+Next, we need to create a yaml representation of our secret. Docker pull secrets are annoying to build by hand, they're base64-encoded json embedded in yaml. It's awful.
+
+Let's utilize kubectl to build it, without actually applying it to the cluster. We'll need some variables defined first:
 ```bash
-[mpd@ish]$ mkdir secrets
-[mpd@ish]$ sops -p 7668061D49BB2B7BA19118B4031734BEBE51F818 -e secrets.yaml > secrets/secrets.enc.yaml
+[mpd@ish]$ export SECRET_NAME=docker-hub-pull-secret
+[mpd@ish]$ export DOCKER_REGISTRY_SERVER=https://index.docker.io/v1/
+[mpd@ish]$ export DOCKER_USERNAME=MathiasPius
+[mpd@ish]$ export DOCKER_PASSWORD=9LqBVN0QPqw0jO7lhAJrsXLvom9xv4CB
+```
+Then create the secret in `--dry-run=client` mode so as to not create it in the cluster directly, and then dump the contents into a `docker-hub.yaml` file.
+```bash
+[mpd@ish]$ kubectl create secret docker-registry  \
+  --dry-run=client                                \
+  --namespace=default                             \
+  --docker-server=$DOCKER_REGISTRY_SERVER         \
+  --docker-username=$DOCKER_USERNAME              \
+  --docker-password=$DOCKER_PASSWORD              \
+   $SECRET_NAME                                   \
+   -o yaml > manifests/infrastructure/pull-secrets/docker-hub.yaml
+```
+Now encrypt the secret before someone sees!
+```bash
+[mpd@ish]$ sops -e -i manifests/infrastructure/pull-secrets/docker-hub.yaml
 ```
 
-Next up is our `talosconfig`. Since our sops-config only tracks .yaml files, it's easiest to just rename it, especially since it's yaml anyway.
-```bash
-[mpd@ish]$ cp talosconfig talosconfig.yaml
-[mpd@ish]$ sops -p 7668061D49BB2B7BA19118B4031734BEBE51F818 -e talosconfig.yaml > secrets/talosconfig.enc.yaml
-```
+Verify that the `.dockerconfigjson` value starts with `ENC[` to ensure that the secret has been encrypted.
 
-Go over all of the new encrypted files and make sure that no sensitive information has 
+Finally, in `manifests/infrastructure/pull-secrets/`, create the `kustomization.yaml` file which just lists `docker-hub.yaml` in the same directory as its only resource.
+
+Commit and push all the changes and wait for the secret to hopefully appear un-encrypted in the default namespace:
+
+```bash
+[mpd@ish]$ kubectl get secrets -n default
+NAME                     TYPE                             DATA   AGE
+docker-hub-pull-secret   kubernetes.io/dockerconfigjson   1      10s
+```
+ALL the points to FluxCD and SOPS!
+
+# Conclusion
+That concludes this rather lengthy expedition into the world of continuous integration and in-repository secret-keeping with SOPS.
+
+In **Part IV: Ingress, DNS and Certificates**, we'll get some of the basic necessities of a cluster up and running, like an ingress controller, automatic dns record creation with [external-dns](https://github.com/kubernetes-sigs/external-dns) and of course certificate retrieval using [cert-manager](https://cert-manager.io/), so we can expose entire TLS-encrypted websites without ever leaving our cluster!
 
 # Epilogue
 [^1]: It looks like this has been fixed, at least as a beta-test [since 2.6](https://argo-cd.readthedocs.io/en/stable/user-guide/multiple_sources/#helm-value-files-from-external-git-repository).
