@@ -27,15 +27,16 @@ I've previously used ArgoCD for keeping helm releases up to date within a cluste
 
 FluxCD seems to solve this by having the helm values as part of the `spec` of their [`HelmRelease`](https://fluxcd.io/flux/components/helm/helmreleases/) resource, while also enabling some pretty cool integrations like [release promotion](https://fluxcd.io/flux/use-cases/gh-actions-helm-promotion/) out of the box.
 
+Let's see how it fares compared to my experience with ArgoCD.
 
 # Installing FluxCD
-The [Get Started with Flux](https://fluxcd.io/flux/get-started/) guide starts by declaring that you'll need GitHub credentials before continuing, but this is only because the guide targets GitHub, which is probably reasonable. Flux seems to work natively with the biggest [git servers](https://fluxcd.io/flux/components/notification/provider/), which is nice to know since we *might* want to move to a self-hosted git(ea|lab) instance at some point.
+The [Get Started with Flux](https://fluxcd.io/flux/get-started/) guide starts by declaring that you'll need GitHub credentials before continuing, but this is only because the guide targets GitHub, which is probably reasonable. Flux seems to work natively with the biggest [git servers](https://fluxcd.io/flux/components/notification/provider/), which is nice to know since we *might* want to move to a self-hosted forgejo|gitea|gitlab instance at some point.
 
 
 ## Repository and Personal Access Token
 I went ahead and created a (private for now) repository at [https://github.com/MathiasPius/kronform](https://github.com/MathiasPius/kronform), and embarked to configure a personal access token, as the guide requires. 
 
-Unfortunately the documentation is really vague about which permissions are necessary, and as far as I can tell it isn't explicitly mentioned anywhere. Not being entirely sure about how Flux works internally, I went ahead and created a PAT with Read/Write access to most of the functionality on the just the one repository:
+Unfortunately the documentation is really vague about which permissions are necessary, and as far as I can tell it isn't explicitly mentioned anywhere. Not being entirely sure how Flux works internally, I went ahead and created a PAT with Read/Write access to most of the functionality on *just* the one repository:
 
 Read access to `kronform`: 
 * metadata
@@ -62,9 +63,9 @@ Read *and* Write access to `kronform`:
 * workflows 
 
 ## Bootstrapping
-The easiest (and apparently) only way of installing FluxCD is through the `flux` cli, so I intalled it through my package manager. The latest available version was `2.0.0-rc.5`
+The easiest, and apparently only, way of installing FluxCD is through the `flux` cli, so I installed it through my package manager. The latest available version was `2.0.0-rc.5`
 
-Again, following the official guide exported my credentials:
+Again, following the official guide I exported my credentials:
 ```bash
 [mpd@ish]$ export GITHUB_USER=MathiasPius
 [mpd@ish]$ export GITHUB_TOKEN=github_pat_...
@@ -85,20 +86,7 @@ Everything went along swimmingly, until it seemed to hang while waiting for some
 ► cloning branch "main" from Git repository "https://github.com/MathiasPius/kronform.git"
 ✔ cloned repository
 ► generating component manifests
-# Warning: 'patchesJson6902' is deprecated. Please use 'patches' instead. Run 'kustomize edit fix' to update your Kustomization automatically.
-✔ generated component manifests
-✔ component manifests are up to date
-► installing components in "flux-system" namespace
-✔ installed components
-✔ reconciled components
-► determining if source secret "flux-system/flux-system" exists
-► generating source secret
-✔ public key: ecdsa-sha2-nistp384 AAAA...
-✔ configured deploy key "flux-system-main-flux-system-./manifests" for "https://github.com/MathiasPius/kronform"
-► applying source secret "flux-system/flux-system"
-✔ reconciled source secret
-► generating sync manifests
-✔ generated sync manifests
+# (...)
 ✔ committed sync manifests to "main" ("be94c9fb726fcab7eb0aff77a0668be41f6f4429")
 ► pushing sync manifests to "https://github.com/MathiasPius/kronform.git"
 ► applying sync manifests
@@ -114,7 +102,7 @@ Everything went along swimmingly, until it seemed to hang while waiting for some
 ✔ all components are healthy
 ✗ bootstrap failed with 1 health check failure(s)
 ```
-Googling around I found some other people encountering the same issue, but the cause seemed to be something specific to OpenShift.
+Googling around I found some other people encountering the same issue, but the cause seemed to be specific to OpenShift.
 
 Using the `flux` cli to list the kustomizations explained exactly what went wrong though:
 
@@ -185,9 +173,9 @@ We push the yaml file and watch flux work:
 After a short while, flux picks up our change and starts spamming updates, eventually ending with
 
 ```bash
-NAME            REVISION                SUSPENDED       READY   MESSAGE                              
-flux-system     main@sha1:d0bca4ce      False   True    Applied revision: main@sha1:d0bca4ce
-podinfo         master@sha1:e06a5517    False   True    Applied revision: master@sha1:e06a5517
+NAME         REVISION              SUSPENDED  READY  MESSAGE                              
+flux-system  main@sha1:d0bca4ce    False      True   Applied revision: main@sha1:d0bca4ce
+podinfo      master@sha1:e06a5517  False      True   Applied revision: master@sha1:e06a5517
 ```
 
 Using `kubectl` to check our default namespace we can see the `podinfo` service up and running:
@@ -201,7 +189,7 @@ service/kubernetes   ClusterIP   10.96.0.1      <none>        443/TCP           
 service/podinfo      ClusterIP   10.110.168.7   <none>        9898/TCP,9999/TCP   2m32s
 ```
 
-Since we don't have an ingress controller yet (that's in part IV), we can't expose the service that way, so let's just proxy it from our local machine:
+Since we don't have an ingress controller yet (that's in Part IV), we can't expose the service that way, so let's just proxy it from our local machine:
 
 ```bash
 [mpd@ish]$ kubectl port-forward svc/podinfo 8080:9898
@@ -213,7 +201,9 @@ Navigating to `http://localhost:8080` in our browser it looks like it's working!
 
 Curious to see how Flux handles destructive actions and to clean up our test, I'll delete the `podinfo.yaml` from the `kronform` repository.
 
-Sure enough, after a little while the deployment and service is yeeted out of the cluster, just as expected. 10 points to FluxCD.
+Sure enough, after a little while the deployment and service is yeeted out of the cluster, just as expected.
+
+10 points to FluxCD.
 
 ## Restructuring
 Reading over the [documentation for repository structure](https://fluxcd.io/flux/guides/repository-structure/), it looks like I might have bungled the setup a bit by yoloing the bootstrapping. This isn't critical, but it'd be nice to follow best practices, and the structure they suggest makes a lot of sense. Since I'll only be using the one cluster though, I decide to be a little bad and axe the `clusters/` sub-directory, instead opting to have just the one folder.
@@ -250,7 +240,9 @@ spec:
 ```
 Theoretically, I should be able to just change that `path: ./manifests` line and move the entire directory, right?
 
-Replacing the path with `./manifests/cluster` and moving `./manifests/flux-system` to `./manifests/cluster/flux-system` and committing the changes caused flux to simply update the deployed resources and continue on as usual. Awesome! Another 10 points to FluxCD.
+Replacing the path with `./manifests/cluster` and moving `./manifests/flux-system` to `./manifests/cluster/flux-system` and committing the changes caused flux to simply update the deployed resources and continue on as usual. Awesome!
+
+Another 10 points to FluxCD.
 
 # Backporting Cilium
 Now that Flux is setup, let's get to work backporting our manually setup Cilium deployment from the previous post.
@@ -278,9 +270,9 @@ resources:
 - repository.yaml
 ```
 
-This should configure a Helm Repository within the `kube-system` namespace, but of course flux is not yet configured to even look in the  `manifests/infrastructure` directory, so just co,mitting this change alone won't do anything.
+This should configure a Helm Repository within the `kube-system` namespace, but of course flux is not yet configured to even look in the  `manifests/infrastructure` directory, so just committing this change alone won't do anything.
 
-We'll need to first create `Kustomization` resource which instructs Flux to watch this sub-directory of our aleady configured `GitRepository`:
+We'll need to first create a `Kustomization` resource which instructs Flux to watch this sub-directory of our already-configured `GitRepository`:
 
 ```yaml
 # manifests/cluster/infrastructure.yaml
@@ -325,7 +317,7 @@ Let's commit all of this and see if it worked.
 NAME     URL                       AGE   READY   STATUS
 cilium   https://helm.cilium.io/   18m   True    stored artifact: revision 'sha256:4cc5a535ccd03271289373f39cc47eb94150679d37f5a9cd8cd3a2b71f93a668'
 ```
-Sure enough, our helmrepository resource has been created, which proves that the whole setup works end to end.
+Sure enough, our `HelmRepository` resource has been created, which proves that the whole setup works end to end.
 
 Of course we haven't fully back-ported the Cilium deployment until we've subsumed the helm release using flux, so let's do that next by translating our helm install action from the previous post into a `HelmRelease` resource:
 
@@ -395,12 +387,12 @@ NAME    NAMESPACE       REVISION        UPDATED                                 
 cilium  kube-system     12              2023-06-23 12:06:05.983931976 +0000 UTC deployed        cilium-1.13.4   1.13.4
 ```
 
-## Restructuring - Again.
+## Restructuring... Again
 Next natural step would be to backport the `CiliumClusterWideNetworkPolicy` we set up to protect our node(s), but this presents a slight problem.
 
 We're treating the entirety of `manifests/infrastructure` as one big "kustomization", which means we can't define dependencies within it. We can work around this problem by creating independent `Kustomizations` for each subdirectory of `manifests/infrastructure` instead. This means a bit more configuration, but since it's infrastructure it will likely not change a lot.
 
-The fix is pretty simple, simply replace `manifests/cluster/flux-system/infrastructure.yaml` with `cilium.yaml`:
+The fix is pretty simple, just replace `manifests/cluster/flux-system/infrastructure.yaml` with `cilium.yaml`:
 ```yaml
 # manifests/cluster/flux-system/cilium.yaml
 apiVersion: kustomize.toolkit.fluxcd.io/v1
@@ -422,18 +414,13 @@ Committing and pushing the changes unfortunately yeets Cilium completely from th
 
 ```bash
 [mpd@ish]$ $ flux events                        
-REASON                  OBJECT                          MESSAGE                                                                                                     
-ReconciliationSucceeded Kustomization/flux-system       Reconciliation finished in 1.149107647s, next run in 10m0s                                                 
-ReconciliationSucceeded Kustomization/infrastructure    Reconciliation finished in 83.547843ms, next run in 10m0s                                                  
-Progressing             Kustomization/flux-system       Kustomization/flux-system/cilium created                                                                   
-Progressing             Kustomization/flux-system       Kustomization/flux-system/infrastructure deleted                                                           
-ReconciliationSucceeded Kustomization/cilium            Reconciliation finished in 110.014532ms, next run in 10m0s                                                 
-Progressing             Kustomization/cilium            HelmRelease/kube-system/cilium configured                                                                  
-                                                        HelmRepository/kube-system/cilium created                                                                  
-ReconciliationSucceeded Kustomization/flux-system       Reconciliation finished in 1.139469736s, next run in 10m0s                                                 
-ReconciliationSucceeded Kustomization/infrastructure    HelmRepository/kube-system/cilium deleted                                                                  
-                                                        HelmRelease/kube-system/cilium deleted                                                                     
-ReconciliationSucceeded Kustomization/infrastructure    Reconciliation finished in 27.026008ms, next run in 10m0s                                                  
+REASON       OBJECT                        MESSAGE                                                                                                     
+Progressing  Kustomization/flux-system     Kustomization/flux-system/cilium created
+Progressing  Kustomization/flux-system     Kustomization/flux-system/infrastructure deleted
+Progressing  Kustomization/cilium          HelmRelease/kube-system/cilium configured
+                                           HelmRepository/kube-system/cilium created
+Succeeded    Kustomization/infrastructure  HelmRepository/kube-system/cilium deleted
+                                           HelmRelease/kube-system/cilium deleted
 ```
 The new `cilium` Kustomization is applied first, resulting in effectively a no-op for the `HelmRelease`, after which the old `infrastructure` kustomization is garbage collected, destroying the `HelmRelease` resource for both of them.
 
@@ -478,7 +465,7 @@ spec:
       namespace: kube-system
 
 ```
-And add it to the cluster kustomization.
+And add it to the cluster kustomization. This will ensure that our cluster-policies Kustomization won't be applied until the Cilium `HelmRelease` is in the `Ready` state.
 
 Next, we create a new infrastructure sub-directory called `cluster-policies` and put our `host-fw-control-plane.yaml` file in there, unmodified, and add the following `kustomization.yaml` file in the same directory:
 
@@ -508,6 +495,13 @@ LAST SEEN   REASON        OBJECT                          MESSAGE
 
 If we never had the need to store secrets in our cluster, we'd practically be done by now, but that's not the case.
 
+As in the previous post we use `cilium monitor` and run some `kubetcl` commands to ensure that we have access, as evidenced by `action allow` appearing in the verdict log. Once satisfied, remember to disable the policy audit mode:
+```bash
+[mpd@ish]$ kubectl exec -n kube-system cilium-6zv78 \
+  -- cilium endpoint config 555 PolicyAuditMode=Disabled
+Endpoint 555 configuration updated successfully
+```
+
 Let's take a look at integrating FluxCD with [Mozilla SOPS](https://fluxcd.io/flux/guides/mozilla-sops/)
 
 # In-repository encryption with SOPS
@@ -515,9 +509,9 @@ Encrypting files in git repositories is nothing new and can be done manually or 
 
 The problem with this approach is that it works on entire files, meaning you completely lose the ability to diff changes, and when your project is often defined in one long multi-document yaml file, this becomes super inconvenient, not to mention wasteful, as the entire file is changed whenever a small part of it changes.
 
-Tools like [Mozilla SOPS](https://github.com/mozilla/sops) instead natively supports and works withyaml files, the files that make up most of our infrastructure. This allows it to encrypt individual values instead of entire files, enabling diffs and redacted sharing of infrastructure documents, without the risk of exposure, while simultaneously removing the need for secrets management infrastructure which is notoriously hard to self-host.
+Tools like [Mozilla SOPS](https://github.com/mozilla/sops) instead natively supports and works with yaml files, the files that make up most of our infrastructure. This allows it to encrypt individual values instead of entire files, enabling diffs and redacted sharing of infrastructure documents, without the risk of exposure, while simultaneously removing the need for secrets management infrastructure which is notoriously hard to self-host.
 
-# Setting up
+## Setting up
 Using [Flux's own guide](https://fluxcd.io/flux/guides/mozilla-sops/), we create a gpg key which will be owned by our flux installation, however since we're cool guys we'll generate an ed25519 key instead of RSA4096.
 
 ```bash
@@ -549,7 +543,7 @@ Comment:
 You selected this USER-ID:
     "flux.kronform.pius.dev"
 ```
-When asked to password protect the key, decline.
+When asked to password protect the key, decline. Flux won't be able to enter a password for it anyway, so it needs to be unprotected.
 
 Finally, our key is generated:
 ```bash
@@ -558,15 +552,12 @@ pub   ed25519 2023-06-23 [SC]
 uid                      flux.kronform.pius.dev
 ```
 
-The string that starts with `BD99..` is the key's fingerprint. Export that, so we don't have to copy-paste it repeatedly.
-```bash
-[mpd@ish]$ export KEY_FP=BD995FEE3775172B56BF652CF10FF7F3F7265919
-``` 
+The string that starts with `BD99..` is the key's fingerprint.
 
-Next, as per the guide we export the secret part of this key and put it directly into a Kubernetes secret in the `flux-system` namespace:
+Next, as per the guide we export the secret part of this key and put it directly into a Kubernetes secret in the `flux-system` namespace, using the fingerprint to identify the key:
 
 ```bash
-[mpd@ish]$ gpg --export-secret-keys --armor "${KEY_FP}" |
+[mpd@ish]$ gpg --export-secret-keys --armor "BD995FEE3775172B56BF652CF10FF7F3F7265919" |
   kubectl create secret generic sops-gpg \
   --namespace=flux-system \
   --from-file=sops.asc=/dev/stdin
@@ -576,7 +567,7 @@ secret/sops-gpg created
 ## Configuring Flux to use the key
 The guide assumes that you're configuring a new repository and therefore wants you to create a new source, but what we want is to allow our existing repository to support decryption.
 
-Decryption is a feature of Flux Kustomizations, so we'll have to specify the decryption secret as part of that resource. In the mean time we can ensure that secrets created with `sops` in our flux repository are automatically encrypted in a way that both flux and I can decrypt it. For this purpose we'll add a `.sops.yaml` file to the root of the repository:
+Decryption is a feature of Flux Kustomizations, so we'll have to specify the decryption secret as part of that resource. In the meantime we can ensure that secrets created with `sops` in our flux repository are automatically encrypted in a way that both flux and I/we/the team can decrypt it. For this purpose we'll add a `.sops.yaml` file to the root of the repository:
 ```yaml
 # .sops.yaml
 ---
@@ -587,17 +578,18 @@ creation_rules:
       BD995FEE3775172B56BF652CF10FF7F3F7265919,
       7668061D49BB2B7BA19118B4031734BEBE51F818
 ```
-Where `BD99..` is Flux's public key and `7668..` is my own public key.
+Where `BD99..` is Flux's public key and `7668..` is my own public key. This ensures that any yaml files created with sops in our git repository will be encrypted in a way that both Flux and I can decrypt them.
 
 For convenience, we'll also export flux's public key into the repository as `.flux.pub.asc`:
 ```bash
 [mpd@ish]$ gpg --export --armor "BD995FEE3775172B56BF652CF10FF7F3F7265919" > .flux.pub.asc
 ```
+This is completely optional, but would allow others to safely encrypt data for use by flux in the future.
 
 With both of those files committed, let's go ahead and preserve some of the sensitive files we produced when setting up the cluster, like the Talos `secrets.yaml`, the `talosconfig` as well as the administrator `kubeconfig`.
 
 ## Encrypting all the things
-We'll add a few `creation_rules` to our sops config, ensuring that `talosconfig`, `kubeconfig` and `secrets.yaml` all get encrypted using only our won public key, since we don't need nor want Flux to know them:
+We'll add a few `creation_rules` to our sops config, ensuring that `talosconfig`, `kubeconfig` and `secrets.yaml` all get encrypted using *only* our own public key, since we don't need nor want Flux to be able to decrypt them:
 ```yaml
 # .sops.yaml
 ---
@@ -627,19 +619,19 @@ Now encrypt (`-e`) the files in-place (`-i`):
 ```bash
 [mpd@ish]$ sops -e -i secrets.yaml
 
-# For talosconfig and kubeconfig, we need to explicitly specify that we're working with yaml.
+# For talosconfig and kubeconfig, we need to specify that we're working with yaml.
 [mpd@ish]$ sops -e -i --input-type yaml --output-type yaml talosconfig
 
 [mpd@ish]$ talosctl -n 159.69.60.182 kubeconfig kubeconfig
 [mpd@ish]$ sops -e -i --input-type yaml --output-type yaml kubeconfig
 ```
 
-And there we go. After going over all the now-encrypted files to ensure no sensitive data is included, we can go ahead and commit it to git.
+And there we go. <u>**After going over all the now-encrypted files to ensure no sensitive data is included**</u>, we can go ahead and commit it to git.
 
 # Encrypted Test
 Let's see if this all works, by creating a Kustomization which makes use of this key.
 
-We'll need it eventually so why not create a Docker Hub pull secret in the `default`.
+We'll need it eventually so why not create a Docker Hub pull secret in the `default` namespace.
 
 First, add the kustomization reference in `manifests/cluster/flux-system/pull-secrets.yaml`:
 ```yaml
@@ -662,7 +654,7 @@ spec:
     secretRef:
       name: sops-gpg
 ```
-Not the `decryption` field pointing to our flux GPG secret we exported and created earlier, and don't forget to add it to the cluster's `kustomization.yaml`.
+Note the `decryption` field pointing to our flux GPG secret we exported and created earlier, and don't forget to add it to the cluster's `kustomization.yaml`.
 
 Next, we need to create a yaml representation of our secret. Docker pull secrets are annoying to build by hand, they're base64-encoded json embedded in yaml. It's awful.
 
@@ -703,10 +695,40 @@ docker-hub-pull-secret   kubernetes.io/dockerconfigjson   1      10s
 ALL the points to FluxCD and SOPS!
 
 # Conclusion
-That concludes this rather lengthy expedition into the world of continuous integration and in-repository secret-keeping with SOPS.
+That concludes this rather lengthy expedition into the world of continuous deployment and in-repository secret-keeping with SOPS.
 
 In **Part IV: Ingress, DNS and Certificates**, we'll get some of the basic necessities of a cluster up and running, like an ingress controller, automatic dns record creation with [external-dns](https://github.com/kubernetes-sigs/external-dns) and of course certificate retrieval using [cert-manager](https://cert-manager.io/), so we can expose entire TLS-encrypted websites without ever leaving our cluster!
 
-# Epilogue
+## Epilogue
+We restructured the entire repository a couple of times so for reference, here's the final directory layout as of the end of this post:
+```bash
+[mpd@ish]$ tree
+.
+├── kubeconfig
+├── manifests
+│   ├── cluster
+│   │   └── flux-system
+│   │       ├── cilium.yaml
+│   │       ├── gotk-components.yaml
+│   │       ├── gotk-sync.yaml
+│   │       ├── kustomization.yaml
+│   │       ├── policies.yaml
+│   │       └── pull-secrets.yaml
+│   └── infrastructure
+│       ├── cilium
+│       │   ├── kustomization.yaml
+│       │   ├── release.yaml
+│       │   └── repository.yaml
+│       ├── cluster-policies
+│       │   ├── host-fw-control-plane.yaml
+│       │   └── kustomization.yaml
+│       └── pull-secrets
+│           ├── docker-hub.yaml
+│           └── kustomization.yaml
+├── README.md
+├── secrets.yaml
+└── talosconfig
+```
+
 [^1]: It looks like this has been fixed, at least as a beta-test [since 2.6](https://argo-cd.readthedocs.io/en/stable/user-guide/multiple_sources/#helm-value-files-from-external-git-repository).
 
