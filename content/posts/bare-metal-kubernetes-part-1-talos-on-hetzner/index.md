@@ -19,7 +19,7 @@ I have a rough sketch of the end product on my mind, which I plan to materialize
 
 * **[Part III: Encrypted GitOps with FluxCD](@/posts/bare-metal-kubernetes-part-3-encrypted-gitops-with-fluxcd/index.md)** Keeping track of deployed resources with FluxCD, using [SOPS](https://github.com/mozilla/sops) to store encrypt secrets in-repository.
 
-* **Part IV: Ingress, DNS and Certificates** Installing an ingress controller (nginx), DNS controller (externaldns), and certificate manager for automating routing.
+* **[Part IV: Ingress, DNS and Certificates](@/posts/bare-metal-kubernetes-part-4-ingress-dns-certificates/index.md)** Installing an ingress controller (nginx), DNS controller (external-dns), and certificate manager for automating routing.
 
 * **Part V: Scaling Up** A single node does not a cluster make! Time to scale the cluster up to 3 nodes
 

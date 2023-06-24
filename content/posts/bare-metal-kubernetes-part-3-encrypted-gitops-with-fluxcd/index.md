@@ -14,7 +14,7 @@ Storing things like machine configurations, Talos config files and network polic
 * [Part I: Talos on Hetzner](@/posts/bare-metal-kubernetes-part-1-talos-on-hetzner/index.md)
 * [Part II: Cilium CNI & Firewalls](@/posts/bare-metal-kubernetes-part-2-cilium-and-firewalls/index.md)
 * **[Part III: Encrypted GitOps with FluxCD](@/posts/bare-metal-kubernetes-part-3-encrypted-gitops-with-fluxcd/index.md)**
-* Part IV: Ingress, DNS and Certificates
+* [Part IV: Ingress, DNS and Certificates](@/posts/bare-metal-kubernetes-part-4-ingress-dns-certificates/index.md)
 * Part V: Scaling Up
 * Part VI: Persistent Storage with Rook Ceph
 * Part VII: Private Registry with Harbor
