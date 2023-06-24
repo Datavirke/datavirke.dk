@@ -195,8 +195,86 @@ Great! This is exactly what we expect to see. After all, we haven't defined any 
 
 We'll wait with the full-scale test of ingresses till the end of this post. Next up is the cert-manager.
 
-# Certificate Manager
-
-
-
 # External DNS
+Before we can configure Certificate Manager to fetch certificates for our domains, we'll need to have some way of automatically creating the DNS records. For this, we'll use `external-dns`.
+
+External DNS is a controller which hangs around in you cluster looking for domain name annotations on your services, nodeports and ingresses, and updates your DNS zone to reflect that.
+
+Since we made security allowances in the `ingress-nginx` namespace, we'll put external dns in its own namespace, otherwise it might have been nice to put all the ingress-related controllers in the same namespace.
+
+I'm using Hetzner's DNS service which is [was supported by external-dns up to version 0.10.2 (Chart versiono 1.6.0)](https://github.com/kubernetes-sigs/external-dns/issues/2653) for the domain `pius.dev`
+
+We'll start by creating a token for managing the domain through the [Hetzner DNS Console](https://dns.hetzner.com/settings/api-token). Unfortunately there's no way to limit the token to *.kronform.pius.dev, or even just to the one domain. Luckily, `pius.dev` is the only domain which is managed by Hetzner, so the blast radius is somewhat limited.
+
+With the token in hand, let's put a secret in in our kustomization to hold it. We could of course put the token directly in the `env` value of our helm release, but our `.sops.yaml` rules aren't designed to pick up that path. It only encrypts `data` and `stringData`, so either we modify our sops setup (and continue to do so every time we need to encrypt a new field), or we just do the sensible thing and setup a separate secret which we can then point to in the helm release.
+
+```yaml
+# manifests/infrastructure/external-dns/hetzner-token.yaml
+apiVersion: v1
+data:
+    HETZNER_TOKEN: <base64-encoded token goes here>
+kind: Secret
+metadata:
+    name: hetzner-token
+    namespace: external-dns
+type: Opaque
+```
+
+And of course encrypt it in place:
+```bash
+[mpd@ish]$ sops -e -i manifests/infrastructure/external-dns/hetzner-token.yaml
+```
+
+Next, let's configure the helm repository and release. Of note here is the `secretKeyRef` pointing to our `hetzner-token`. 
+```yaml
+# manifests/infrastructure/external-dns/external-dns.yaml
+---
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: HelmRepository
+metadata:
+  name: external-dns
+  namespace: external-dns
+spec:
+  interval: 5m0s
+  url: https://kubernetes-sigs.github.io/external-dns/
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: external-dns
+  namespace: external-dns
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: external-dns
+      version: ">=v1.6.0 <1.7.0"
+      sourceRef:
+        kind: HelmRepository
+        name: external-dns
+        namespace: external-dns
+      interval: 1m
+  values:
+    provider: hetzner
+    domainFilters:
+    - kronform.pius.dev
+    env:
+    - name: HETZNER_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: hetzner-token
+          key: HETZNER_TOKEN
+```
+
+```bash
+[mpd@ish]$ kubectl logs -n external-dns external-dns-db9868f46-rhdwc
+time="2023-06-24T12:35:11Z" level=info msg="Instantiating new Kubernetes client"
+time="2023-06-24T12:35:11Z" level=info msg="Using inCluster-config based on serviceaccount-token"
+time="2023-06-24T12:35:11Z" level=info msg="Created Kubernetes client https://10.96.0.1:443"
+time="2023-06-24T12:35:17Z" level=info msg="All records are already up to date"
+```
+Looks good.
+
+With two down, there's only one to go: `cert-manager`
+
+# Certificate Manager
