@@ -107,7 +107,10 @@ spec:
       hostPort:
         enabled: true
       kind: DaemonSet
+      service:
+        enabled: false
 ```
+Note the `hostNetwork` and `hostPort` values which expose the controller on the node itself, and disabling the `service` since we have no use for it, and helm will time out waiting for a load balancer controller to assign it if we dont.
 
 Let's commit it and wait for Flux to do its thing.
 
@@ -220,12 +223,14 @@ metadata:
 type: Opaque
 ```
 
-And of course encrypt it in place:
+Encrypt it in place:
 ```bash
 [mpd@ish]$ sops -e -i manifests/infrastructure/external-dns/hetzner-token.yaml
 ```
 
-Next, let's configure the helm repository and release. Of note here is the `secretKeyRef` pointing to our `hetzner-token`. 
+Don't forget to add the `decryption` section to the Kustomization so Flux knows how to decrypt the secret when deploying it.
+
+Next, let's configure the helm repository and release. Of note here is the `secretKeyRef` pointing to our `hetzner-token`.
 ```yaml
 # manifests/infrastructure/external-dns/external-dns.yaml
 ---
@@ -278,3 +283,156 @@ Looks good.
 With two down, there's only one to go: `cert-manager`
 
 # Certificate Manager
+`cert-manager` is responsible for monitoring TLS endpoints, ordering certificates through Let's Encrypt (or any ACME-compatible provider), fulfilling the validation process and installing the generated `Certificate` resource in the cluster, for use by our ingress controller.
+
+It's a relatively straight forward deployment and the only helm value we set is `installCRDs`. Now, there's a reason it's disabled by default, and that is that Helm intentionally does not handle CRD upgrades, so as to prevent data loss, however in this case the `Certificate` resources that *might* be lost in a future update of the software will simply be re-issued once the cert-manager catches on, so it's not a huge deal. If we were running a massive cluster with hundreds or thousands of services, such an event might cause us to hit rate-limits with Let's Encrypt, but I don't think that will be relevant in our case.
+
+```yaml
+# manifests/infrastructure/cert-manager/cert-manager.yaml
+---
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: HelmRepository
+metadata:
+  name: jetstack
+  namespace: cert-manager
+spec:
+  interval: 5m0s
+  url: https://charts.jetstack.io
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: cert-manager
+  namespace: cert-manager
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: cert-manager
+      version: ">=v1.12.0 <1.13.0"
+      sourceRef:
+        kind: HelmRepository
+        name: jetstack
+        namespace: cert-manager
+      interval: 1m
+  values:
+    installCRDs: true
+```
+
+The one little tricksy thing about cert-manager is that we need to create our own `ClusterIssuer` resources, a custom resource type which `cert-manager` installs. That means there's an explicit dependency between them, which we need to factor into our deployment.
+
+The `ClusterIssuer` resources themselves are pretty simple:
+
+```yaml
+# manifests/infrastructure/cluster-issuers/cluster-issuers.yaml
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-staging
+spec:
+  acme:
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    email: contact@pius.io
+    privateKeySecretRef:
+      name: letsencrypt-staging
+    solvers:
+    - http01:
+        ingress:
+          class: nginx
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-production
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: contact@pius.io
+    privateKeySecretRef:
+      name: letsencrypt-production
+    solvers:
+    - http01:
+        ingress:
+          class: nginx
+```
+
+Like we did with Cilium & cluster-policies, I'll be creating an independent Kustomization for the cluster, whose sole purpose is installing these clusterissuers, and then creating a health check dependency on the helm cert-manager helmrelease:
+
+```yaml
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: cluster-issuers
+  namespace: flux-system
+spec:
+  interval: 10m0s
+  path: ./manifests/infrastructure/cluster-issuers
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  healthChecks:
+    - apiVersion: helm.toolkit.fluxcd.io/v2beta1
+      kind: HelmRelease
+      name: cert-manager
+      namespace: cert-manager
+
+```
+
+And with that done, we're all set!
+
+# All the things working together
+
+Let's revisit [podinfo](https://github.com/stefanprodan/podinfo), but this time with the full weight of our three musketeers to set up a dns record, retrieve a certificate and forward the traffic. We're manually deploying this instead of committing it to git, since it's only temporary:
+```yaml
+---
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: HelmRepository
+metadata:
+  name: podinfo
+  namespace: default
+spec:
+  interval: 5m0s
+  url: https://stefanprodan.github.io/podinfo
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: podinfo
+  namespace: default
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: podinfo
+      version: "=6.3.6"
+      sourceRef:
+        kind: HelmRepository
+        name: podinfo
+        namespace: default
+      interval: 1m
+  values:
+    ingress:
+      enabled: true
+      className: nginx
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt-production
+        external-dns.alpha.kubernetes.io/hostname: podinfo.apps.kronform.pius.dev
+      hosts:
+      - host: podinfo.apps.kronform.pius.dev
+        paths:
+        - path: /
+          pathType: Prefix
+      tls:
+      - hosts:
+        - podinfo.apps.kronform.pius.dev
+        secretName: podinfo-tls-secret
+```
+Of special not are the annotations on the `ingress` values in our `HelmRelease`, which ensure that cert manager and external-dns notice the ingress and do their jobs.
+
+Sure enough, navigating to `https://podinfo.apps.kronform.pius.dev/` gives us back our lovely.. Squid or whatever!
+
+![Podinfo Screenshot](podinfo.png)
+
