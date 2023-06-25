@@ -21,7 +21,7 @@ I have a rough sketch of the end product on my mind, which I plan to materialize
 
 * **[Part IV: Ingress, DNS and Certificates](@/posts/bare-metal-kubernetes-part-4-ingress-dns-certificates/index.md)** Installing an ingress controller (nginx), DNS controller (external-dns), and certificate manager for automating routing.
 
-* **Part V: Scaling Up** A single node does not a cluster make! Time to scale the cluster up to 3 nodes
+* **[Part V: Scaling Out](@/posts/bare-metal-kubernetes-part-5-scaling-out/index.md)** A single node does not a cluster make! Time to scale the cluster up to 3 nodes
 
 * **Part VI: Persistent Storage with Rook Ceph** With 3 nodes and 6 available disks, we're finally eligible to store data long term, which we'll need going forward.
 
@@ -32,6 +32,8 @@ I have a rough sketch of the end product on my mind, which I plan to materialize
 * **Part IX: Monitoring with Prometheus and Grafana** We have a lot of workers and workloads, but very little insight into how they're performing. Let's fix that.
 
 * **Part X: Log collection** Metrics are great for seeing *if* something is wrong, but logs helps to explain *why*.
+
+Complete source code for the live cluster is available [@github/MathiasPius/kronform](https://github.com/MathiasPius/kronform)
 
 # Choosing a Kubernetes Distribution
 

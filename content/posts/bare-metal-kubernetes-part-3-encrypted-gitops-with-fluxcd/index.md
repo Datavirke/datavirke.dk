@@ -15,12 +15,14 @@ Storing things like machine configurations, Talos config files and network polic
 * [Part II: Cilium CNI & Firewalls](@/posts/bare-metal-kubernetes-part-2-cilium-and-firewalls/index.md)
 * **[Part III: Encrypted GitOps with FluxCD](@/posts/bare-metal-kubernetes-part-3-encrypted-gitops-with-fluxcd/index.md)**
 * [Part IV: Ingress, DNS and Certificates](@/posts/bare-metal-kubernetes-part-4-ingress-dns-certificates/index.md)
-* Part V: Scaling Up
+* [Part V: Scaling Out](@/posts/bare-metal-kubernetes-part-5-scaling-out/index.md)
 * Part VI: Persistent Storage with Rook Ceph
 * Part VII: Private Registry with Harbor
 * Part VIII: Self-hosted Authentication with Kanidm
 * Part IX: Monitoring with Prometheus and Grafana
 * Part X: Log collection
+
+Complete source code for the live cluster is available at: https://github.com/MathiasPius/kronform
 
 # Choosing FluxCD
 I've previously used ArgoCD for keeping helm releases up to date within a cluster, but they didn't support specifying helm values files in a separate directory from the chart, which effectively meant that if you needed to change *even a single value* of a chart, you had to basically create a new chart which had the original as a sub-chart and set the values that way.[^1]
@@ -34,7 +36,7 @@ The [Get Started with Flux](https://fluxcd.io/flux/get-started/) guide starts by
 
 
 ## Repository and Personal Access Token
-I went ahead and created a (private for now) repository at [https://github.com/MathiasPius/kronform](https://github.com/MathiasPius/kronform), and embarked to configure a personal access token, as the guide requires. 
+I went ahead and created a repository [@github/MathiasPius/kronform](https://github.com/MathiasPius/kronform), and embarked to configure a personal access token, as the guide requires. 
 
 Unfortunately the documentation is really vague about which permissions are necessary, and as far as I can tell it isn't explicitly mentioned anywhere. Not being entirely sure how Flux works internally, I went ahead and created a PAT with Read/Write access to most of the functionality on *just* the one repository:
 

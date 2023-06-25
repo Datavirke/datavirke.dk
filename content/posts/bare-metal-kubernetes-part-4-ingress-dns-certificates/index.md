@@ -24,13 +24,14 @@ To fix that, we'll need:
 * [Part II: Cilium CNI & Firewalls](@/posts/bare-metal-kubernetes-part-2-cilium-and-firewalls/index.md)
 * [Part III: Encrypted GitOps with FluxCD](@/posts/bare-metal-kubernetes-part-3-encrypted-gitops-with-fluxcd/index.md)
 * **[Part IV: Ingress, DNS and Certificates](@/posts/bare-metal-kubernetes-part-4-ingress-dns-certificates/index.md)**
-* Part V: Scaling Up
+* [Part V: Scaling Out](@/posts/bare-metal-kubernetes-part-5-scaling-out/index.md)
 * Part VI: Persistent Storage with Rook Ceph
 * Part VII: Private Registry with Harbor
 * Part VIII: Self-hosted Authentication with Kanidm
 * Part IX: Monitoring with Prometheus and Grafana
 * Part X: Log collection
 
+Complete source code for the live cluster is available [@github/MathiasPius/kronform](https://github.com/MathiasPius/kronform)
 
 # Ingress Controller
 There are many excellent ingress controllers out there supporting a wide range of cases, but since our needs are pretty basic we'll just run with the official Kubernetes [ingress-nginx](https://kubernetes.github.io/ingress-nginx/) controller, not to be confused with the other official [*NGINX* Ingress Controller](https://docs.nginx.com/nginx-ingress-controller/)!
