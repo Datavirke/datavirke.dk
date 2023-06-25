@@ -7,17 +7,17 @@ tags = ["kubernetes", "talos", "ingress", "external-dns", "nginx", "cert-manager
 +++
 Let's reflect on the state of the cluster so far:
 
-* Single node, which is chugging along beatifully.
+* Single node, which is chugging along beauifully.
 * Cilium network policies protect our node from the onslaught of the internet.
-* Our cluster secrets and administrator configs are stored encrypted in git, in case we need them.
+* Cluster secrets and administrator configs are stored encrypted in git, in case we need them.
 * Flux helps to keep our software up to date, and our repository keeps an inventory of what we have deployed.
 
 Our cluster is still relatively useless though, at least for deploying web applications. 
 
 To fix that, we'll need:
-1. An ingress controller, that can take incoming HTTP(S) connections and map them to services running in the cluster.
-2. Cert-manager, which can retrieve and update certificates for our HTTPS resources.
-3. External-dns, for managing our DNS records, so we don't have to.
+1. An [ingress controller](https://kubernetes.github.io/ingress-nginx/), that can take incoming HTTP(S) connections and map them to services running in the cluster.
+2. [cert-manager](https://cert-manager.io/), which can retrieve and update certificates for our HTTPS resources.
+3. [external-dns](https://github.com/kubernetes-sigs/external-dns), for managing our DNS records, so we don't have to.
 
 *Series Index*
 * [Part I: Talos on Hetzner](@/posts/bare-metal-kubernetes-part-1-talos-on-hetzner/index.md)
@@ -38,25 +38,27 @@ There are many excellent ingress controllers out there supporting a wide range o
 ## Considerations
 As mentioned in the [guide](https://kubernetes.github.io/ingress-nginx/deploy/baremetal/) there are some special considerations when deploying an(y) ingress controller to a bare-metal cluster.
 
-Ingress controllers usually work by either exposing a `LoadBalancer` service which is picked up by the hosting provider's own controller, which provisions some sort of load balancer externally to the cluster and forwards the traffic to the cluster through a publically accessible port, usually in the range `30000-32767)`. Alternatively, the ingress controller can be configured with a `NodePort` service directly, and then a load balancer can be configured manually to forward to the exposed port.
+Ingress controllers usually work by either exposing a `LoadBalancer` service which is picked up by the hosting provider's own controller, which provisions some sort of load balancer externally to the cluster and forwards the traffic to the cluster through a publically accessible `NodePort`, usually in the range `30000-32767`. Alternatively, the load balancer can be configured manually to forward to the exposed port.
 
-Since we don't have a provider, or rather don't want to make use of Hetzner's Load Balancer service, that's not an option for us. We could theoretically still use a `NodePort` service, but telling people to *come visit my cool site at `https://example.com:32751`* is just not nearly as cool as being able to use the standard http(s) ports.
+Since we don't have a provider, or rather don't want to make use of Hetzner's Load Balancer service, that's not an option for us. We could theoretically still use a `NodePort` service, but telling people to *come visit my awesome site at `https://example.com:31451`* is just not nearly as cool as being able to use the standard http(s) ports and omitting the port.
 
-To achieve this goal, we're gonna have to be bad. But only a little bit. By running the ingress controller as a daemonset (that is, one instance per node exactly), and allowing it to run in the `hostNetwork: true`, we can let it listen on port `80` and `443` directly on the node, instead of using `NodePort`s. There are some security implications of this, like the ingress controller effectively getting localhost-access to the node, theoretically allowing it to interact with other services running on it. Since we're not running any unauthenticated services directly on the node anyway, and the software we're running is an official piece of Kubernetes software, I judge this risk to be very low.
+To achieve this goal, we're gonna have to be bad. But only a little bit.
+
+By running the ingress controller as a daemonset (that is, one instance per node exactly), and allowing it to run in the `hostNetwork: true`, we can let it listen on port `80` and `443` directly on the node, instead of using `NodePort`s. There are some security implications of this, like the ingress controller effectively getting localhost-access to the node, theoretically allowing it to interact with other services running on it. Since we're not running any unauthenticated services directly on the node anyway, and the software we're running is an official piece of Kubernetes software, I judge this risk to be very low.
 
 Another somewhat orthogonal option would be to use a project like [MetalLB](https://metallb.org/) and Hetzner's vSwitch with a floating IP attached, which we could then reassign from node to node if one went down. Advantage of this would be that we could potentially rig the controller in such a way that it only gets access to the virtual VLAN ethernet link attached to the vSwitch, thereby separating it from the "real" node ethernet port. Whether this would actually provide any protection, or is even feasible I'm not sure.
 
 Whatever the case, we won't explore this option for a couple of reasons:
 1. Hetzner's vSwitch is limited to 1TB of traffic, with overruns costing extra.
 2. Floating IP addresses are pretty expensive.
-3. *Allegedly*, traffic running over vSwitch can sometimes be *worse* than just going through the hair-pinned public addresses of the nodes.
+3. *Allegedly*, traffic running over vSwitch can sometimes perform *worse* than just going through the hair-pinned public addresses of the nodes.
 4. All traffic would flow through a single node at all times, instead of being spread out across the nodes.
 
-The last point needs some exposition. By relying solely on DNS for load balancing, we're allowing incoming connections to be spread across all nodes, which is great. In most cases the target service will likely be a one-off, meaning the traffic would have to be routed between the nodes to reach the destination anyway, but this would be the same if using a floating IP. DNS Load Balancing might present a problem if a node goes down however, since even with low TTL and assuming all the intermediate caches respect it, we're probably still looking at upwards of 30 minutes of latency from our controller notices the node is down and issues the DNS update, to the time the end user's browser picks up a new address to try.
+The last point needs some exposition. By relying solely on DNS for load balancing, we're allowing incoming connections to be spread across all nodes, which is great. In most cases the target service will likely be a one-off, meaning the traffic would have to be routed between the nodes to reach the destination anyway, but this would be the same if using a floating IP. DNS Load Balancing might present a problem if a node goes down however, since even with low TTL and assuming all the intermediate caches respect it, we're probably still looking at upwards of 30 minutes of latency from our controller noticing the node is down and issuing the DNS update, to the time the end user's browser picks up a new address to try.
 
 Enough excuses, let's get to work!
 
-## Deploying the controller with a Flux
+## Deploying the controller with Flux
 Just as with Cilium, we'll be using Flux's `HelmRepository` and `HelmRelease` resources to deploy the controller.
 
 I'll allow myself to yada-yada over all the Kustomization shenanigans this time in the interest of brevity, but suffice to say that the procedure is exactly the same as with Cilium.
@@ -110,17 +112,30 @@ spec:
       service:
         enabled: false
 ```
-Note the `hostNetwork` and `hostPort` values which expose the controller on the node itself, and disabling the `service` since we have no use for it, and helm will time out waiting for a load balancer controller to assign it if we dont.
+Note the `hostNetwork` and `hostPort` values which expose the controller on the node itself. I'm also disabling the `service` since we have no use for it, and helm will time out waiting for a load balancer controller to provision it and mark it as ready.
 
 Let's commit it and wait for Flux to do its thing.
+```
+[mpd@ish]$ kubectl get all -n ingress-nginx 
+NAME                                         TYPE        CLUSTER-IP    PORT(S)
+service/ingress-nginx-controller-admission   ClusterIP   10.98.32.54   443/TCP
+
+NAME                                      DESIRED   READY   NODE SELECTOR
+daemonset.apps/ingress-nginx-controller   1         1       kubernetes.io/os=linux
+```
+
 
 The namespace gets created, as well as the `DaemonSet`, but there's no pod! Let's inspect the daemonset to see what's going on.
 
 Running `kubectl -n ingress-nginx describe daemonset ingress-nginx` reveals a bunch of errors during pod creation:
 ```bash
-Warning  FailedCreate      29s               daemonset-controller  Error creating: pods "ingress-nginx-controller-zdfff" is forbidden: violates PodSecurity "baseline:latest": host namespaces (hostNetwork=true), hostPort (container "controller" uses hostPorts 443, 80, 8443)
+Warning  FailedCreate  29s  daemonset-controller
+  Error creating: pods "ingress-nginx-controller-zdfff" is forbidden: 
+    violates PodSecurity "baseline:latest": 
+      host namespaces (hostNetwork=true),
+      hostPort (container "controller" uses hostPorts 443, 80, 8443)
 ```
-Oooh, right. Pod Security Policies are finally out and have been replaced with Pod Security Admissions, and in our talos machineconfig, we can see that the apiserver's default enforcement level is set to `baseline:restricted`:
+Oooh, right. Pod Security Policies are finally out and have been replaced with Pod Security Admissions, and in our talos machineconfig, we can see that the apiserver's default enforcement level is set to `baseline:latest`:
 
 ```yaml
 cluster:
@@ -140,7 +155,7 @@ cluster:
 ```
 To be fair, I have been getting a lot of warnings when spawning other pods, but nothing that caused a disruption.
 
-We could of course patch our machineconfig to disable the enforcement, but that seems like a really dumb thing to do. The policy is there to protect us after all, and we *are* doing some really dodgy things to be fair!
+We could of course patch our machineconfig to disable the enforcement, but that seems like a really dumb thing to do. The policy is there to protect us after all, and we *are* doing some really dodgy things!
 
 Instead, let's modify the `ingress-nginx` namespace to be a little more lenient:
 
@@ -196,7 +211,7 @@ With that small aside out of the way, our policy will have had a chance to apply
 
 Great! This is exactly what we expect to see. After all, we haven't defined any ingress routes or anything yet, so the controller has nothing to serve us.
 
-We'll wait with the full-scale test of ingresses till the end of this post. Next up is the cert-manager.
+We'll wait with the full-scale test of ingresses till the end of this post. Next up is the root of all sysadmin problems: DNS!
 
 # External DNS
 Before we can configure Certificate Manager to fetch certificates for our domains, we'll need to have some way of automatically creating the DNS records. For this, we'll use `external-dns`.
@@ -205,11 +220,11 @@ External DNS is a controller which hangs around in you cluster looking for domai
 
 Since we made security allowances in the `ingress-nginx` namespace, we'll put external dns in its own namespace, otherwise it might have been nice to put all the ingress-related controllers in the same namespace.
 
-I'm using Hetzner's DNS service which is [was supported by external-dns up to version 0.10.2 (Chart versiono 1.6.0)](https://github.com/kubernetes-sigs/external-dns/issues/2653) for the domain `pius.dev`
+I'm using Hetzner's DNS service which [was supported by external-dns up to version 0.10.1 (Chart version 1.6.0)](https://github.com/kubernetes-sigs/external-dns/issues/2653) for the domain `pius.dev`
 
 We'll start by creating a token for managing the domain through the [Hetzner DNS Console](https://dns.hetzner.com/settings/api-token). Unfortunately there's no way to limit the token to *.kronform.pius.dev, or even just to the one domain. Luckily, `pius.dev` is the only domain which is managed by Hetzner, so the blast radius is somewhat limited.
 
-With the token in hand, let's put a secret in in our kustomization to hold it. We could of course put the token directly in the `env` value of our helm release, but our `.sops.yaml` rules aren't designed to pick up that path. It only encrypts `data` and `stringData`, so either we modify our sops setup (and continue to do so every time we need to encrypt a new field), or we just do the sensible thing and setup a separate secret which we can then point to in the helm release.
+With the token in hand, let's put a secret in our kustomization to hold it. We could of course put the token directly in the `env` value of our helm release, but our `.sops.yaml` rules aren't designed to pick up that path. It only encrypts `data` and `stringData`, so either we modify our sops setup (and continue to do so every time we need to encrypt a new field), or we just do the sensible thing and setup a separate secret which we can then point to in the helm release.
 
 ```yaml
 # manifests/infrastructure/external-dns/hetzner-token.yaml
@@ -228,7 +243,12 @@ Encrypt it in place:
 [mpd@ish]$ sops -e -i manifests/infrastructure/external-dns/hetzner-token.yaml
 ```
 
-Don't forget to add the `decryption` section to the Kustomization so Flux knows how to decrypt the secret when deploying it.
+Don't forget to add the `decryption` section to the Kustomization so Flux knows how to decrypt the secret when deploying it. If you don't you'll get a bunch of warnings about unexpected characters at byte 3, when Flux tries to base64-decode `ENC[...`. 
+
+Ask me how I know.
+
+<small>... You already know how I know.</small>
+
 
 Next, let's configure the helm repository and release. Of note here is the `secretKeyRef` pointing to our `hetzner-token`.
 ```yaml
@@ -356,8 +376,9 @@ spec:
         ingress:
           class: nginx
 ```
+<small>Please don't forget to change the email if you're copy-pasting</small>
 
-Like we did with Cilium & cluster-policies, I'll be creating an independent Kustomization for the cluster, whose sole purpose is installing these clusterissuers, and then creating a health check dependency on the helm cert-manager helmrelease:
+Like with Cilium & cluster-policies, I'll be creating an independent Kustomization for the cluster, whose sole purpose is installing these cluster issuers, and then creating a health check for `cert-manager`'s `HelmRelease`:
 
 ```yaml
 ---
@@ -385,7 +406,9 @@ And with that done, we're all set!
 
 # All the things working together
 
-Let's revisit [podinfo](https://github.com/stefanprodan/podinfo), but this time with the full weight of our three musketeers to set up a dns record, retrieve a certificate and forward the traffic. We're manually deploying this instead of committing it to git, since it's only temporary:
+Let's revisit [podinfo](https://github.com/stefanprodan/podinfo), but this time with the full weight of our three musketeers to set up a dns record, retrieve a certificate and forward the traffic.
+
+We're manually deploying this instead of committing it to git, since it's only temporary:
 ```yaml
 ---
 apiVersion: source.toolkit.fluxcd.io/v1beta2
@@ -430,9 +453,12 @@ spec:
         - podinfo.apps.kronform.pius.dev
         secretName: podinfo-tls-secret
 ```
-Of special not are the annotations on the `ingress` values in our `HelmRelease`, which ensure that cert manager and external-dns notice the ingress and do their jobs.
+Of special note are the annotations on the `ingress` values in our `HelmRelease`, which ensure that cert manager and external-dns notice the ingress and do their jobs.
 
 Sure enough, navigating to `https://podinfo.apps.kronform.pius.dev/` gives us back our lovely.. Squid or whatever!
 
 ![Podinfo Screenshot](podinfo.png)
 
+Our cluster is starting to become really damn cool! Only it's not really a *cluster* per se. It's just a single node vibing by itself in some datacenter in Germany.
+
+In Part V we'll commission some more hardware from Hetzner and see if we can get them speaking the same language.
