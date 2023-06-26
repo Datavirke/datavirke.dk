@@ -178,5 +178,6 @@ Finally, make sure all the machineconfigs are encrypted and push them to git. Th
 In **Part VI: Persistent Storage with Rook Ceph** I'll install [Rook](https://rook.io/), which will act as a replication layer on top of our non-talos hard drives and provide replicated [Persistent Volumes](https://kubernetes.io/docs/concepts/storage/persistent-volumes/) which won't disappear if a node dies.
 
 # Epilogue
+The fact that this is the shortest post of the whole series so far tells me Talos was probably the right choice.
 
 [^1]: I'm using RFC6902 JSON Patches this sime, since I hit some merge error when trying to use the same style patch as when creating the `n1` config originally.
