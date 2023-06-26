@@ -16,7 +16,7 @@ We've got a brand new cluster exposed directly to the internet, and it doesn't e
 * [Part III: Encrypted GitOps with FluxCD](@/posts/bare-metal-kubernetes-part-3-encrypted-gitops-with-fluxcd/index.md)
 * [Part IV: Ingress, DNS and Certificates](@/posts/bare-metal-kubernetes-part-4-ingress-dns-certificates/index.md)
 * [Part V: Scaling Out](@/posts/bare-metal-kubernetes-part-5-scaling-out/index.md)
-* Part VI: Persistent Storage with Rook Ceph
+* [Part VI: Persistent Storage with Rook Ceph](@/posts/bare-metal-kubernetes-part-6-persistent-storage-with-rook-ceph/index.md)
 * Part VII: Private Registry with Harbor
 * Part VIII: Self-hosted Authentication with Kanidm
 * Part IX: Monitoring with Prometheus and Grafana

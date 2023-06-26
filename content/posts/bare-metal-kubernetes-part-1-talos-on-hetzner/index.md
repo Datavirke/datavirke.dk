@@ -23,7 +23,7 @@ I have a rough sketch of the end product on my mind, which I plan to materialize
 
 * **[Part V: Scaling Out](@/posts/bare-metal-kubernetes-part-5-scaling-out/index.md)** A single node does not a cluster make! Time to scale the cluster up to 3 nodes
 
-* **Part VI: Persistent Storage with Rook Ceph** With 3 nodes and 6 available disks, we're finally eligible to store data long term, which we'll need going forward.
+* **[Part VI: Persistent Storage with Rook Ceph](@/posts/bare-metal-kubernetes-part-6-persistent-storage-with-rook-ceph/index.md)** With 3 nodes and 6 available disks, we're finally eligible to store data long term, which we'll need going forward.
 
 * **Part VII: Private Registry with Harbor** Persistent storage allows us to store and cache the images we use, so let's!
 
