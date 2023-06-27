@@ -69,3 +69,18 @@ image: sha256:ea299dd31352594c776cf1527b319fe3afb4b535bd9ba1e005a28983edf66330
 
 # Installing Harbor
 Harbor has an official deployment helm chart located [here](https://github.com/goharbor/harbor-helm)
+
+
+! Helm chart install
+
+
+! Ingress admission hook?
+
+! security policy - switch to bitnami
+
+! update strategy
+
+
+! proxy caches
+
+! switch images to internal ones
