@@ -23,7 +23,7 @@ In this post, I'll be deploying the Rook operators into our cluster and configur
 * [Part IV: Ingress, DNS and Certificates](@/posts/bare-metal-kubernetes-part-4-ingress-dns-certificates/index.md)
 * [Part V: Scaling Out](@/posts/bare-metal-kubernetes-part-5-scaling-out/index.md)
 * **[Part VI: Persistent Storage with Rook Ceph](@/posts/bare-metal-kubernetes-part-6-persistent-storage-with-rook-ceph/index.md)**
-* Part VII: Private Registry with Harbor
+* [Part VII: Private Registry with Harbor](@/posts/bare-metal-kubernetes-part-7-private-registry-with-harbor/index.md)
 * Part VIII: Self-hosted Authentication with Kanidm
 * Part IX: Monitoring with Prometheus and Grafana
 * Part X: Log collection
@@ -288,4 +288,4 @@ pvc-e1470495-3eee-47ab-881a-c66f45a71f3b
   pvc-e1470495-3eee-47ab-881a-c66f45a71f3b
 csi-vol-5039f1f5-641f-4e33-822c-7c517b629575
 ```
-In **Part VII: Private Registry with Harbor** we'll put this persistent storage to use by setting up a private container registry with a pull-through cache.
+In [Part VII: Private Registry with Harbor](@/posts/bare-metal-kubernetes-part-7-private-registry-with-harbor/index.md) we'll put this persistent storage to use by setting up a private container registry with a pull-through cache.

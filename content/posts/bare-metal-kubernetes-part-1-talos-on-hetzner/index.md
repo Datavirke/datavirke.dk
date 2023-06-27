@@ -25,7 +25,7 @@ I have a rough sketch of the end product on my mind, which I plan to materialize
 
 * **[Part VI: Persistent Storage with Rook Ceph](@/posts/bare-metal-kubernetes-part-6-persistent-storage-with-rook-ceph/index.md)** With 3 nodes and 6 available disks, we're finally eligible to store data long term, which we'll need going forward.
 
-* **Part VII: Private Registry with Harbor** Persistent storage allows us to store and cache the images we use, so let's!
+* **[Part VII: Private Registry with Harbor](@/posts/bare-metal-kubernetes-part-7-private-registry-with-harbor/index.md)** Persistent storage allows us to store and cache the images we use, so let's!
 
 * **Part VIII: Self-hosted Authentication with Kanidm** Using the root/admin credentials everywhere is easy, but not exactly secure. Using an OIDC-capable identity management solution we can hopefully switch most of our services to SSO.
 
