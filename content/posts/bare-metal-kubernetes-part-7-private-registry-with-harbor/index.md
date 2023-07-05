@@ -27,7 +27,7 @@ Complete source code for the live cluster is available [@github/MathiasPius/kron
 # How bad is it?
 Before we go get into the nitty-gritty, let's take a second to see how dependent we actually are.
 
-Using kubectl and some grep magic we can get a complete overview of all the images in use by our cluster, or rather all the pods currently deployed
+Using kubectl and some grep magic we can get a complete overview of all the images in use by pods running in our cluster:
 
 ```bash
 [mpd@ish]$ kubectl get pod -A -o yaml | grep 'image:' | sort -u
@@ -64,7 +64,7 @@ image: rook/ceph:v1.11.8
 28 different container images, and we haven't even finished laying the ground work yet! Being able to cache at least some of these images locally will help save both ourselves and their courteous hosts a decent amount of bandwidth, and make our setup a little more resilient, and with [Harbor](https://goharbor.io/) we even get a few nice bonuses like vulnerability scanning for free, which later on can help alert us when it's time to upgrade.
 
 # Installing Harbor
-Harbor has an official deployment helm chart located [here](https://github.com/goharbor/harbor-helm), but after a few test runs, it turns out that the official helm chart is not all that great. It does not drop root-level capabilities, nor pledge to run as non-root, which means it will run afoul of our pod security admissions which by default refuses to run such pods, unless the namespace in which they run has been explicitly granted those permissions.
+Harbor has an official deployment helm chart located [here](https://github.com/goharbor/harbor-helm), but after a few test runs it turns out that the official helm chart is not all that great. It does not drop root-level capabilities, nor pledge to run as non-root, which means it will run afoul of our pod security admissions which by default refuses to run such pods, unless the namespace in which they run has been explicitly granted those permissions.
 
 Looking around a bit, [Bitnami](https://bitnami.com/stack/harbor-registry) seems to have a much more modern packaged helm chart for Harbor deployment than Harbor themselves, so let's use that instead.
 
@@ -126,13 +126,15 @@ Since we're using `CephBlockPool`s which only supports the `ReadWriteOnce` acces
 
 Anyway, with all those values set, it's time to commit and push!
 
+---
+
 Now for some reason the deployment never seemed to conclude successfully from Flux's point of view, even though the registry was reachable. It turns out that while setting up the ingress controller, I missed a small detail: The ingress controller admission hook.
 
 ```bash
 Internal error occurred: failed calling webhook "validate.nginx.ingress.kubernetes.io": Post https://ingress-nginx-controller-admission.ingress-nginx.svc:443/extensions/v1beta1/ingresses?timeout=30s: context deadline exceeded
 ```
 
-When deploying [Kubernetes Ingress Nginx](@/posts/bare-metal-kubernetes-part-4-ingress-dns-certificates/index.md#deploying-the-controller-with-flux), it also sets up an admission hook that checks the validity of the incoming ingresses, "admitting" ones that are correctly defined. But there's nothing wrong with our Harbor ingress, the problem lies elsewhere.
+When deploying [Kubernetes' ingress nginx](@/posts/bare-metal-kubernetes-part-4-ingress-dns-certificates/index.md#deploying-the-controller-with-flux), it also sets up an admission hook that checks the validity of the incoming ingresses, "admitting" ones that are correctly defined. But there's nothing wrong with our Harbor ingress, the problem lies elsewhere.
 
 Having deployed ingress-nginx with `hostNetwork: true`, the admission controller too is exposed on the node itself, which means that our `CiliumClusterWideNetworkPolicy` applies, and since we haven't explicitly allowed access to the admission controller's port `8443` on the node, the traffic is dropped. We can fix this by allowing access to the admission controller port in our policy:
 
@@ -156,16 +158,17 @@ Next, let's set up proxy caches for some of the bigger registries.
 
 # Harbor Proxy Caches
 
-Using our list of used images above as a reference, we setup Registries for each, setting up users and providing the authentication details where applicable:
+Using our list of used images above as a reference, we setup *Registries* for each, setting up users and providing the authentication details where applicable:
+
 ![Mirror Registries](registries.png)
 
-Next, we need to define Projects which use these Registries as their upstream backends.
+Next, we need to define *Projects* which use these *Registries* as their upstream backends.
 
-Essentially we create projects like `docker.io` hosted at `registry.kronform.pius.dev/docker.io` which opaquely queries the registry at *https://docker.io* behind the scenes.
+Essentially we create a Harbor project named `docker.io` hosted at `registry.kronform.pius.dev/docker.io` which opaquely queries the actual registry at *https://docker.io* behind the scenes.
 
 For simplicitly I've named the projects the same as the backing registry, so if we wanted to explicitly use these mirrors we can just prefix it with `registry.kronform.pius.dev/`.
 
-e.g.: `registry.kronform.pius.dev/quay.io/cilium/cilium:v1.13`.
+For example, `quay.io/cilium/cilium:v1.13` => `registry.kronform.pius.dev/quay.io/cilium/cilium:v1.13`.
 
 Here's the list of the configured projects:
 ![Mirror Projects](projects.png)
@@ -178,7 +181,7 @@ The robot account is granted list, get and read permissions on repositories, tag
 
 # Configuring Talos Overrides
 
-With the proxy cache up and running, we should configure one of our Talos machines to use that as a mirror as a test and see if the images are getting pulled through the cache. We'll also specify the actual endpoints in the mirror list, to act as a fallback in in case Harbor fails or needs an upgrade. It can't hardly pull images through itself!
+With the proxy cache up and running, we will configure one of our Talos machines to use that as a mirror to test it and see if the images get pulled through the cache. We'll also specify the actual endpoints in the mirror list, to act as a fallback in in case Harbor fails or needs an upgrade. It can't hardly pull images through itself!
 
 Because the mirror list is a bit long, we'll be applying a patch to the machineconfig instead of using `talosctl edit machineconfig`, so we get it right for all nodes. It would be a real pain to debug why pods are not getting scheduled *sometimes* because one of our nodes happens to have a bad mirror configuration.
 
@@ -243,15 +246,20 @@ If everything worked out, `containerd` should have attempted to pull the image t
 
 We finish up by applying the patch to the two other machines.
 
-Importantly, our `sops` config does not currently cover the `password:` field of our registry config, so we add that before re-fetching and comitting the machineconfigs for safekeeping.
+Importantly, our `sops` config does not currently cover the `password:` field of our registry config, so we add that before backing up, sops-encrypting and committing them to git.
 
 # Conclusion
 
-To tie a neat little bow on this post, let's just go ahead and pull all of our images through our proxy. Since the images are already available on most of the nodes, the best way I cold come up with is to pull the images to our local machine through Harbor:
+To tie a neat little bow on this post, let's just go ahead and pull all of our images through our proxy. Since the images are already available on most of the nodes, we can't just redeploy containers onto them, as it won't trigger another pull. The best way I cold come up with is to pull the images to our local machine through Harbor:
 
 First we gather a comprehensive list of unique images we're using and slap our *https://registry.kronform.pius.dev/* prefix on it, then pull:
 
 ```bash
+[mpd@ish]$ docker login registry.kronform.pius.dev
+Username: robot$proxy-cache
+Password: ********
+Login Succeeded
+
 [mpd@ish]$ kubectl get pods -A -o yaml                  \
   | rg -o "image: (.*)" -r '$1'                         \
   | grep -v '^sha256'                                   \
