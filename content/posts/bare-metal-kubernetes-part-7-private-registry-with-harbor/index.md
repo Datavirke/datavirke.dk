@@ -1,6 +1,6 @@
 +++
 title = "Bare-metal Kubernetes, Part VII: Private Registry with Harbor"
-date = 2023-07-05
+date = 2023-07-06
 draft = false
 [taxonomies]
 tags = ["kubernetes", "hetzner", "harbor", "proxy", "cache", "private registry"]
