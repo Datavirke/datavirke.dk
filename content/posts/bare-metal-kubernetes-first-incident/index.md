@@ -1,12 +1,15 @@
 +++
 title = "Bare-metal Kubernetes: First Incident"
-date = 2023-07-29
+date = 2023-08-01
 draft = false
 [taxonomies]
 tags = ["kubernetes", "talos", "harbor", "incident"]
 +++
 
-Instigating event:
+I attempted to upgrade Talos from 1.4.6 to 1.4.7 and ended up completely breaking scheduling
+across my cluster!
+
+Here's how it happened:
 
 1. Attempted to run talosctl upgrade from 1.4.6 to 1.4.7 for single node.
 2. Forgot '--preserve' flag which should be used when upgrading clusters using Rook(citation?).
