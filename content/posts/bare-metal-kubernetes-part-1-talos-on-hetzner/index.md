@@ -27,12 +27,6 @@ I have a rough sketch of the end product on my mind, which I plan to materialize
 
 * **[Part VII: Private Registry with Harbor](@/posts/bare-metal-kubernetes-part-7-private-registry-with-harbor/index.md)** Persistent storage allows us to store and cache the images we use, so let's!
 
-* **Part VIII: Self-hosted Authentication with Kanidm** Using the root/admin credentials everywhere is easy, but not exactly secure. Using an OIDC-capable identity management solution we can hopefully switch most of our services to SSO.
-
-* **Part IX: Monitoring with Prometheus and Grafana** We have a lot of workers and workloads, but very little insight into how they're performing. Let's fix that.
-
-* **Part X: Log collection** Metrics are great for seeing *if* something is wrong, but logs helps to explain *why*.
-
 Complete source code for the live cluster is available [@github/MathiasPius/kronform](https://github.com/MathiasPius/kronform)
 
 # Choosing a Kubernetes Distribution
