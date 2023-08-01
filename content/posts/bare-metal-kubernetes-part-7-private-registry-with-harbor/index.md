@@ -18,9 +18,6 @@ One *type* of dependency we're relying heavily on, is the presence of container 
 * [Part V: Scaling Out](@/posts/bare-metal-kubernetes-part-5-scaling-out/index.md)
 * [Part VI: Persistent Storage with Rook Ceph](@/posts/bare-metal-kubernetes-part-6-persistent-storage-with-rook-ceph/index.md)
 * **[Part VII: Private Registry with Harbor](@/posts/bare-metal-kubernetes-part-7-private-registry-with-harbor/index.md)**
-* Part VIII: Self-hosted Authentication with Kanidm
-* Part IX: Monitoring with Prometheus and Grafana
-* Part X: Log collection
 
 Complete source code for the live cluster is available [@github/MathiasPius/kronform](https://github.com/MathiasPius/kronform)
 
@@ -269,5 +266,4 @@ Login Succeeded
 ```
 <small>Some of the images might assume the default `docker.io` so for any images which fails to pull, we just edit it manually and run it again.</small>
 
-
-In **Part VIII: Self-hosted Authentication with Kanidm**, we'll experiment with an Identity Management platform called [kanidm](https://kanidm.com/) and see if we can use it to configure OIDC login for Harbor and Kubernetes itself!
+All done!

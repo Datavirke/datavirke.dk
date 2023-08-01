@@ -18,9 +18,6 @@ Storing things like machine configurations, Talos config files and network polic
 * [Part V: Scaling Out](@/posts/bare-metal-kubernetes-part-5-scaling-out/index.md)
 * [Part VI: Persistent Storage with Rook Ceph](@/posts/bare-metal-kubernetes-part-6-persistent-storage-with-rook-ceph/index.md)
 * [Part VII: Private Registry with Harbor](@/posts/bare-metal-kubernetes-part-7-private-registry-with-harbor/index.md)
-* Part VIII: Self-hosted Authentication with Kanidm
-* Part IX: Monitoring with Prometheus and Grafana
-* Part X: Log collection
 
 Complete source code for the live cluster is available at: https://github.com/MathiasPius/kronform
 
