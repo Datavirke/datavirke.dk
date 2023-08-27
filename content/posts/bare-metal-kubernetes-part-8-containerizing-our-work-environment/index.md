@@ -147,3 +147,6 @@ the container:
 ```Dockerfile
 USER ${UID}
 ```
+
+# GnuPG
+
