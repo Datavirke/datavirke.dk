@@ -40,7 +40,7 @@ that the Rook manifest object is "too old":
 
 Listing pods in the `rook-ceph` namespace shows that some containers are failing to 
 fetch images, showing state `ImagePullBackOff`, crucially the operator is one of them:
-```
+```txt
 rook-ceph-operator-857f946667-qrhxm    0/1    ImagePullBackOff    0    96m
 ```
 
@@ -112,7 +112,7 @@ shutdown of the node earlier, we see that `registry` and `redis` have
 recovered from the ordeal, but the `core` service is still broken.
 
 Checking the logs, reveals that it can't find the postgres database:
-```text
+```txt
 2023-07-29T12:36:24Z [ERROR] [/common/utils/utils.go:108]:
   failed to connect to tcp://harbor-registry-postgresql:5432,
   retry after 2 seconds :dial tcp 10.110.80.47:5432: connect: operation not permitted
@@ -126,7 +126,7 @@ With our harbor helm chart configuration, harbor should deploy its own postgres 
 as a `StatefulSet` and use it, so why isn't it running?
 
 Describing the `harbor-registry-postgresql` set reveals the following:
-```text
+```txt
 Warning  FailedCreate  109s (x105 over 24h) statefulset-controller
   create Pod harbor-registry-postgresql-0 in StatefulSet harbor-registry-postgresql failed
   error: Pod "harbor-registry-postgresql-0" is invalid:
@@ -193,7 +193,7 @@ Checking out the source code for the rook operator, I can't find any hardcoded
 versions of this container, which means it must be coming from somewhere else.
 
 Checking the logs of the new operator pod, something catches my eye:
-```text
+```txt
 2023-07-29 13:53:39.975016 E | ceph-nodedaemon-controller:
   ceph version not found for image "quay.io/ceph/ceph:v17.2.31"
   used by cluster "rook-ceph" in namespace "rook-ceph".
