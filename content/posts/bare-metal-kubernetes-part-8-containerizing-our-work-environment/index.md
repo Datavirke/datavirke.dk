@@ -150,3 +150,4 @@ USER ${UID}
 
 # GnuPG
 
+# Decrypting on launch (entrypoint)
