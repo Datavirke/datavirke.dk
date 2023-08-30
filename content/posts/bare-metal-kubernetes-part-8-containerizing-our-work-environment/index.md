@@ -213,4 +213,47 @@ docker run -it --rm                       \
 A bit of a mouthful. At this stage I'd suggest either throwing this blurb into a script file so you don't have
 to [wear out your up-arrow key](https://www.commitstrip.com/en/2017/02/28/definitely-not-lazy/?)
 
-# Decrypting on launch (entrypoint)
+# Incorporating our Credentials
+
+Up until now I've of course been using the `kubectl` and `talosctl` binaries installed on my host operating system,
+which meant installing our kubeconfig and talosconfig files in my local home directory so they could find them.
+Since everything is moving into the container now, those credential files have to move too.
+
+The obvious thing to do, is to just mount the `~/.kube` and `~/.talos` directories directly, but this exposes
+*all* our Talos/Kubernetes clusters to the container, not just the one we're operating on, and we have to mount
+multiple directories.
+
+Since talosconfig and kubeconfig already exist in an encrypted state in the repository, and we now have gpg & sops
+configured within the container, a much cleaner approach would be to simply decrypt on the fly and install ephemeral
+kube and talos configuration files *inside* the container.
+
+This is easily achievable, by overriding the default `bash` entrypoint of the debian bookworm image.
+
+First, create our decryption script `tools/entrypoint.sh`:
+
+```bash
+#!/usr/bin/env bash
+
+mkdir /home/user/.talos
+sops -d --input-type=yaml --output-type=yaml talosconfig > /home/user/.talos/config
+
+mkdir /home/user/.kube
+sops -d --input-type=yaml --output-type=yaml kubeconfig > /home/user/.kube/config
+
+bash
+```
+
+In all its simplicity, the script just decrypts and installs our configs, then hands over the reigns to bash.
+Sops can work with arbitrary data, so the `--input-type` and `--output-type` options are necessary, to let it
+now that the passed in files aren't fully encrypted, but actually just contain partially encrypted yaml. Usually
+sops is smart enough to figure this out on its own, but since there's no `yaml` extension on either of the files
+it needs a little  help.
+
+Next, we need to obviously copy this script into the container image, and instruct Docker to execute it as the first thing:
+
+```Dockerfile
+COPY --chown=user:user --chmod=0700 entrypoint.sh /usr/bin/local/entrypoint
+ENTRYPOINT ["/usr/bin/local/entrypoint"]
+```
+
+Now we won't even need to keep our credentials around on our machines. Sweet!
