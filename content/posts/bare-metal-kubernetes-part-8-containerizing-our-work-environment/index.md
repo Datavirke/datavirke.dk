@@ -258,3 +258,150 @@ ENTRYPOINT ["/usr/bin/local/entrypoint"]
 ```
 
 Now we won't even need to keep our credentials around on our machines. Sweet!
+
+## Painless Updating
+With all that in place, let's take our container for a spin!
+
+The latest version of Talos is `1.5.1`, putting us a couple of versions behind, and ditto for Kubernetes. Let's start with Talos.
+
+### Upgrading Talos
+
+Luckily upgrading from `1.4.7` to `1.5.1` requires no special attention or at least none that affect us, however the only supported
+upgrade path by Talos between minor versions is from latest patch to latest patch. This means that in order to arrive at `1.5.1`,
+we have to take a detour to `1.4.8`, since `8` would be the latest patch for the minor version `4`.
+
+Let's get to it!
+
+We start by upgrading the version of talos insalled in our container to the version we want to run. This isn't strictly necessary
+to do at this point, since the `talosctl upgrade` command simply takes an image doesn't much care if the version we're installing
+is behind or ahead, but by upgrading our local version first the default image to upgrade to will automatically be our target version,
+meaning we won't accidentally fat-finger the procedure and initiate a rollback.
+
+Change the version in our Dockerfile:
+```Dockerfile
+ARG TALOSCTL_VERSION="1.4.8"
+```
+
+Once rebuilt, we enter our container. I've written a [justfile](https://github.com/MathiasPius/kronform/blob/main/talosconfig) script
+for making it a little easier for mysel. If you're not familiar with Just, you should be able to glean what's going on from the link.
+
+```bash
+[mpd@ish] $ just tools
+docker run -it --rm                         \
+    -v $(pwd):/data                         \
+    -v /run/user/1000/:/run/user/1000/:ro   \
+    -v $HOME/.gnupg:/home/user/.gnupg:ro    \
+    tools:latest
+user@104e7ee67743:/data$ # And we're in!
+```
+
+Presented with our very anonymous "user" terminal, we'll kick off the upgrade procedure. Taking care to include the `--preserve` option,
+so as to not repeat the massive blunder that was [The First Incident](@/posts/bare-metal-kubernetes-first-incident/index.md).
+
+```bash
+user@104e7ee67743:/data$ talosctl -n 159.69.60.182 upgrade --preserve
+```
+We don't have to include the `--image` option here, since it defaults to the version of our `talosctl`, which is already `1.4.8`
+
+Talos does its thing, cordoning the node, upgrading Talos and booting into its upgraded version.
+
+Let's see if everything is working as intended. Listing all our nodes, shows that the one node has indeed been upgraded:
+```bash
+user@104e7ee67743:/data$ kubectl get nodes -o wide
+NAME   STATUS   VERSION   INTERNAL-IP     OS-IMAGE         KERNEL-VERSION
+n1     Ready    v1.27.4   159.69.60.182   Talos (v1.4.8)   6.1.44-talos
+n2     Ready    v1.27.4   88.99.105.56    Talos (v1.4.7)   6.1.41-talos
+n3     Ready    v1.27.4   46.4.77.66      Talos (v1.4.7)   6.1.41-talos
+```
+Out of an abundance of caution, I also quickly log into the Ceph dashboard to check that all OSDs have recovered.
+
+Next, we upgrade the remaining two nodes. Making sure that the cluster is healthy between each upgrade.
+
+```bash
+user@104e7ee67743:/data$ kubectl get nodes -o wide
+NAME   STATUS   VERSION   INTERNAL-IP     OS-IMAGE         KERNEL-VERSION
+n1     Ready    v1.27.4   159.69.60.182   Talos (v1.4.8)   6.1.44-talos
+n2     Ready    v1.27.4   88.99.105.56    Talos (v1.4.8)   6.1.44-talos
+n3     Ready    v1.27.4   46.4.77.66      Talos (v1.4.8)   6.1.44-talos
+```
+So far so good! Now at `1.4.8` across the board and no worse for wear we repeat the procedure, but this time wth `1.5.1`:
+```Dockerfile
+ARG TALOSCTL_VERSION="1.5.1"
+```
+
+And yadda, yadda, yadda...
+
+```bash
+user@e2029f39cf11:/data$ kubectl get nodes -o wide
+NAME   STATUS   VERSION   INTERNAL-IP     OS-IMAGE         KERNEL-VERSION
+n1     Ready    v1.27.4   159.69.60.182   Talos (v1.5.1)   6.1.46-talos
+n2     Ready    v1.27.4   88.99.105.56    Talos (v1.5.1)   6.1.46-talos
+n3     Ready    v1.27.4   46.4.77.66      Talos (v1.5.1)   6.1.46-talos
+```
+
+We're on `1.5.1`! At this point I manually edited the machineconfigs of each Talos node to `1.5.1`, just so they wouldn't
+have to start from scratch at the the initial `1.4.6` in case of a rebuild
+
+Next up, Kubernetes!
+
+## Upgrading Kubernetes
+
+Before upgrading Kubernetes, even between minor versions, you should always check out the list of deprecations
+and list of changes, to see if it might interfere with any of your workloads!
+
+As it turns out, the version of Cilium we're running (`1.13.6`) doesn't even support Kubernetes `1.28`, nor does
+even the latest stable version! Kubernetes `1.28` support is only available in Cilium `1.15` which is a pre-release
+version, so we'll have to settle for `1.27.5` for now.
+
+No matter, a patch upgrade is still an upgrade.
+
+Since `talosctl` will be doing the upgrading for us and we've already updated it, we're technically already set.
+But like before, it'd be great to be able to interact with the cluster directly after the upgrade from within the
+container with a known-compatible client, so let's upgrade `kubectl` right away:
+
+```Dockerfile
+ARG KUBECTL_VERSION="1.27.5"
+```
+
+We rebuild the container once again and jump into it. This time we have to specify the target version, since talos
+1.5.1 by default assumes 1.28.0 is desired. We also do a dry run just as an extra precaution:
+
+```bash
+user@5fe767daf694:/data$ talosctl -n 159.69.60.182 upgrade-k8s --dry-run --to 1.27.5
+```
+
+Satisfied that this won't unleash hell on earth, we snip the `--dry-run` and go again:
+
+```bash
+user@5fe767daf694:/data$ talosctl -n 159.69.60.182 upgrade-k8s --to 1.27.5
+```
+
+Although we're explicitly selecting node `159.69.60.182` here, the `upgrade-k8s` command will automatically upgrade
+the entire cluster, one piece at a time.
+
+
+Once omplete, make sure everything is in order:
+
+```bash
+user@5fe767daf694:/data$ kubectl get nodes -o wide
+NAME   STATUS   VERSION   INTERNAL-IP     OS-IMAGE         KERNEL-VERSION
+n1     Ready    v1.27.5   159.69.60.182   Talos (v1.5.1)   6.1.46-talos
+n2     Ready    v1.27.5   88.99.105.56    Talos (v1.5.1)   6.1.46-talos
+n3     Ready    v1.27.5   46.4.77.66      Talos (v1.5.1)   6.1.46-talos
+```
+v1.27.5 across the board, and all nodes ready. Looking good!
+
+Finally, we update our local copies of the machineconfigs for our nodes, in case we need to recreate them,
+using the handy [machineconfigs/update-configs.sh](https://github.com/MathiasPius/kronform/blob/main/machineconfigs/update-configs.sh) script,
+and commit the new ones to git.
+
+## Conclusion
+This post went on a little longer than originally intended, but ended up providing (I would say) a good explanation of not only *how* to
+containerize a Kubernetes-related work environment, but also a pretty decent demonstration of *why*, as exemplified by the extremely short
+section dedicated to the upgrade procedure.
+
+This post was initially inspired by a reader who ran into problems following a previous post, because I had completely failed to document
+*which* version of each of the tools I was using, and not knowing there were multiple wildly different `yq`.
+
+If nothing else, this post and the accompanying code changes in the GitHub repository, should provide a definitive reference, for anyone
+else trying to follow along at home :)
