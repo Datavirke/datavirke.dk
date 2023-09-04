@@ -344,7 +344,7 @@ have to start from scratch at the the initial `1.4.6` in case of a rebuild
 
 Next up, Kubernetes!
 
-## Upgrading Kubernetes
+### Upgrading Kubernetes
 
 Before upgrading Kubernetes, even between minor versions, you should always check out the list of deprecations
 and list of changes, to see if it might interfere with any of your workloads!
