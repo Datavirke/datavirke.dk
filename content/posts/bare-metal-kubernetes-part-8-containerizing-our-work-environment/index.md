@@ -403,7 +403,7 @@ Although we're explicitly selecting node `159.69.60.182` here, the `upgrade-k8s`
 the entire cluster, one piece at a time.
 
 
-Once omplete, make sure everything is in order:
+Once complete, make sure everything is in order:
 
 ```bash
 user@5fe767daf694:/data$ kubectl get nodes -o wide
