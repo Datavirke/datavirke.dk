@@ -18,8 +18,9 @@ Storing things like machine configurations, Talos config files and network polic
 * [Part V: Scaling Out](@/posts/bare-metal-kubernetes-part-5-scaling-out/index.md)
 * [Part VI: Persistent Storage with Rook Ceph](@/posts/bare-metal-kubernetes-part-6-persistent-storage-with-rook-ceph/index.md)
 * [Part VII: Private Registry with Harbor](@/posts/bare-metal-kubernetes-part-7-private-registry-with-harbor/index.md)
+* [Part VIII: Containerizing our Work Environment](@/posts/bare-metal-kubernetes-part-8-containerizing-our-work-environment/index.md)
 
-Complete source code for the live cluster is available at: https://github.com/MathiasPius/kronform
+Complete source code for the live cluster is available [@github/MathiasPius/kronform](https://github.com/MathiasPius/kronform)
 
 # Choosing FluxCD
 I've previously used ArgoCD for keeping helm releases up to date within a cluster, but they didn't support specifying helm values files in a separate directory from the chart, which effectively meant that if you needed to change *even a single value* of a chart, you had to basically create a new chart which had the original as a sub-chart and set the values that way.[^1]

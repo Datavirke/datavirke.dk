@@ -18,6 +18,7 @@ One *type* of dependency we're relying heavily on, is the presence of container 
 * [Part V: Scaling Out](@/posts/bare-metal-kubernetes-part-5-scaling-out/index.md)
 * [Part VI: Persistent Storage with Rook Ceph](@/posts/bare-metal-kubernetes-part-6-persistent-storage-with-rook-ceph/index.md)
 * **[Part VII: Private Registry with Harbor](@/posts/bare-metal-kubernetes-part-7-private-registry-with-harbor/index.md)**
+* [Part VIII: Containerizing our Work Environment](@/posts/bare-metal-kubernetes-part-8-containerizing-our-work-environment/index.md)
 
 Complete source code for the live cluster is available [@github/MathiasPius/kronform](https://github.com/MathiasPius/kronform)
 
@@ -267,3 +268,6 @@ Login Succeeded
 <small>Some of the images might assume the default `docker.io` so for any images which fails to pull, we just edit it manually and run it again.</small>
 
 All done!
+
+In [Part VIII: Containerizing our Work Environment](@/posts/bare-metal-kubernetes-part-8-containerizing-our-work-environment/index.md),
+we compile all the tools necessary to interact with and maintain our cluster, and then upgrade Talos from `1.4.7` to `1.5.1` and Kubernetes from `1.27.4` to `1.27.5`!

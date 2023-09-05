@@ -16,6 +16,7 @@ It's time to get serious about this whole *clustering* thing, so let's add some 
 * **[Part V: Scaling Out](@/posts/bare-metal-kubernetes-part-5-scaling-out/index.md)**
 * [Part VI: Persistent Storage with Rook Ceph](@/posts/bare-metal-kubernetes-part-6-persistent-storage-with-rook-ceph/index.md)
 * [Part VII: Private Registry with Harbor](@/posts/bare-metal-kubernetes-part-7-private-registry-with-harbor/index.md)
+* [Part VIII: Containerizing our Work Environment](@/posts/bare-metal-kubernetes-part-8-containerizing-our-work-environment/index.md)
 
 Complete source code for the live cluster is available [@github/MathiasPius/kronform](https://github.com/MathiasPius/kronform)
 

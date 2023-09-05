@@ -27,6 +27,8 @@ I have a rough sketch of the end product on my mind, which I plan to materialize
 
 * **[Part VII: Private Registry with Harbor](@/posts/bare-metal-kubernetes-part-7-private-registry-with-harbor/index.md)** Persistent storage allows us to store and cache the images we use, so let's!
 
+* **[Part VIII: Containerizing our Work Environment](@/posts/bare-metal-kubernetes-part-8-containerizing-our-work-environment/index.md)** Compile our entire working environment into a single image to make upgrades easy.
+
 Complete source code for the live cluster is available [@github/MathiasPius/kronform](https://github.com/MathiasPius/kronform)
 
 # Choosing a Kubernetes Distribution
