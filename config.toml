@@ -19,7 +19,7 @@ taxonomies = [
            {name = "tags", rss = true}
 ]
 
-generate_feed = "true"
+generate_feed = true
 
 [markdown]
 # Whether to do syntax highlighting
