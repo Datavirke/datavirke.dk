@@ -12,7 +12,7 @@ across my cluster!
 Here's how it happened:
 
 1. Attempted to run talosctl upgrade from 1.4.6 to 1.4.7 for single node.
-2. Forgot '--preserve' flag which should be used when upgrading clusters using Rook(citation?).
+2. Forgot '--preserve' flag which I thought was required when upgrading clusters with rook[^1]
 3. Aborted upgrade (CTRL+C). Node had not yet cordoned, but still went through with attempt.
 4. Booted into 1.4.7. Then rebooted and rolled back to 1.4.6.
 
@@ -71,7 +71,7 @@ The idea being that in case the registry goes down, talos/containerd would know 
 just circumvent it and go straight to the source.
 
 I can't seem to find any documentation covering this kind of fallback at the moment,
-but I am positive, that this was how it was meant to work[^1].
+but I am positive, that this was how it was meant to work[^2].
 
 Of course, it could be the case that the docker pull is *also* failing, perhaps due
 to rate-limiting so I test it locally by pulling `rook/ceph:v1.11.10` directly from
@@ -274,6 +274,9 @@ With decent monitoring I hope to also limit the compounding complexity of attemp
 Switching to a high availability deployment of Harbor is not worth the complexity, especially
 not with the registry fallback now working as expected.
 
-[^1]: I have not been able to find any such documentation, as far as I can tell, *nobody*
+[^1]: As it turns out this is [only strictly necessary when using only a single `mon` instance](https://www.talos.dev/v1.5/kubernetes-guides/configuration/ceph-with-rook/#talos-linux-considerations)
+      and since we have three, letting the upgrade go ahead would have been inconsequential.
+
+[^2]: I have not been able to find any such documentation, as far as I can tell, *nobody*
       does it this way, and in fact removing the explicit fallback, ended up fixing the
       issue. Sure seems like I just pulled it out of thin air in retrospect..
