@@ -538,6 +538,10 @@ hr.post-end {
   }
 }
 
+.footnote-definition + .footnote-definition {
+  margin-top: 10px;
+}
+
 .footnote-definition {
   font-size: 0.85em;
 
