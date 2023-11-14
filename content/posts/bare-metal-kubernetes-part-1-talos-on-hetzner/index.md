@@ -6,6 +6,8 @@ draft = false
 tags = ["kubernetes", "hetzner", "talos"]
 +++
 
+<i>Discussion on <a href="https://news.ycombinator.com/item?id=37443404">Hacker News</a></i>
+
 I've been running a Kubernetes cluster on a mix of virtual and bare metal machines with Hetzner for about a year now, and while the setup has served me well, being a very exploratory exercise at the time it wasn't very well documented.
 
 To rectify this, and to get a chance to play with some tools I wasn't aware of at the time, I've decided to rebuild the cluster from scratch and document the process through these posts.

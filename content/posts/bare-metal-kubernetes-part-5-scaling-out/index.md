@@ -6,6 +6,8 @@ draft = false
 tags = ["kubernetes", "talos", "hetzner", "cilium", "etcd"]
 +++
 
+<i>Discussion on <a href="https://news.ycombinator.com/item?id=37443404">Hacker News</a></i>
+
 It's time to get serious about this whole *clustering* thing, so let's add some nodes!
 
 *Series Index*

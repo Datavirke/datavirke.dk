@@ -5,6 +5,9 @@ draft = false
 [taxonomies]
 tags = ["kubernetes", "talos", "ingress", "external-dns", "nginx", "cert-manager"]
 +++
+
+<i>Discussion on <a href="https://news.ycombinator.com/item?id=37443404">Hacker News</a></i>
+
 Let's reflect on the state of the cluster so far:
 
 * Single node, which is chugging along beauifully.

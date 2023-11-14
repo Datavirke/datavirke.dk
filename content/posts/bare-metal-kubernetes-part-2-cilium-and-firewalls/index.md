@@ -6,6 +6,8 @@ draft = false
 tags = ["kubernetes", "hetzner", "talos", "cilium"]
 +++
 
+<i>Discussion on <a href="https://news.ycombinator.com/item?id=37443404">Hacker News</a></i>
+
 Ah, that new cluster smell!
 
 We've got a brand new cluster exposed directly to the internet, and it doesn't even work yet. Let's get to work remedying that.

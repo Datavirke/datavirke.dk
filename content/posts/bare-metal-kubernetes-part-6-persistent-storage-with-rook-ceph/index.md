@@ -6,6 +6,8 @@ draft = false
 tags = ["kubernetes", "hetzner", "talos", "ceph", "rook", "storage"]
 +++
 
+<i>Discussion on <a href="https://news.ycombinator.com/item?id=37443404">Hacker News</a></i>
+
 If you've been following this series closely you might have seen the two extra hard drives with sizes ranging from 2-4TB on each of the provisioned nodes, totalling 6 disks and 16TB of capacity.
 
 All that capacity is great, but it'd be even better if we could trade some of it for a few guarantees that it won't be gone temporarily when we upgrade a node, or forever the second one of our disks or nodes die.

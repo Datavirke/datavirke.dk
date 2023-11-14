@@ -6,6 +6,8 @@ draft = false
 tags = ["kubernetes", "fluxcd", "sops", "gitops"]
 +++
 
+<i>Discussion on <a href="https://news.ycombinator.com/item?id=37443404">Hacker News</a></i>
+
 We've got an actually working cluster now that is relatively secure, but rebuilding it and keeping it up to date is going to be a real chore.
 
 Storing things like machine configurations, Talos config files and network policies in a git repository would help with the rebuilding part, but not with keeping it up to date. For that, we'll need some kind of continuous deployment system like [ArgoCD](https://argo-cd.readthedocs.io/en/stable/) or [FluxCD](https://fluxcd.io/).

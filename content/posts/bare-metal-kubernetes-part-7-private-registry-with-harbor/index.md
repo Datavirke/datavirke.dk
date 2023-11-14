@@ -6,6 +6,8 @@ draft = false
 tags = ["kubernetes", "hetzner", "harbor", "proxy", "cache", "private registry"]
 +++
 
+<i>Discussion on <a href="https://news.ycombinator.com/item?id=37443404">Hacker News</a></i>
+
 Keeping track of all your dependencies can be extremely difficult. With modern packaging, distribution, and deployment methods enabling really fast iteration (as evidenced by this series), it's easy to build dependencies on all kinds of external services, without realizing it.
 
 One *type* of dependency we're relying heavily on, is the presence of container registries for all our workloads. Even our [Linux/Kubernetes distribution](https://www.talos.dev/v1.4/reference/configuration/#installconfig) is built on container images! Being able to cache these images locally would be a nice insurance against network issues and registry outages, and for that we'll need a private registry with proxy caching, also known as a pull-through cache.
