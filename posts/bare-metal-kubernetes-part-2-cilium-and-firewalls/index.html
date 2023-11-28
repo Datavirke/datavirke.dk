@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <meta name="robots" content="max-snippet:0, max-image-preview:large">
+    <meta name="description" content="Experts in Kubernetes, DevOps, and Cloud Infrastructure.">
+  
+    <!-- Google / Search Engine Tags -->
+
+	
+    <title>Bare-metal Kubernetes, Part II: Cilium CNI &amp; Firewalls - Datavirke</title>
+	<meta itemprop="name" content="Bare-metal Kubernetes, Part II: Cilium CNI &amp; Firewalls - Datavirke">
+	<meta property="og:title" content="Bare-metal Kubernetes, Part II: Cilium CNI &amp; Firewalls - Datavirke">
+	<meta name="twitter:title" content="Bare-metal Kubernetes, Part II: Cilium CNI &amp; Firewalls - Datavirke">
+    
+
+	
+	<meta itemprop="description" content="Experts in Kubernetes, DevOps, and Cloud Infrastructure.">
+	<meta property="og:description" content="Experts in Kubernetes, DevOps, and Cloud Infrastructure.">
+	<meta name="twitter:description" content="Experts in Kubernetes, DevOps, and Cloud Infrastructure.">
+	
+
+	<meta name="twitter:card" content="summary_large_image">    
+    <meta name="twitter:image" content="https://datavirke.dk/logo.svg">
+	<meta itemprop="image" content="https://datavirke.dk/logo.svg">
+	<meta property="og:image" content="https://datavirke.dk/logo.svg">
+    <meta property="og:url" content="https:&#x2F;&#x2F;datavirke.dk">
+    <meta property="og:type" content="website">
+    
+    <link rel="apple-touch-icon" sizes="180x180" href="https://datavirke.dk/apple-touch-icon.png"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="https://datavirke.dk/favicon-32x32.png" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="https://datavirke.dk/favicon-16x16.png"
+    />
+    <link
+      rel="shortcut icon"
+      href="https://datavirke.dk/favicon.ico"
+    />
+    <link rel="stylesheet" href="https://datavirke.dk/style.css"/>
+    
+    
+    <link rel="alternate" type="application/rss+xml" title="RSS" href="https://datavirke.dk/atom.xml">
+    
+
+	<script src="https://datavirke.dk/mermaid.min.js"></script>
+	<script>
+		let config = { 
+			startOnLoad: true, 
+
+			darkMode: true
+		};
+		mermaid.initialize(config);
+	
+	</script>
+
+	<script type="application/ld+json">
+		{
+		"@context": "https://schema.org",
+		"@type": "Organization",
+		"url": "https://datavirke.dk",
+		"logo": "https://datavirke.dk/logo.svg"
+		}
+	</script>
+  </head>
+  <body id="page">
+
+	
+<header id="site-header" class="animated faster">
+  <div class="hdr-wrapper section-inner">
+    <div class="hdr-left">
+      <div class="site-branding">
+        <a href="https:&#x2F;&#x2F;datavirke.dk">Datavirke</a>
+      </div>
+      <nav class="site-nav hide-in-mobile">
+            
+        
+        <a href="https://datavirke.dk/about">About</a>
+        
+        <a href="https://datavirke.dk/experience">Experience</a>
+        
+        <a href="https://datavirke.dk/posts">Blog</a>
+        
+      </nav>
+    </div>
+    <div class="hdr-right hdr-icons">
+      <span class="hdr-social hide-in-mobile">
+        
+
+<a href="https:&#x2F;&#x2F;github.com&#x2F;MathiasPius" target="_blank" rel="noopener me"
+   title="github">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+  
+</a>
+
+<a href="https:&#x2F;&#x2F;www.linkedin.com&#x2F;in&#x2F;mathias-pius&#x2F;" target="_blank" rel="noopener me"
+   title="linkedin">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+  
+</a>
+
+<a href="mailto:mathias@datavirke.dk" target="_blank" rel="noopener me"
+   title="email">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+  
+</a>
+
+<a href="https:&#x2F;&#x2F;fosstodon.org&#x2F;@MathiasPius" target="_blank" rel="noopener me"
+   title="twitter">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path></svg>
+  
+</a>
+
+
+      </span>
+      <button id="menu-btn" class="hdr-btn" title="Menu">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="feather feather-menu"
+        >
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>
+<div id="mobile-menu" class="animated fast">
+  <ul>
+    
+    <li><a href="https://datavirke.dk/about">About</a></li>
+    
+    <li><a href="https://datavirke.dk/experience">Experience</a></li>
+    
+    <li><a href="https://datavirke.dk/posts">Blog</a></li>
+    
+  </ul>
+</div>
+
+	
+	
+
+		
+<main class="site-main section-inner animated fadeIn faster">
+  <article class="thin">
+	<header class="post-header">
+	  <div class="post-meta">
+		
+		<span>Jun 23, 2023</span>
+		<small> - 
+<span class="reading-time" title="Estimated read time">
+  
+  8 min read
+  
+</span>
+</small>
+		
+            
+	  </div>
+	  <h1>Bare-metal Kubernetes, Part II: Cilium CNI &amp; Firewalls</h1>
+	</header>
+
+	<div class="content">
+        
+	  <p><i>Discussion on <a href="https://news.ycombinator.com/item?id=37443404">Hacker News</a></i></p>
+<p>Ah, that new cluster smell!</p>
+<p>We've got a brand new cluster exposed directly to the internet, and it doesn't even work yet. Let's get to work remedying that.</p>
+<p><em>Series Index</em></p>
+<ul>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-1-talos-on-hetzner/">Part I: Talos on Hetzner</a></li>
+<li><strong><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-2-cilium-and-firewalls/">Part II: Cilium CNI &amp; Firewalls</a></strong></li>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-3-encrypted-gitops-with-fluxcd/">Part III: Encrypted GitOps with FluxCD</a></li>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-4-ingress-dns-certificates/">Part IV: Ingress, DNS and Certificates</a></li>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-5-scaling-out/">Part V: Scaling Out</a></li>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-6-persistent-storage-with-rook-ceph/">Part VI: Persistent Storage with Rook Ceph</a></li>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-7-private-registry-with-harbor/">Part VII: Private Registry with Harbor</a></li>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-8-containerizing-our-work-environment/">Part VIII: Containerizing our Work Environment</a></li>
+</ul>
+<p>Complete source code for the live cluster is available <a href="https://github.com/MathiasPius/kronform">@github/MathiasPius/kronform</a></p>
+<h1 id="picking-a-cni"><a class="zola-anchor" href="#picking-a-cni" aria-label="Anchor link for: picking-a-cni">Picking a CNI</a></h1>
+<p>Talos Linux defaults to using <a href="https://ubuntu.com/kubernetes/docs/cni-flannel">flannel</a>, and both it and <a href="https://docs.tigera.io/calico/latest/about/">calico</a> (which are the two other CNIs I have experience with) are perfectly adequate CNIs.</p>
+<p>The last few clusters I've built have used Cilium, and I've come to really like it. It's extremely performant and has a lot of great features out of the box:</p>
+<ul>
+<li>Optional wireguard-based inter-node communication.</li>
+<li>Network Policies that you can <a href="https://docs.cilium.io/en/latest/network/kubernetes/policy/#ciliumclusterwidenetworkpolicy">attach to nodes</a> (CRD-based node firewalling!)</li>
+<li><a href="https://docs.cilium.io/en/latest/network/kubernetes/policy/#ciliumclusterwidenetworkpolicy">Hubble</a>, super intuitive visualization of traffic within your cluster/namespaces.</li>
+</ul>
+<h1 id="installing-cilium"><a class="zola-anchor" href="#installing-cilium" aria-label="Anchor link for: installing-cilium">Installing Cilium</a></h1>
+<p>Compared to bootstrapping a node, this is a breeze. Just install the helm chart!</p>
+<p>First we need to add the Helm repository locally.</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> helm repo add cilium https://helm.cilium.io/
+</span></code></pre>
+<p>Then define some variables.</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> export KUBERNETES_API_SERVER_ADDRESS=api.kronform.pius.dev
+</span><span style="color:#bf616a;">[mpd@ish]$</span><span> export KUBERNETES_API_SERVER_PORT=6443
+</span><span style="color:#bf616a;">[mpd@ish]$</span><span> export CLUSTER_DOMAIN=local.kronform.pius.dev
+</span></code></pre>
+<p>And then install:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> helm install                                         \
+</span><span>    cilium                                                      \
+</span><span>    cilium/cilium                                               \
+</span><span style="color:#bf616a;">    --version</span><span> 1.13.4                                            \
+</span><span style="color:#bf616a;">    --namespace</span><span> kube-system                                     \
+</span><span style="color:#bf616a;">    --set</span><span> ipam.mode=kubernetes                                  \
+</span><span style="color:#bf616a;">    --set</span><span> hostFirewall.enabled=true                             \
+</span><span style="color:#bf616a;">    --set</span><span> hubble.relay.enabled=true                             \
+</span><span style="color:#bf616a;">    --set</span><span> hubble.ui.enabled=true                                \
+</span><span style="color:#bf616a;">    --set</span><span> hubble.peerService.clusterDomain=${</span><span style="color:#bf616a;">CLUSTER_DOMAIN</span><span>}    \
+</span><span style="color:#bf616a;">    --set</span><span> etcd.clusterDomain=${</span><span style="color:#bf616a;">CLUSTER_DOMAIN</span><span>}                  \
+</span><span style="color:#bf616a;">    --set</span><span> kubeProxyReplacement=strict                           \
+</span><span style="color:#bf616a;">    --set</span><span> securityContext.capabilities.ciliumAgent=&quot;</span><span style="color:#a3be8c;">{CHOWN,KILL,NET_ADMIN,NET_RAW,IPC_LOCK,SYS_ADMIN,SYS_RESOURCE,DAC_OVERRIDE,FOWNER,SETGID,SETUID}</span><span>&quot; \
+</span><span style="color:#bf616a;">    --set</span><span> securityContext.capabilities.cleanCiliumState=&quot;</span><span style="color:#a3be8c;">{NET_ADMIN,SYS_ADMIN,SYS_RESOURCE}</span><span>&quot; \
+</span><span style="color:#bf616a;">    --set</span><span> cgroup.autoMount.enabled=false                        \
+</span><span style="color:#bf616a;">    --set</span><span> cgroup.hostRoot=/sys/fs/cgroup                        \
+</span><span style="color:#bf616a;">    --set</span><span> k8sServiceHost=&quot;$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">KUBERNETES_API_SERVER_ADDRESS</span><span style="color:#a3be8c;">}</span><span>&quot;     \
+</span><span style="color:#bf616a;">    --set</span><span> k8sServicePort=&quot;$</span><span style="color:#a3be8c;">{</span><span style="color:#bf616a;">KUBERNETES_API_SERVER_PORT</span><span style="color:#a3be8c;">}</span><span>&quot;
+</span></code></pre>
+<p><small>In Part III I'll translate this into a FluxCD <code>HelmChart</code> so we can manage it in git and keep it updated.</small></p>
+<p>Most of options above are taken directly from <a href="https://www.talos.dev/v1.4/kubernetes-guides/network/deploying-cilium/">Talos' own Cilium deployment guide</a>, and provide a better explanation than I could. The options I've set are:</p>
+<ul>
+<li><code>--set hubble.peerService.clusterDomain=${CLUSTER_DOMAIN}</code> because I changed the cluster domain.</li>
+<li><code>--set etcd.clusterDomain=${CLUSTER_DOMAIN}</code> same as above.</li>
+<li><code>--set hubble.relay.enabled=true</code> because Hubble is great for debugging network policy errors.</li>
+<li><code>--set hubble.relay.enabled=true</code> same as above.</li>
+<li><code>--set hostFirewall.enabled=true</code> so we can use <code>CiliumClusterWideNetworkPolicy</code> for firewalling.</li>
+</ul>
+<p>Following along in the Talos Dashboard, we can see Cilium is doing work, and very soon after our node enters the <code>Ready</code> state:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> kubectl get nodes                                         
+</span><span style="color:#bf616a;">NAME</span><span>   STATUS   ROLES           AGE     VERSION
+</span><span style="color:#bf616a;">n1</span><span>     Ready    control-plane   4h37m   v1.27.2
+</span></code></pre>
+<p>We have connectivity! The cluster is now operational, but it's still completely open to the internet.</p>
+<h1 id="firewalling"><a class="zola-anchor" href="#firewalling" aria-label="Anchor link for: firewalling">Firewalling</a></h1>
+<p>Cilium comes with a custom network policy resource which unlike regular Kubernetes <a href="https://kubernetes.io/docs/concepts/services-networking/network-policies/">Network Policies</a> can be deployed across the entire cluster, instead of just within a namespace. This enables them to apply to cluster-wide resources like for example <em>nodes</em>.</p>
+<p>With some cleverly defined <em>CiliumClusterWideNetworkPolicies</em> targeted at our cluster nodes, we can define - using the familiar Kubernetes interface - firewall rules to protect our nodes from the outside world.</p>
+<h2 id="doors-ajar"><a class="zola-anchor" href="#doors-ajar" aria-label="Anchor link for: doors-ajar">Doors Ajar</a></h2>
+<p>There's one little catch(-22) though. Since our firewall rules are defined in-cluster, it means if we lock ourselves out, we won't have any way of getting back in to fix the problem which locked us out in the first place. I'd like to add an IP whitelist to the Kubernetes and Talos API endpoints, but since my IP address is subject to change, I don't want to risk locking myself out and waiting for the DHCP gods to let me back in.</p>
+<p>By using <code>CiliumClusterWideNetworkPolicy</code> for <em>most</em> things, but leaving some Hetzner Robot configured escape hatches in, we can spare ourselves a complete cluster rebuild in the future, if catastrophy strikes.</p>
+<p>This means that we'll have to configure these specific rules in the <a href="https://docs.hetzner.com/robot/dedicated-server/firewall/">Hetzner Robot Firewall</a> interface. I'm creating a Firewall Template with the rules, so we can just re-apply it when we add more nodes to the cluster later on. The template looks like this:</p>
+<p><img src="https://datavirke.dk/posts/bare-metal-kubernetes-part-2-cilium-and-firewalls/hetzner-rules.png" alt="Hetzner Firewall Rules" /></p>
+<p>By defining the rules in this way, with an explicit <em>allow</em> for myself, then explicit <em>discard</em> for accessing Talos and Kube API Server, followed by explicit <em>allow</em> I succeeded in limiting access to those API endpoints to only me:</p>
+<ol>
+<li>If the source address is my home, immediately accept the packet, ending evaluation.</li>
+<li>If rule 1 did not apply AND the destination port is Kube API Server (<code>6443</code>), discard the packet.</li>
+<li>If rule 1 &amp; 2 did not apply AND the destination port is in the Talos range (<code>50000-500001</code>), discard the packet.</li>
+<li>If none of the above rules applied, allow the packet through.</li>
+</ol>
+<p>This is a very permissive firewall, but keep in mind that we'll be managing most of our firewalling with Cilium.</p>
+<p>Speaking of escape hatches, let's talk about Cilium's PolicyAuditMode.</p>
+<h2 id="policy-audit-mode"><a class="zola-anchor" href="#policy-audit-mode" aria-label="Anchor link for: policy-audit-mode">Policy Audit Mode</a></h2>
+<p>Applying network policies to nodes it's entirely possible that I end up breaking Talos' ability to communicate with the cluster, or break cluster access in some other funky ways. For this reason it's a good idea to put our node into <a href="https://docs.cilium.io/en/v1.13/security/host-firewall/#enable-policy-audit-mode-for-the-host-endpoint">Audit Mode</a> which means that policy violations (dropped packets) won't actually be dropped, they'll just report the violation.</p>
+<p>This means that we can inspect the audit log and see if our policies are working, without the risk of losing access to the node.</p>
+<p>Enabling audit mode is a little involved since Cilium operates on its own internal representation of the cluster via identities and endpoints, so first we need to figure out what our node's endpoint is. We could install the cilium cli locally and use that to interact with our setup, but it's much easier to just the cilium pod already deployed inside our cluster, so let's find it.</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> kubectl</span><span style="color:#bf616a;"> -n</span><span> kube-system get pods</span><span style="color:#bf616a;"> -l </span><span>&quot;</span><span style="color:#a3be8c;">k8s-app=cilium</span><span>&quot;
+</span><span style="color:#bf616a;">NAME</span><span>           READY   STATUS    RESTARTS   AGE
+</span><span style="color:#bf616a;">cilium-gtxsf</span><span>   1/1     Running   0          12h
+</span></code></pre>
+<p>In Cilium identities are just 16-bit integers assigned by Cilium, with the lower range reserved for <em>special</em> identities which cover things like <em>hosts</em> (1), <em>world</em> (2), <em>kube-apiserver</em> (7), which lets you easily write policies which target one of these.</p>
+<p>Identity <code>1</code> is the one reserved for hosts, which is what we want to put into audit mode. We can't put an identity into audit mode though, so first we need to find the endpoint matching the <em>host</em> identity:</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>[mpd@ish]$ kubectl exec -n kube-system cilium-gtxsf \
+</span><span>  -- cilium endpoint list -o jsonpath=&#39;{[?(@.status.identity.id==1)].id}&#39;
+</span><span>555
+</span></code></pre>
+<p>I suggest running the command without the jsonpath filter just to get a feel for what the output looks like, I only used the jsonpath filter because the output is a bit too large and confusing to fit on this page.</p>
+<p>Anyway, we have our endpoint now: <code>555</code>. Let's check the configuration of our host endpoint first:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> kubectl exec</span><span style="color:#bf616a;"> -n</span><span> kube-system cilium-gtxsf \
+</span><span>  -- cilium endpoint config 555
+</span><span style="color:#bf616a;">ConntrackAccounting</span><span>               : Enabled
+</span><span style="color:#bf616a;">ConntrackLocal</span><span>                    : Disabled
+</span><span style="color:#bf616a;">Debug</span><span>                             : Disabled
+</span><span style="color:#bf616a;">DebugLB</span><span>                           : Disabled
+</span><span style="color:#bf616a;">DebugPolicy</span><span>                       : Disabled
+</span><span style="color:#bf616a;">DropNotification</span><span>                  : Enabled
+</span><span style="color:#bf616a;">MonitorAggregationLevel</span><span>           : Medium
+</span><span style="color:#bf616a;">PolicyAuditMode</span><span>                   : Disabled </span><span style="color:#65737e;"># &lt;-- this one
+</span><span style="color:#bf616a;">PolicyVerdictNotification</span><span>         : Enabled
+</span><span style="color:#bf616a;">TraceNotification</span><span>                 : Enabled
+</span></code></pre>
+<p>It's disabled as expected, so let's enable it:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> kubectl exec</span><span style="color:#bf616a;"> -n</span><span> kube-system cilium-gtxsf \
+</span><span>  -- cilium endpoint config 555 PolicyAuditMode=Enabled
+</span><span style="color:#bf616a;">Endpoint</span><span> 555 configuration updated successfully
+</span></code></pre>
+<p>And checking the config again:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">kubectl</span><span> exec</span><span style="color:#bf616a;"> -n</span><span> kube-system cilium-gtxsf \
+</span><span>  -- cilium endpoint config 555 | </span><span style="color:#bf616a;">grep</span><span> PolicyAuditMode
+</span><span style="color:#bf616a;">PolicyAuditMode</span><span>                   : Enabled
+</span></code></pre>
+<p>Great!</p>
+<p>Since we haven't actually applied our network policy yet, there won't be any policies to audit.</p>
+<p>Cilium uses an enforcement mode to decide how traffic is controlled. The default enforcement mode means that endpoints which don't have any policies associated with them default to allow, which means that unless we actually have applied a policy, Cilium won't care. Of course you can put Cilium into strict enforcement mode, and we might at a later point, but without any policies assigned, we'd literally break everything by doing so.</p>
+<h2 id="building-up"><a class="zola-anchor" href="#building-up" aria-label="Anchor link for: building-up">Building Up</a></h2>
+<p>Since we've enabled audit mode, we can go ham applying the dumbest most restrictive possible policy without worry. Let's write a small policy for allowing traffic from anywhere to Talos's and Kubernetes' APIs, since we block those in the Hetzner firewall anyway.</p>
+<pre data-lang="yaml" style="background-color:#2b303b;color:#c0c5ce;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#65737e;"># policies/host-fw-control-plane.yaml
+</span><span style="color:#bf616a;">apiVersion</span><span>: &quot;</span><span style="color:#a3be8c;">cilium.io/v2</span><span>&quot;
+</span><span style="color:#bf616a;">kind</span><span>: </span><span style="color:#a3be8c;">CiliumClusterwideNetworkPolicy
+</span><span style="color:#bf616a;">metadata</span><span>:
+</span><span>  </span><span style="color:#bf616a;">name</span><span>: &quot;</span><span style="color:#a3be8c;">host-fw-control-plane</span><span>&quot;
+</span><span style="color:#bf616a;">spec</span><span>:
+</span><span>  </span><span style="color:#bf616a;">description</span><span>: &quot;</span><span style="color:#a3be8c;">control-plane specific access rules.</span><span>&quot;
+</span><span>  </span><span style="color:#bf616a;">nodeSelector</span><span>:
+</span><span>    </span><span style="color:#bf616a;">matchLabels</span><span>:
+</span><span>      </span><span style="color:#bf616a;">node-role.kubernetes.io/control-plane</span><span>: &quot;&quot;
+</span><span>  </span><span style="color:#bf616a;">ingress</span><span>:
+</span><span>  </span><span style="color:#65737e;"># Allow access to kube api from anywhere.
+</span><span>  - </span><span style="color:#bf616a;">fromEntities</span><span>:
+</span><span>    - </span><span style="color:#a3be8c;">world
+</span><span>    - </span><span style="color:#a3be8c;">cluster
+</span><span>    </span><span style="color:#bf616a;">toPorts</span><span>:
+</span><span>    - </span><span style="color:#bf616a;">ports</span><span>:
+</span><span>      - </span><span style="color:#bf616a;">port</span><span>: &quot;</span><span style="color:#a3be8c;">6443</span><span>&quot;
+</span><span>        </span><span style="color:#bf616a;">protocol</span><span>: &quot;</span><span style="color:#a3be8c;">TCP</span><span>&quot;
+</span><span>
+</span><span>  </span><span style="color:#65737e;"># Allow access to talos from anywhere.
+</span><span>  </span><span style="color:#65737e;"># https://www.talos.dev/v1.4/learn-more/talos-network-connectivity/
+</span><span>  - </span><span style="color:#bf616a;">fromEntities</span><span>:
+</span><span>    - </span><span style="color:#a3be8c;">world
+</span><span>    - </span><span style="color:#a3be8c;">cluster
+</span><span>    </span><span style="color:#bf616a;">toPorts</span><span>:
+</span><span>    - </span><span style="color:#bf616a;">ports</span><span>:
+</span><span>      - </span><span style="color:#bf616a;">port</span><span>: &quot;</span><span style="color:#a3be8c;">50000</span><span>&quot;
+</span><span>        </span><span style="color:#bf616a;">protocol</span><span>: &quot;</span><span style="color:#a3be8c;">TCP</span><span>&quot;
+</span><span>      - </span><span style="color:#bf616a;">port</span><span>: &quot;</span><span style="color:#a3be8c;">50001</span><span>&quot;
+</span><span>        </span><span style="color:#bf616a;">protocol</span><span>: &quot;</span><span style="color:#a3be8c;">TCP</span><span>&quot;
+</span></code></pre>
+<p>Applying the above:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> kubectl apply</span><span style="color:#bf616a;"> -f</span><span> policies/host-fw-control-plane.yaml
+</span></code></pre>
+<p>We still have access! Let's take a look at the audit log and see how our policy is fairing using <code>cilium monitor</code> and limiting the output to traffic coming to or from our node endpoint <code>555</code>:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> kubectl exec</span><span style="color:#bf616a;"> -n</span><span> kube-system cilium-gtxsf -- cilium monitor -t policy-verdict --related-to 555
+</span></code></pre>
+<p><img src="https://datavirke.dk/posts/bare-metal-kubernetes-part-2-cilium-and-firewalls/welcome-to-internet.png" alt="Welcome to the Internet" /></p>
+<p>Welcome to the internet! Your ports <em>will</em> be scanned!</p>
+<p>The only things I really care about at this stage however, is if our policy allows us to interact with Kubernetes and Talos, so let's try those</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> kubectl get pods
+</span><span style="color:#bf616a;">[mpd@ish]$</span><span> talosctl</span><span style="color:#bf616a;"> -n</span><span> 159.69.60.182 time
+</span></code></pre>
+<p>Following along in the monitor log we can see <code>action allow</code> for those entries:</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>Policy verdict log: flow 0x0 local EP ID 555, remote ID world, proto 6, ingress, action allow, match L3-L4, 89.23.224.44:56372 -&gt; 159.69.60.182:6443 tcp SYN
+</span><span>
+</span><span>Policy verdict log: flow 0x0 local EP ID 555, remote ID world, proto 6, ingress, action allow, match L3-L4, 89.23.224.44:58916 -&gt; 159.69.60.182:50000 tcp SYN
+</span></code></pre>
+<p>Awesome!</p>
+<p><code>cilium monitor</code> is a great tool for debugging connectivity issues and designing policies. Starting out with a very restrictive policy and just adding rules is a simple but sometimes time-consuming way of building robust policies. The policy below is one I've come up with based on documentation of Kubernetes workings and some trial and error:</p>
+<pre data-lang="yaml" style="background-color:#2b303b;color:#c0c5ce;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#65737e;"># policies/host-fw-control-plane.yaml
+</span><span style="color:#bf616a;">apiVersion</span><span>: &quot;</span><span style="color:#a3be8c;">cilium.io/v2</span><span>&quot;
+</span><span style="color:#bf616a;">kind</span><span>: </span><span style="color:#a3be8c;">CiliumClusterwideNetworkPolicy
+</span><span style="color:#bf616a;">metadata</span><span>:
+</span><span>  </span><span style="color:#bf616a;">name</span><span>: &quot;</span><span style="color:#a3be8c;">host-fw-control-plane</span><span>&quot;
+</span><span style="color:#bf616a;">spec</span><span>:
+</span><span>  </span><span style="color:#bf616a;">description</span><span>: &quot;</span><span style="color:#a3be8c;">control-plane specific access rules.</span><span>&quot;
+</span><span>  </span><span style="color:#bf616a;">nodeSelector</span><span>:
+</span><span>    </span><span style="color:#bf616a;">matchLabels</span><span>:
+</span><span>      </span><span style="color:#bf616a;">node-role.kubernetes.io/control-plane</span><span>: &quot;&quot;
+</span><span>  </span><span style="color:#bf616a;">ingress</span><span>:
+</span><span>  </span><span style="color:#65737e;"># Allow access to kube api from anywhere.
+</span><span>  - </span><span style="color:#bf616a;">fromEntities</span><span>:
+</span><span>    - </span><span style="color:#a3be8c;">world
+</span><span>    - </span><span style="color:#a3be8c;">cluster
+</span><span>    </span><span style="color:#bf616a;">toPorts</span><span>:
+</span><span>    - </span><span style="color:#bf616a;">ports</span><span>:
+</span><span>      - </span><span style="color:#bf616a;">port</span><span>: &quot;</span><span style="color:#a3be8c;">6443</span><span>&quot;
+</span><span>        </span><span style="color:#bf616a;">protocol</span><span>: &quot;</span><span style="color:#a3be8c;">TCP</span><span>&quot;
+</span><span>
+</span><span>  </span><span style="color:#65737e;"># Allow access to talos from anywhere.
+</span><span>  </span><span style="color:#65737e;"># https://www.talos.dev/v1.4/learn-more/talos-network-connectivity/
+</span><span>  - </span><span style="color:#bf616a;">fromEntities</span><span>:
+</span><span>    - </span><span style="color:#a3be8c;">world
+</span><span>    - </span><span style="color:#a3be8c;">cluster
+</span><span>    </span><span style="color:#bf616a;">toPorts</span><span>:
+</span><span>    - </span><span style="color:#bf616a;">ports</span><span>:
+</span><span>      - </span><span style="color:#bf616a;">port</span><span>: &quot;</span><span style="color:#a3be8c;">50000</span><span>&quot;
+</span><span>        </span><span style="color:#bf616a;">protocol</span><span>: &quot;</span><span style="color:#a3be8c;">TCP</span><span>&quot;
+</span><span>      - </span><span style="color:#bf616a;">port</span><span>: &quot;</span><span style="color:#a3be8c;">50001</span><span>&quot;
+</span><span>        </span><span style="color:#bf616a;">protocol</span><span>: &quot;</span><span style="color:#a3be8c;">TCP</span><span>&quot;
+</span><span>
+</span><span>  </span><span style="color:#65737e;"># Allow kube-proxy-replacement from kube-apiserver
+</span><span>  - </span><span style="color:#bf616a;">fromEntities</span><span>:
+</span><span>    - </span><span style="color:#a3be8c;">kube-apiserver
+</span><span>    </span><span style="color:#bf616a;">toPorts</span><span>:
+</span><span>    - </span><span style="color:#bf616a;">ports</span><span>:
+</span><span>      - </span><span style="color:#bf616a;">port</span><span>: &quot;</span><span style="color:#a3be8c;">10250</span><span>&quot;
+</span><span>        </span><span style="color:#bf616a;">protocol</span><span>: &quot;</span><span style="color:#a3be8c;">TCP</span><span>&quot;
+</span><span>      - </span><span style="color:#bf616a;">port</span><span>: &quot;</span><span style="color:#a3be8c;">4244</span><span>&quot;
+</span><span>        </span><span style="color:#bf616a;">protocol</span><span>: &quot;</span><span style="color:#a3be8c;">TCP</span><span>&quot;
+</span><span>
+</span><span>  </span><span style="color:#65737e;"># Allow access from hubble-relay to hubble-peer (running on the node)
+</span><span>  - </span><span style="color:#bf616a;">fromEndpoints</span><span>:
+</span><span>    - </span><span style="color:#bf616a;">matchLabels</span><span>:
+</span><span>        </span><span style="color:#bf616a;">k8s-app</span><span>: </span><span style="color:#a3be8c;">hubble-relay
+</span><span>    </span><span style="color:#bf616a;">toPorts</span><span>:
+</span><span>    - </span><span style="color:#bf616a;">ports</span><span>:
+</span><span>      - </span><span style="color:#bf616a;">port</span><span>: &quot;</span><span style="color:#a3be8c;">4244</span><span>&quot;
+</span><span>        </span><span style="color:#bf616a;">protocol</span><span>: &quot;</span><span style="color:#a3be8c;">TCP</span><span>&quot;
+</span><span>
+</span><span>   </span><span style="color:#65737e;"># Allow metrics-server to scrape
+</span><span>  - </span><span style="color:#bf616a;">fromEndpoints</span><span>:
+</span><span>    - </span><span style="color:#bf616a;">matchLabels</span><span>:
+</span><span>        </span><span style="color:#bf616a;">k8s-app</span><span>: </span><span style="color:#a3be8c;">metrics-server
+</span><span>    </span><span style="color:#bf616a;">toPorts</span><span>:
+</span><span>    - </span><span style="color:#bf616a;">ports</span><span>:
+</span><span>      - </span><span style="color:#bf616a;">port</span><span>: &quot;</span><span style="color:#a3be8c;">10250</span><span>&quot;
+</span><span>        </span><span style="color:#bf616a;">protocol</span><span>: &quot;</span><span style="color:#a3be8c;">TCP</span><span>&quot;
+</span><span>
+</span><span>  </span><span style="color:#65737e;"># Allow ICMP Ping from/to anywhere.
+</span><span>  - </span><span style="color:#bf616a;">icmps</span><span>:
+</span><span>    - </span><span style="color:#bf616a;">fields</span><span>:
+</span><span>      - </span><span style="color:#bf616a;">type</span><span>: </span><span style="color:#d08770;">8
+</span><span>        </span><span style="color:#bf616a;">family</span><span>: </span><span style="color:#a3be8c;">IPv4
+</span><span>      - </span><span style="color:#bf616a;">type</span><span>: </span><span style="color:#d08770;">128
+</span><span>        </span><span style="color:#bf616a;">family</span><span>: </span><span style="color:#a3be8c;">IPv6
+</span><span>
+</span><span>  </span><span style="color:#65737e;"># Allow cilium tunnel/health checks from other nodes.
+</span><span>  - </span><span style="color:#bf616a;">fromEntities</span><span>:
+</span><span>    - </span><span style="color:#a3be8c;">remote-node
+</span><span>    </span><span style="color:#bf616a;">toPorts</span><span>:
+</span><span>    - </span><span style="color:#bf616a;">ports</span><span>:
+</span><span>      - </span><span style="color:#bf616a;">port</span><span>: &quot;</span><span style="color:#a3be8c;">8472</span><span>&quot;
+</span><span>        </span><span style="color:#bf616a;">protocol</span><span>: &quot;</span><span style="color:#a3be8c;">UDP</span><span>&quot;
+</span><span>      - </span><span style="color:#bf616a;">port</span><span>: &quot;</span><span style="color:#a3be8c;">4240</span><span>&quot;
+</span><span>        </span><span style="color:#bf616a;">protocol</span><span>: &quot;</span><span style="color:#a3be8c;">TCP</span><span>&quot;
+</span><span>
+</span><span>  </span><span style="color:#65737e;"># Allow access to etcd and api from other nodes.
+</span><span>  - </span><span style="color:#bf616a;">fromEntities</span><span>:
+</span><span>    - </span><span style="color:#a3be8c;">remote-node
+</span><span>    </span><span style="color:#bf616a;">toPorts</span><span>:
+</span><span>    - </span><span style="color:#bf616a;">ports</span><span>:
+</span><span>      - </span><span style="color:#bf616a;">port</span><span>: &quot;</span><span style="color:#a3be8c;">2379</span><span>&quot;
+</span><span>        </span><span style="color:#bf616a;">protocol</span><span>: &quot;</span><span style="color:#a3be8c;">TCP</span><span>&quot;
+</span><span>      - </span><span style="color:#bf616a;">port</span><span>: &quot;</span><span style="color:#a3be8c;">2380</span><span>&quot;
+</span><span>        </span><span style="color:#bf616a;">protocol</span><span>: &quot;</span><span style="color:#a3be8c;">TCP</span><span>&quot;
+</span><span>      - </span><span style="color:#bf616a;">port</span><span>: &quot;</span><span style="color:#a3be8c;">51871</span><span>&quot;
+</span><span>        </span><span style="color:#bf616a;">protocol</span><span>: &quot;</span><span style="color:#a3be8c;">UDP</span><span>&quot;
+</span><span>
+</span></code></pre>
+<h1 id="final-exam"><a class="zola-anchor" href="#final-exam" aria-label="Anchor link for: final-exam">Final Exam</a></h1>
+<p>Relatively confident in our ability to not lock ourselves out, it's time to leave Policy Audit Mode and test our skills for real.</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> kubectl exec</span><span style="color:#bf616a;"> -n</span><span> kube-system cilium-gtxsf \
+</span><span>  -- cilium endpoint config 555 PolicyAuditMode=Disabled
+</span><span style="color:#bf616a;">Endpoint</span><span> 555 configuration updated successfully
+</span></code></pre>
+<p>Running our Talos and Kubectl tests from before again proves we still have access. Meanwhile all the <code>action audit</code> entries in our cilium monitor output have turned into <code>audit deny</code>, which means traffic is actually getting dropped.</p>
+<p>In <a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-3-encrypted-gitops-with-fluxcd/">Part III: Encrypted GitOps with FluxCD</a>, we'll setup FluxCD and try to get as much of our code (machineconfigs, helm releases, network policies, etc.) shoved into Git so we can be all <em><strong>~GitOpsy~</strong></em></p>
+
+	</div>
+	<hr class="post-end">
+	<footer class="post-info">
+    
+	  <p>
+		<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-tag meta-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7" y2="7"></line></svg>
+		
+		
+		<span class="tag"><a href="https://datavirke.dk/tags/kubernetes/">kubernetes</a></span>
+		
+		<span class="tag"><a href="https://datavirke.dk/tags/hetzner/">hetzner</a></span>
+		
+		<span class="tag"><a href="https://datavirke.dk/tags/talos/">talos</a></span>
+		
+		<span class="tag"><a href="https://datavirke.dk/tags/cilium/">cilium</a></span>
+		
+		
+    </p>
+    
+    <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>2178 Words</p>
+    
+    <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>2023-06-23</p>
+    
+	</footer>
+  </article>
+    
+  
+  <div class="post-nav thin">
+	
+	
+  </div>
+
+  
+</main>
+
+	  </div>
+	  
+	  
+
+
+
+<footer id="site-footer" class="section-inner thin animated fadeIn faster">
+  <p>&copy; 2023 <a href="https:&#x2F;&#x2F;datavirke.dk">Mathias Pius</a> &mdash; CVR: 43033336</p>
+  <p>Made with <a href="https://www.getzola.org" target="_blank" rel="noopener">Zola</a> &#183; Theme <a href="https://github.com/VersBinarii/hermit_zola" target="_blank" rel="noopener">Hermit_Zola</a>
+	
+	&#183; <a href="https://datavirke.dk/atom.xml" target="_blank" title="rss"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-rss"><path d="M4 11a9 9 0 0 1 9 9"></path><path d="M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1"></circle></svg></a>
+	
+  </p>
+</footer>
+
+
+
+
+	</div>
+	
+	<script src="https://datavirke.dk/js/main.js"></script>
+
+	<!-- Math rendering -->
+	<link rel="stylesheet" href="/katex.min.css">
+    <script defer src="/katex.min.js"></script>
+    <script defer src="/auto-render.min.js" onload="renderMathInElement(document.body, { delimiters: [ {left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}, {left: '\\[', right: '\\]', display: true}, {left: '\\(', right: '\\)', display: false}]});"></script>
+
+    
+		<link href="/vs2015.css" rel="stylesheet">
+		<script src="/highlight.pack.js"></script>
+		<script src="/highlightjs-badge.min.js"></script>
+		<script>
+			var pres = document.querySelectorAll("pre>code");
+			for (var i = 0; i < pres.length; i++) {
+				hljs.highlightBlock(pres[i]);
+			}
+		</script>
+		
+			<script src="/clipboard.min.js"></script>
+			<script>
+				var options = {
+					copyIconClass: "gg-clipboard",
+					checkIconClass: "gg-check"
+				};
+				window.highlightJsBadge(options);
+			</script>
+		
+
+	
+
+	
+	<script src="https://datavirke.dk/js/main.js"></script>
+
+    
+    
+
+	
+  </body>
+</html>
