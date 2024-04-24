@@ -31,6 +31,8 @@ I have a rough sketch of the end product on my mind, which I plan to materialize
 
 * **[Part VIII: Containerizing our Work Environment](@/posts/bare-metal-kubernetes-part-8-containerizing-our-work-environment/index.md)** Compile our entire working environment into a single image to make upgrades easy.
 
+* **[Part IX: Renovating old Deployments](@/posts/bare-metal-kubernetes-part-9-renovating-old-deployments/index.md)** Automating the tedious chore of making sure all your helm charts and images are up to date.
+
 Complete source code for the live cluster is available [@github/MathiasPius/kronform](https://github.com/MathiasPius/kronform)
 
 # Choosing a Kubernetes Distribution
