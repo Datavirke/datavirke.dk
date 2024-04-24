@@ -3,7 +3,7 @@ base_url = "https://datavirke.dk"
 
 # Used in RSS by default
 title = "Datavirke"
-description = "Experts in Kubernetes, DevOps, and Cloud Infrastructure."
+description = "Freelance DevOps Engineer building reliable infrastructure using Kubernetes, Cloud & Rust."
 # The default language, used in RSS
 default_language = "en"
 
@@ -15,9 +15,7 @@ build_search_index = true
 
 theme = "hermit_zola"
 
-taxonomies = [
-           {name = "tags", rss = true}
-]
+taxonomies = [{ name = "tags", rss = true }]
 
 generate_feed = true
 
@@ -42,7 +40,7 @@ hermit_social = [
     { name = "github", link = "https://github.com/MathiasPius" },
     { name = "linkedin", link = "https://www.linkedin.com/in/mathias-pius/" },
     { name = "email", link = "mailto:mathias@datavirke.dk" },
-    { name = "twitter", link = "https://fosstodon.org/@MathiasPius" }
+    { name = "twitter", link = "https://fosstodon.org/@MathiasPius" },
 ]
 
 [extra.highlightjs]
