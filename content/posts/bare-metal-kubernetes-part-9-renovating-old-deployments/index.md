@@ -216,7 +216,7 @@ With all that configured, our renovate all of a sudden has a lot more work to do
 
 Staying on top of updates is now as easy as keeping track of the periodically updated Dependency Dashboard issue and shooting off and merging PRs whenever a new version rolls around.
 
-## Conflusion
+## Conclusion
 
 Renovate let's you stop worrying about how much of your cluster is dangerously out of date, because it will literally tell you!
 
