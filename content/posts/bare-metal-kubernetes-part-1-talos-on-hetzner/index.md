@@ -33,6 +33,8 @@ I have a rough sketch of the end product on my mind, which I plan to materialize
 
 * **[Part IX: Renovating old Deployments](@/posts/bare-metal-kubernetes-part-9-renovating-old-deployments/index.md)** Automating the tedious chore of making sure all your helm charts and images are up to date.
 
+* **[Part X: Metrics and Monitoring with OpenObserve](@/posts/bare-metal-kubernetes-part-10-metrics-and-monitoring-with-openobserve/index.md)** Setting up OpenObserve to keep monitor and measure our cluster's health, and all the workloads running on it.
+
 Complete source code for the live cluster is available [@github/MathiasPius/kronform](https://github.com/MathiasPius/kronform)
 
 # Choosing a Kubernetes Distribution
