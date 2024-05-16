@@ -114,7 +114,7 @@ resources:
   - namespace.yaml
   - secret.yaml
   - openobserve.yaml
-  - https://github.com/open-telemetry/opentelemetry-operator/releases/download/v0.100.0/opentelemetry-operator.yaml
+  - https://github.com/open-telemetry/opentelemetry-operator/releases/download/v0.99.0/opentelemetry-operator.yaml
  ```
 
 The next obvious step is to deploy the [openobserve-collector](https://github.com/openobserve/openobserve-helm-chart/tree/main/charts/openobserve-collector) which claims to be an opinionated [`OpentelemetryCollector`](https://opentelemetry.io/docs/collector/), but this is where things kind of got out of hand.
