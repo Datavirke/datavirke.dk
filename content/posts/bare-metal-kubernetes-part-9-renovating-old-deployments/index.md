@@ -6,8 +6,6 @@ draft = false
 tags = ["kubernetes", "talos", "renovate", "day-2"]
 +++
 
-<i>Discussion on <a href="https://news.ycombinator.com/item?id=37443404">Hacker News</a></i>
-
 As of writing this, my cluster has been up and running [mostly](@/posts/bare-metal-kubernetes-first-incident/index.md) as expected for 300 days!
 
 During this time I've made an effort to keep Talos and Kubernetes somewhat up to date, as well all the different helm charts and kustomizations running within it, whenever I stumbled on an out of date version. This has worked reasonably well, primarily because of the small scope of the project, but it'd be real nice to *automate* this process. That way I get to stay up to date with all the developments, and don't accidentally leave a piece of critical infrastructure to fester in some corner, collecting CVEs.

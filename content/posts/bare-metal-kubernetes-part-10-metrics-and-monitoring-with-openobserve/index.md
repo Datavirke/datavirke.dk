@@ -1,12 +1,10 @@
 +++
 title = "Bare-metal Kubernetes, Part X: Metrics and Monitoring with OpenObserve"
-date = 2024-04-24
+date = 2024-05-16
 draft = false
 [taxonomies]
 tags = ["openobserve", "metrics", "monitoring", "talos", "kubernetes"]
 +++
-
-<i>Discussion on <a href="https://news.ycombinator.com/item?id=37443404">Hacker News</a></i>
 
 I intended to write this section much earlier, especially after [the incident](@/posts/bare-metal-kubernetes-first-incident/index.md) where monitoring would have proven very helpful,
 but my previous experience configuring my cluster for metrics and log aggregation using a combination of Prometheus, Grafana and Loki was a little lackluster.

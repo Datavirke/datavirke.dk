@@ -6,8 +6,6 @@ draft = false
 tags = ["kubernetes", "talos", "docker", "container", "upgrade"]
 +++
 
-<i>Discussion on <a href="https://news.ycombinator.com/item?id=37443404">Hacker News</a></i>
-
 Setting up Kubernetes once is not *that* hard to get right. Where things usually start to go
 wrong is when the cluster is left to its own devices for extended periods of time.
 
