@@ -8,12 +8,12 @@ tags = ["openobserve", "metrics", "monitoring", "talos", "kubernetes"]
 
 <i>Discussion on <a href="https://news.ycombinator.com/item?id=37443404">Hacker News</a></i>
 
-I intended to write this section much earlier, especially after [the incident](@/porsts/bare-metal-kubernetes-first-incident/index.md) where monitoring would have proven very helpful,
+I intended to write this section much earlier, especially after [the incident](@/posts/bare-metal-kubernetes-first-incident/index.md) where monitoring would have proven very helpful,
 but my previous experience configuring my cluster for metrics and log aggregation using a combination of Prometheus, Grafana and Loki was a little lackluster.
 
 At the time Loki was a somewhat new product which might have contributed to my impression, but it felt very sluggish and not very easy to use, so I was reluctant to put a lot of effort into setting it up just to get disappointed again.
 
-My enthusiasm increased a little bit when [OpenObserve](https://openobserve.ai/) recently popped up on my radar. It sells itself as a sort of all-in-one observability platform with a self-hosting option. While the do-one-thing-well and protocol-first approach of products like Prometheus works extremely well for creating an ecosystem of services which can seamlessly integrate (like Grafana), for something like observability you *really* want an all-encompassing interface which can provide visibility into all aspects of your workloads at once, and not have to switch between Kibana and Grafana to make sense of when exactly your application shit the bed.
+My enthusiasm increased a little bit when [OpenObserve](https://openobserve.ai/) recently popped up on my radar. It sells itself as a sort of all-in-one observability platform with a self-hosting option. While the do-one-thing-well and protocol-first approach of products like Prometheus works extremely well for creating an ecosystem of services which can seamlessly integrate it (like Grafana), for something like observability you *really* want an all-encompassing interface which can provide visibility into all aspects of your workloads at once, and not have to switch between Kibana and Grafana to make sense of when exactly your application shit the bed.
 
 So let's give OpenObserve a whirl!
 
@@ -87,7 +87,7 @@ extraEnv:
 
 Apart from the security stuff, I've also disabled telemetry (really, this needs to be opt-in), granted it a little more local storage, and configured ingress using our previously configured cert-manager cluster issuer `letsencrypt-production`.
 
-That last part actually [did not work](https://github.com/openobserve/openobserve-helm-chart/issues/60). The default `values.yaml` definition for the chart explicitly sets `cert-manager.io/issuer: letsencrypt`, but since we're using a *cluster* issuer, adding our annotation as above breaks the ingress definitions since it now contains the merged values with both the `cert-manager.io/issuer` and `cert-manager.io/cluster-issuer` annotations, meaning cert-manager doesn't know which to use and defaults to the safe choice of doing neither.
+That last part actually [did not work](https://github.com/openobserve/openobserve-helm-chart/issues/60). The default `values.yaml` definition for the chart explicitly sets `cert-manager.io/issuer: letsencrypt`, but since we're using a *cluster* issuer, adding our annotation as above breaks the ingress definitions since it now contains the merged values with both the `cert-manager.io/issuer` and `cert-manager.io/cluster-issuer` annotations, meaning cert-manager doesn't know which to use and defaults to the safe choice of using neither.
 
 I initially got around this by simply editing the ingress directly and removing the `cert-manager.io/issuer` annotation, which allowed cert-manager to proceed with the certificate issuing process. Another fix would be to simply use the built-in namespaced issuer configured in the chart. After sleeping on the problem and googling a bit, it dawned on me that you can actually *remove* default values using `null` as the value, so the real fix was as easy as:
 
@@ -103,15 +103,29 @@ With all those headaches out of the way, we finally have OpenObserve up and runn
 
 ## A Significant Detour
 
-Now that the OpenObserve platform appears to be up and running, it's time to set up the OpenTelemetry operators, which is done by simply `kubect apply`ing [this](https://github.com/open-telemetry/opentelemetry-operator/releases/download/v0.100.0/opentelemetry-operator.yaml) manifest, or in our case pointing a Kustomization at it instead.
+Now that the OpenObserve platform appears to be up and running, it's time to set up the [OpenTelemetry](https://opentelemetry.io/docs/what-is-opentelemetry/) operators, which gives us a Kubernetes-native and very flexible way of gathering metrics and logs from our cluster.
 
-The next obvious step is to deploy the `openobserve-collector` which claims to be an opinionated [`OpentelemetryCollector`](https://opentelemetry.io/docs/collector/), but this is where things kind of got out of hand.
+ Deployment is as easy as `kubect apply`ing [this](https://github.com/open-telemetry/opentelemetry-operator/releases/download/v0.100.0/opentelemetry-operator.yaml) manifest, or in our case pointing a Kustomization at it instead:
 
-The openobserve-collector spawns a DaemonSet of agents which are responsible for collecting metrics and logs from each of the Kubernetes nodes in our cluster, and neither of these worked as expected out of the gate.
+ ```yaml
+# manifests/infrastructure/openobserve/kustomization.yaml
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - namespace.yaml
+  - secret.yaml
+  - openobserve.yaml
+  - https://github.com/open-telemetry/opentelemetry-operator/releases/download/v0.100.0/opentelemetry-operator.yaml
+ ```
+
+The next obvious step is to deploy the [openobserve-collector](https://github.com/openobserve/openobserve-helm-chart/tree/main/charts/openobserve-collector) which claims to be an opinionated [`OpentelemetryCollector`](https://opentelemetry.io/docs/collector/), but this is where things kind of got out of hand.
+
+The openobserve-collector spawns a `DaemonSet` of agents which are responsible for collecting metrics and logs from each of the Kubernetes nodes in our cluster, and neither of these worked as expected out of the gate.
 
 ### Kubelet Metrics
 
-Openobserve's Collector runs as a pod on each node, speaking directly to the Kubelet on port 10250/tcp. The way it goes about doing this, is by getting the `spec.nodeName` from its own pod using [fieldRef](https://kubernetes.io/docs/tasks/inject-data-application/environment-variable-expose-pod-information/), and then relying on DNS resolution to turn this node name into an IP address. Unfortunately, this node name does *not* resolve to an IP address, at least not on Talos 1.6.4 which I was running at the time, but by some chance this feature just happened to added in [1.7.0](https://www.talos.dev/v1.7/talos-guides/network/host-dns/#resolving-talos-cluster-member-names).
+Openobserve's Collector runs as a pod on each node, speaking directly to the Kubelet on port `10250/tcp`. The way it goes about doing this, is by getting the `spec.nodeName` from its own pod using [fieldRef](https://kubernetes.io/docs/tasks/inject-data-application/environment-variable-expose-pod-information/), and then relying on DNS resolution to turn this node name into an IP address. Unfortunately, this node name does *not* resolve to an IP address, at least not on Talos 1.6.4 which I was running at the time, but by some chance this feature just happened to added in [1.7.0](https://www.talos.dev/v1.7/talos-guides/network/host-dns/#resolving-talos-cluster-member-names).
 
 After upgrading to 1.7.0 and enabling both `resolveMembers` and `kubeDNSForwardToHost`, thereby having the in-cluster coredns deployment forward queries it can't answer to the talos host DNS service which *can* resolve node names, it still doesn't work and what's more loads of other things are experiencing problems too! Upon inspecting the coredns deployment, its logs were full of I/O Timeouts:
 
@@ -135,9 +149,15 @@ Messing around with the masquerading options in Cilium, I tried a number of diff
 
 Unfortunately none of these worked out, and I had spent roughly 10 hours attempting to get this to work at this point, so I decided to take a few steps back..
 
-Going back to the original issue which was Openobserve Collector attempting to call out to `https://{{ spec.nodeName }}:10250`, I realized that I could just use the IP address instead! All I needed to do was replace the target with (effectively) `https://{{ status.nodeIp }}:10250`.
+Going back to the original issue which was Openobserve Collector attempting to call out to:
 
-True to form however, the OpenObserve Helm chart provided no way of doing so, so I was forced extract the otherwise quite well designed [`OpenTelemetryCollector`](https://github.com/MathiasPius/kronform/blob/main/manifests/infrastructure/openobserve/agent-collector.yaml) manifests which the helm chart would generate and deploy them manually, allowing me to override the necessary fields.
+> `https://{{ spec.nodeName }}:10250`
+
+I realized that I could of course just use the IP address instead! All I needed to do was replace the target with (effectively):
+
+>  `https://{{ status.nodeIp }}:10250`
+
+True to form however, the OpenObserve Helm chart provided no way of doing so, so I was forced extract the otherwise quite well designed [OpenTelemetryCollector](https://github.com/MathiasPius/kronform/blob/main/manifests/infrastructure/openobserve/agent-collector.yaml) manifests which the helm chart would generate and deploy them manually, allowing me to override the necessary fields.
 
 The change was rather simple. By injecting the node IP into the Pod's environment:
 
@@ -251,7 +271,7 @@ With all this setup finally done, my plan was to design some dashboards to monit
 
 There are still a bunch of tasks left, like configuring the Talos nodes to forward their internal logs to the Fluent-bit forwarder for example, but I think I'll leave that for the next post where I might also setup some alerting for some of the critical services running in the cluster, like my friends' TeamSpeak server, once I've familiarized myself a bit with the OpenObserve platform.
 
-# Conclusion
+## Conclusion
 
 In conclusion, I think OpenObserve is a very interesting platform, and it definitely feels snappy and looks very good. With that said, it's pretty obvious that the platform is new, and (rationally) focusing heavily on their paid/cloud platform which unfortunately leaves the self-hosted option with quite a few gaps as far as deployment process, documentation and standardization goes.
 
