@@ -1,9 +1,9 @@
 +++
 title = "Contemplating Entity Component Architecture"
 date = 2024-05-22
-draft = false
+draft = true
 [taxonomies]
-tags = ["ecs", "programmaing", "rust", "correctness"]
+tags = ["ecs", "programming", "rust", "correctness"]
 [extra]
 toc = true
 +++
@@ -596,7 +596,7 @@ Of course this approach can lead to slightly confusing scenarios... Like what if
 
 ### Weakness: Fluid Objects
 
-One of the key benefits of ECS is that we don't have to define exactly what an entity *is*, but this comes with a few downsides as well. As a huge fan of [sum types](https://en.wikipedia.org/wiki/Tagged_union) as implemented in Rust for example, I really appreciate being able to use pattern matching to know *exactly* what kind of object I'm dealing with. With the ECS approach, emergent behavior becomes possible, for better or [worse](https://www.bay12games.com/dwarves/mantisbt/view.php?id=9195).
+As a huge fan of [sum types](https://en.wikipedia.org/wiki/Tagged_union) as implemented in Rust for example, I really appreciate being able to use pattern matching to know *exactly* what kind of object I'm dealing with. With the ECS approach, emergent behavior becomes possible, for better or [worse](https://www.bay12games.com/dwarves/mantisbt/view.php?id=9195).
 
 What this means in practice is that you need to be very precise when designing your components. Imagine you work for a Winery where you decide to delete customers younger than 18 by targeting all entities with the components `Name` and `Age`, you might inadverdently be mangling half your inventory because the stock-keeping department decided to use `Age` for a slightly different purpose.
 
@@ -611,3 +611,10 @@ The latter solution might sound like a regressing to an OOP-worldview, but the d
 
 
 ## Archetypes
+
+
+## See Also
+
+[David Komer creates an ECS-based ToDo app](https://github.com/dakom/todo-shipyard-lit-dominator/blob/master/rust/src/components.rs)
+
+[Michael F. Bryan explores how you might write a Computer-Aided Design library using an ECS architecture](https://adventures.michaelfbryan.com/posts/ecs-outside-of-games/)
