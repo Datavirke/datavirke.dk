@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <meta name="robots" content="max-snippet:0, max-image-preview:large">
+    <meta name="description" content="Freelance DevOps Engineer building reliable infrastructure using Kubernetes, Cloud &amp; Rust.">
+  
+    <!-- Google / Search Engine Tags -->
+
+	
+    <title>An eventually comprehensive guide to domain name resolution in Ubuntu - Datavirke</title>
+	<meta itemprop="name" content="An eventually comprehensive guide to domain name resolution in Ubuntu - Datavirke">
+	<meta property="og:title" content="An eventually comprehensive guide to domain name resolution in Ubuntu - Datavirke">
+	<meta name="twitter:title" content="An eventually comprehensive guide to domain name resolution in Ubuntu - Datavirke">
+    
+
+	
+	<meta itemprop="description" content="Freelance DevOps Engineer building reliable infrastructure using Kubernetes, Cloud &amp; Rust.">
+	<meta property="og:description" content="Freelance DevOps Engineer building reliable infrastructure using Kubernetes, Cloud &amp; Rust.">
+	<meta name="twitter:description" content="Freelance DevOps Engineer building reliable infrastructure using Kubernetes, Cloud &amp; Rust.">
+	
+
+	<meta name="twitter:card" content="summary_large_image">    
+    <meta name="twitter:image" content="https://datavirke.dk/logo.svg">
+	<meta itemprop="image" content="https://datavirke.dk/logo.svg">
+	<meta property="og:image" content="https://datavirke.dk/logo.svg">
+    <meta property="og:url" content="https:&#x2F;&#x2F;datavirke.dk">
+    <meta property="og:type" content="website">
+    
+    <link rel="apple-touch-icon" sizes="180x180" href="https://datavirke.dk/apple-touch-icon.png"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="https://datavirke.dk/favicon-32x32.png" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="https://datavirke.dk/favicon-16x16.png"
+    />
+    <link
+      rel="shortcut icon"
+      href="https://datavirke.dk/favicon.ico"
+    />
+    <link rel="stylesheet" href="https://datavirke.dk/style.css"/>
+    
+    
+    <link rel="alternate" type="application/rss+xml" title="RSS" href="https://datavirke.dk/atom.xml">
+    
+
+	<script src="https://datavirke.dk/mermaid.min.js"></script>
+	<script>
+		let config = { 
+			startOnLoad: true, 
+
+			darkMode: true
+		};
+		mermaid.initialize(config);
+	
+	</script>
+
+	<script type="application/ld+json">
+		{
+		"@context": "https://schema.org",
+		"@type": "Organization",
+		"url": "https://datavirke.dk",
+		"logo": "https://datavirke.dk/logo.svg"
+		}
+	</script>
+  </head>
+  <body id="page">
+
+	
+<header id="site-header" class="animated faster">
+  <div class="hdr-wrapper section-inner">
+    <div class="hdr-left">
+      <div class="site-branding">
+        <a href="https:&#x2F;&#x2F;datavirke.dk">Datavirke</a>
+      </div>
+      <nav class="site-nav hide-in-mobile">
+            
+        
+        <a href="https://datavirke.dk/about">About</a>
+        
+        <a href="https://datavirke.dk/experience">Experience</a>
+        
+        <a href="https://datavirke.dk/posts">Blog</a>
+        
+      </nav>
+    </div>
+    <div class="hdr-right hdr-icons">
+      <span class="hdr-social hide-in-mobile">
+        
+
+<a href="https:&#x2F;&#x2F;github.com&#x2F;MathiasPius" target="_blank" rel="noopener me"
+   title="github">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+  
+</a>
+
+<a href="https:&#x2F;&#x2F;www.linkedin.com&#x2F;in&#x2F;mathias-pius&#x2F;" target="_blank" rel="noopener me"
+   title="linkedin">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+  
+</a>
+
+<a href="mailto:mathias@datavirke.dk" target="_blank" rel="noopener me"
+   title="email">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+  
+</a>
+
+<a href="https:&#x2F;&#x2F;fosstodon.org&#x2F;@MathiasPius" target="_blank" rel="noopener me"
+   title="twitter">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path></svg>
+  
+</a>
+
+
+      </span>
+      <button id="menu-btn" class="hdr-btn" title="Menu">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="feather feather-menu"
+        >
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>
+<div id="mobile-menu" class="animated fast">
+  <ul>
+    
+    <li><a href="https://datavirke.dk/about">About</a></li>
+    
+    <li><a href="https://datavirke.dk/experience">Experience</a></li>
+    
+    <li><a href="https://datavirke.dk/posts">Blog</a></li>
+    
+  </ul>
+</div>
+
+	
+	
+
+		
+<main class="site-main section-inner animated fadeIn faster">
+  <article class="thin">
+	<header class="post-header">
+	  <div class="post-meta">
+		
+		<span>Jul 12, 2022</span>
+		<small> - 
+<span class="reading-time" title="Estimated read time">
+  
+  9 min read
+  
+</span>
+</small>
+		
+            
+	  </div>
+	  <h1>An eventually comprehensive guide to domain name resolution in Ubuntu</h1>
+	</header>
+
+	<div class="content">
+        
+	  <p><strong>Disclaimer</strong>: This article is a work-in-progress, so if you notice errors or confusing segments, please let me know so I can correct them, and hopefully at some point remove <em>eventually</em> from the title. While Ubuntu is specifically listed in the title, the information might be relevant for other distributions, especially <code>systemd</code> based ones.</p>
+<h1 id="tl-dr"><a class="zola-anchor" href="#tl-dr" aria-label="Anchor link for: tl-dr">tl;dr</a></h1>
+<p>Check <code>/etc/resolv.conf</code> for any <code>nameserver</code> settings. If it's pointing at <code>127.0.0.53</code> (the <code>systemd-resolved</code> resolver service). Use <code>$ resolvectl status</code> to figure out what <code>systemd-resolved</code> is using as its upstream nameserver. It will most likely be getting this upstream nameserver from either:</p>
+<ol>
+<li>
+<p><a href="https://datavirke.dk/posts/dns-resolution-in-ubuntu/#netplan">netplan</a>, which configures <a href="https://datavirke.dk/posts/dns-resolution-in-ubuntu/#systemd-networkd">systemd-networkd</a> if you're on a default-configured Ubuntu Server in turn getting its nameserver configuration from DHCP. Some cloud images might override this setting and bake their own recursive resolvers into their images or provide them via default cloud-init scripts.</p>
+</li>
+<li>
+<p><a href="https://datavirke.dk/posts/dns-resolution-in-ubuntu/#networkmanager">NetworkManager</a> if you're on Desktop, or if your <code>netplan</code> is configured with <code>renderer: NetworkManager</code>.</p>
+</li>
+</ol>
+<p>If <code>/etc/resolv.conf</code> is <em>not</em> pointing at <code>127.0.0.53</code>, your quest is most likely over. Barring funky per-device search domain settings, the <code>nameserver</code>(s) listed in <code>/etc/resolv.conf</code> are exactly where your queries will be sent.</p>
+<p>If the above information was not helpful it's time to buckle up, cause this is gonna be a pretty confusing ride.</p>
+<h1 id="the-landscape"><a class="zola-anchor" href="#the-landscape" aria-label="Anchor link for: the-landscape">The Landscape</a></h1>
+<p>Domain Name Resolution in Linux is a lively place sprawling with tools, cross-referencing configuration files, independent services and so many different ways of doing what basically boils down to a key-value look-up.</p>
+<p>I've collected a <a href="https://datavirke.dk/posts/dns-resolution-in-ubuntu/#list-of-services-and-files">non-exhaustive list</a> of some of the files, tools and services you might have to interact with in order to make sense of your world. This guide is not going to touch on all of them, but if you run into an issue not covered by this guide, going through this list and seeing if any of these are present on your system, might be a good place to start.</p>
+<p>Trying to deduce after the fact which services might be contributing confusing nameserver configuration information into your <code>/etc/resolv.conf</code> is nigh impossible, unless you're an <code>lsof</code>-ninja, and have some way of replicating the write.</p>
+<hr />
+<h1 id="consumers-who-s-asking"><a class="zola-anchor" href="#consumers-who-s-asking" aria-label="Anchor link for: consumers-who-s-asking">Consumers - Who's asking?</a></h1>
+<p>The first step to determining who answers your queries, is figuring out exactly who's asking. Just because you ask <code>host</code> to look up <code>my-favorite-domain.com</code>, does not necessarily mean that this is the query that <code>host</code> passes on to the actual resolver. Depending on how your <code>/etc/resolv.conf</code> is configured, any number of wild things might happen to that domain before it hits a resolver, and might not even be the same when using different tools like <code>dig</code> or <code>nslookup</code>.</p>
+<p>Exactly which hostname is even looked up depends on the tool you use, and the arguments that are passed to it. Consult the <a href="https://datavirke.dk/posts/dns-resolution-in-ubuntu/#query-comparison-table">Big Table of Questions</a> to figure why some of your <code>host</code>  queries might come back as you expect, while <code>dig</code> for instance does not.</p>
+<h2 id="brief-aside-about-nsswitch"><a class="zola-anchor" href="#brief-aside-about-nsswitch" aria-label="Anchor link for: brief-aside-about-nsswitch">Brief aside about nsswitch</a></h2>
+<p>Under the hood, most of these tools use <a href="https://linux.die.net/man/3/getaddrinfo">getaddrinfo(3)</a>, but how it determines the method by which to perform the lookup is defined in <code>/etc/nsswitch.conf</code>, specifically the line that starts with <code>hosts:</code>. Each element in this line points to a library on your system which is used to perform the lookup. </p>
+<p>For example <code>dns</code> indicates that a <code>libnss_dns.so</code>file exists in your systems library paths (usually <code>/lib/</code>), which provides the actual lookup functionality using the nameservers in <code>/etc/resolv.conf</code>. Other commonly used libraries are <code>files</code> which uses <code>/etc/hosts</code> for resolution, or <code>resolve</code> which uses <code>systemd-resolved</code> directly. The databases are tried in order until a result is found, or an error occurs.</p>
+<h3 id="nslookup"><a class="zola-anchor" href="#nslookup" aria-label="Anchor link for: nslookup"><code>$ nslookup</code></a></h3>
+<p>The O.G. domain resolution utility. Has an interactive mode, that I don't think I've ever seen anyone use, but plenty of people fall into accidentally when trying to get a list of command options out. Eats terminal newlines upon exit (at least mine). Behaves in much the same way as <code>host</code>, except slightly more verbose. Is both <code>ndots</code>- and <code>search</code>-aware as far as <code>/etc/resolv.conf</code> goes, defaulting to treating any lookup without dots in it as a local one, and any lookups with dots as absolute ones. These can be overriden in interactive mode, or in <code>/etc/resolv.conf</code>, or in the non-interactive mode using the <code>-option</code> switch.</p>
+<h3 id="host"><a class="zola-anchor" href="#host" aria-label="Anchor link for: host"><code>$ host</code></a></h3>
+<p>Unless otherwise specified on the command-line will get its nameserver information from <code>/etc/resolv.conf</code>, and use that to query results. Just like <code>nslookup</code>, <code>host</code> is <code>ndots</code>- and <code>search</code>-aware and shares the same defaults.</p>
+<h3 id="dig"><a class="zola-anchor" href="#dig" aria-label="Anchor link for: dig"><code>$ dig</code></a></h3>
+<p>Gets its nameserver information directly from <code>/etc/resolv.conf</code>, but supports (according to iself) a much wider range of operations than <code>host</code>. Notable differences between this and <code>host</code> is that <code>dig</code> by default will ignore search domains specified in <code>/etc/resolv.conf</code>, requiring you to add a <code>+search</code> flag to your command, if this is the behaviour you want. </p>
+<p>I suspect this particular difference of opinion between <code>dig</code> and <code>host</code> might have been the cause of its fair share of <em>&quot;but it works on my machine!&quot;</em>-exclamations throughout the years.</p>
+<h3 id="drill"><a class="zola-anchor" href="#drill" aria-label="Anchor link for: drill"><code>$ drill</code></a></h3>
+<p>The (not so) new kid on the block, not installed by default in either Desktop or Server minimal installations, and instead provided by the <code>ldnsutils</code>-package. Comes with all the DNSSEC bells and whistles one could ever want. Like everyone else, this tool takes its orders from <code>/etc/resolv.conf</code> by default, but search domain is completely ignored, and there doesn't seem to be any flag for configuring it.</p>
+<h3 id="resolvectl-query"><a class="zola-anchor" href="#resolvectl-query" aria-label="Anchor link for: resolvectl-query"><code>$ resolvectl query</code></a></h3>
+<p>Queries the <code>systemd-resolved</code> resolver directly, instead of obtaining nameservers from <code>/etc/resolv.conf</code> which may or may not point at the <code>127.0.0.53</code> systemd-resolved internal resolver service. Note that in most cases, the reply from here will be identical to other services (ignoring search domain logic), since by default <code>systemd-resolved</code> will either be the provider or consumer of <code>/etc/resolv.conf</code>, which in most cases aligns the search path. See the <a href="https://datavirke.dk/posts/dns-resolution-in-ubuntu/#systemd-resolved"><code>systemd-resolved</code></a> section for more information.</p>
+<h1 id="providers-then-who-answers"><a class="zola-anchor" href="#providers-then-who-answers" aria-label="Anchor link for: providers-then-who-answers">Providers - Then who answers?</a></h1>
+<p>Now that we have some idea how the questions are being posed as far as search domains go, we can start delving a bit deeper into how a query is actually answered.</p>
+<h3 id="systemd-resolved"><a class="zola-anchor" href="#systemd-resolved" aria-label="Anchor link for: systemd-resolved">systemd-resolved</a></h3>
+<p>In a default-configured Ubuntu 20.04 LTS Server or Desktop installation, your DNS queries are most likely to be answered by <code>systemd-resolved</code> by way of the &quot;stub resolver&quot; defined in <code>/run/systemd/resolve/stub-resolv.conf</code> which lists <code>nameserver 127.0.0.53</code> as its only nameserver, the address the <code>systemd-resolved</code> resolver service (<code>/lib/systemd/system/systemd-resolved.service</code>) binds to.</p>
+<p><code>systemd-resolved</code> has four modes of operation, but figuring out which one its in, is relatively simple.</p>
+<ol>
+<li><strong>Stub Resolver</strong> (default): <code>/etc/resolv.conf</code> is symlinked to <code>/run/systemd/resolve/stub-resolv.conf</code>, a file which <code>systemd-resolved</code> populates with a single entry pointing to itself (as above), as well as search domains.</li>
+<li><strong>Static</strong>: <code>/etc/resolv.conf</code> is symlinked to <code>/usr/lib/systemd/resolv.conf</code>. This mode is identical to the one above with the one exception that search domains are not available.</li>
+<li><strong>Bypass</strong>: <code>/etc/resolv.conf</code>is symlinked to <code>/run/systemd/resolve/resolv.conf</code>, a file which is populated with the upstream nameserver configuration which <code>systemd-resolved</code> uses, effectively bypassing <code>systemd-resolved</code> altogether, querying the upstream resolvers directly.</li>
+<li><strong>Consumer</strong>: <code>/etc/resolv.conf</code> is not symlinked to any of the above files, which means <code>systemd-resolved</code> assumes it is managed by another package (like <code>NetworkManager</code>), and becomes a consumer of <code>/etc/resolv.conf</code> instead of the owner of it.</li>
+</ol>
+<p>Source: <a href="https://manpages.debian.org/testing/systemd/systemd-resolved.service.8.en.html#/ETC/RESOLV.CONF">systemd-resolved.service#/etc/resolv.conf</a></p>
+<blockquote>
+<p>Exercise for the Reader: What happens if <code>systemd-resolved</code> is in the <strong>Consumer</strong> mode (that is, you've unlinked <code>/etc/resolv.conf</code> and written one yourself), but <code>/etc/resolv.conf</code> still only contains the <code>systemd-resolved</code> endpoint <code>nameserver 127.0.0.53</code>? Is it a consumer? A provider?</p>
+</blockquote>
+<p>In most cases systemd-resolved will be the provider of the <code>/etc/resolv.conf</code> file, in either <strong>Stub Resolver</strong> or <strong>Static</strong> mode, which means we're no closer to figuring out our actual responses are coming from, or how we enforce usage of our own nameservers. For starters, we can use <code>$ resolvectl status</code> to get <code>systemd-resolved</code> to tell us which nameservers it believes to be the correct upstream ones, but not how it came about that information.</p>
+<h3 id="netplan"><a class="zola-anchor" href="#netplan" aria-label="Anchor link for: netplan">netplan</a></h3>
+<p><code>netplan</code>'s only purpose, is generating configuration files for other network services, such as <a href="https://datavirke.dk/posts/dns-resolution-in-ubuntu/#systemd-networkd"><code>systemd-networkd</code></a> (the default networking service in Ubuntu Server). </p>
+<p>Although present in Ubuntu Desktop, it's usually just configured to hand over control to <code>NetworkManager</code>. That being said, devices and connections configured in <code>netplan</code> under Ubuntu Desktop while using the <code>NetworkManager</code> renderer, will (as you might expect) export these connections to <code>NetworkManager</code>, making them visible in the interface or through the <code>nmcli</code>. Changing them there however would be pointless, as they would be reset after the next reboot, or after the next <code>netplan apply</code>.</p>
+<p><code>netplan</code> is configured through YAML-files located in <code>/etc/netplan/</code></p>
+<h3 id="networkmanager"><a class="zola-anchor" href="#networkmanager" aria-label="Anchor link for: networkmanager">NetworkManager</a></h3>
+<p>The default operating mode for <code>NetworkManager</code> is to take ownership of <code>/etc/resolv.conf</code> and to <em>also</em> push nameserver configuration settings from its connections directly to <code>systemd-resolved</code>. This is configurable using the <code>dns</code> and <code>systemd-resolved</code> configuration options described <a href="https://networkmanager.dev/docs/api/latest/NetworkManager.conf.html">here</a>.</p>
+<p>The nameserver settings are derived from the active connections <code>NetworkManager</code> controls, the configuration for which can be found in <code>/etc/NetworkManager/system-connections/</code>. Some packages like <code>docker</code> specifies more dynamic connections, which can be found in <code>/run/NetworkManager/system-connections/</code>.</p>
+<p>You can inspect <code>NetworkManager</code>s current configuration using simply <code>$ nmcli</code>.</p>
+<h3 id="systemd-networkd"><a class="zola-anchor" href="#systemd-networkd" aria-label="Anchor link for: systemd-networkd">systemd-networkd</a></h3>
+<p>Like <code>NetworkManager</code>, <code>systemd-networkd</code> is a system service for managing network connnections themselves, and which can optionally share discovered (DHCP) or configured (static) DNS configurations with <code>systemd-resolved</code>. This means that if you're using <code>systemd-networkd</code> as your network connection manager and expect it to populate your nameserver configuration, you <strong>must</strong> also use <code>systemd-resolved</code>. It is of course possible to use <code>systemd-networkd</code> without <code>systemd-resolved</code> (no automatic nameserver discovery) or inversely <code>systemd-resolved</code> without <code>systemd-networkd</code> (like when using <code>NetworkManager</code> or another service for connection management).</p>
+<p>Configuration files for <code>systemd-networkd</code> are primarily found in <code>/etc/systemd/network/</code>. Like <code>NetworkManager</code>, some programs might add per-boot configurations to the <em>run</em> counterpart: <code>/run/systemd/network</code>.</p>
+<h1 id="addendum"><a class="zola-anchor" href="#addendum" aria-label="Anchor link for: addendum">Addendum</a></h1>
+<p>Resources, lists, indices and other resources which might be relevant when debugging domain name resolution.</p>
+<h2 id="list-of-services-and-files"><a class="zola-anchor" href="#list-of-services-and-files" aria-label="Anchor link for: list-of-services-and-files">List of Services and Files</a></h2>
+<p>I've tried to list some of the services, files and tools which are commonly used when configuring or troubleshooting domain name resolution, even if I don't explicitly cover them in this guide.</p>
+<h3 id="files"><a class="zola-anchor" href="#files" aria-label="Anchor link for: files">Files</a></h3>
+<ul>
+<li><a href="https://www.man7.org/linux/man-pages/man5/resolv.conf.5.html">/etc/resolv.conf</a></li>
+<li><a href="https://manpages.debian.org/testing/systemd/resolved.conf.5.en.html">/etc/systemd/resolved.conf</a></li>
+<li><a href="https://manpages.ubuntu.com/manpages/trusty/man8/resolvconf.8.html">/etc/resolvconf.conf</a></li>
+<li><a href="https://man7.org/linux/man-pages/man5/nsswitch.conf.5.html">/etc/nsswitch.conf</a></li>
+<li><a href="https://www.man7.org/linux/man-pages/man5/gai.conf.5.html">/etc/gai.conf</a></li>
+<li><a href="https://manpages.ubuntu.com/manpages/cosmic/man5/netplan.5.html">/etc/netplan/*.yml</a></li>
+<li><a href="https://man7.org/linux/man-pages/man5/hosts.5.html">/etc/hosts</a></li>
+<li><a href="https://man7.org/linux/man-pages/man5/hostname.5.html">/etc/hostname</a></li>
+<li><a href="https://thekelleys.org.uk/dnsmasq/docs/dnsmasq-man.html">/etc/dnsmasq.conf</a></li>
+<li><a href="https://linux.die.net/man/5/dhclient.conf">/etc/dhclient.conf</a></li>
+</ul>
+<h3 id="tools"><a class="zola-anchor" href="#tools" aria-label="Anchor link for: tools">Tools</a></h3>
+<ul>
+<li><a href="https://manpages.debian.org/testing/systemd/resolvectl.1.en.html">resolvectl</a>, formerly <a href="https://manpages.ubuntu.com/manpages/bionic/man1/systemd-resolve.1.html">systemd-resolve</a></li>
+<li><a href="https://linux.die.net/man/1/dig">dig</a></li>
+<li><a href="https://linux.die.net/man/1/drill">drill</a></li>
+<li><a href="https://linux.die.net/man/1/host">host</a></li>
+<li><a href="https://linux.die.net/man/1/nslookup">nslookup</a></li>
+<li><a href="https://thekelleys.org.uk/dnsmasq/docs/dnsmasq-man.html">dnsmasq</a></li>
+<li><a href="https://linux.die.net/man/8/dhclient">dhclient</a></li>
+<li><a href="https://linux.die.net/man/1/nmcli">nmcli</a></li>
+<li><a href="https://helpmanual.io/man5/netplan/">netplan</a></li>
+</ul>
+<h3 id="services"><a class="zola-anchor" href="#services" aria-label="Anchor link for: services">Services</a></h3>
+<ul>
+<li><a href="https://www.man7.org/linux/man-pages/man8/systemd-networkd.service.8.html">systemd-networkd</a></li>
+<li><a href="https://manpages.debian.org/testing/systemd/systemd-resolved.service.8.en.html">systemd-resolved</a></li>
+<li><a href="https://linux.die.net/man/8/dhcpd">dhcpd</a></li>
+<li><a href="https://man7.org/linux/man-pages/man8/systemd-resolved.service.8.html">dnsmaqd</a></li>
+<li><a href="https://linux.die.net/man/8/networkmanager">NetworkManager</a></li>
+</ul>
+<h2 id="query-comparison-table"><a class="zola-anchor" href="#query-comparison-table" aria-label="Anchor link for: query-comparison-table">Big Table of Questions</a></h2>
+<p>Below I've compiled a table of how different tools respond to queries when called with a number of different arguments, and how they respond to search domains specified in <code>/etc/resolv.conf</code>. </p>
+<p>The result of each test is either a pass (✅) which means that the returned IP-address of the query matches the A-record for <code>example.com</code> as queried directly against <code>1.1.1.1</code>.</p>
+<table><thead><tr><th>command, search domain --&gt;</th><th>(none)</th><th>com</th><th>example.com</th></tr></thead><tbody>
+<tr><td><code>nslookup example</code></td><td>❌</td><td>✅</td><td>❌</td></tr>
+<tr><td><code>nslookup example.com</code></td><td>✅</td><td>✅</td><td>✅</td></tr>
+<tr><td><code>nslookup www</code></td><td>❌</td><td>❌</td><td>✅</td></tr>
+<tr><td><code>nslookup www.example</code></td><td>❌</td><td>❌</td><td>❌</td></tr>
+<tr><td><code>nslookup www.example.com</code></td><td>✅</td><td>✅</td><td>✅</td></tr>
+<tr><td><code>nslookup -search example</code></td><td>❌</td><td>✅</td><td>❌</td></tr>
+<tr><td><code>nslookup -search example.com</code></td><td>✅</td><td>✅</td><td>✅</td></tr>
+<tr><td><code>nslookup -search www</code></td><td>❌</td><td>❌</td><td>✅</td></tr>
+<tr><td><code>nslookup -search www.example</code></td><td>❌</td><td>❌</td><td>❌</td></tr>
+<tr><td><code>nslookup -search www.example.com</code></td><td>✅</td><td>✅</td><td>✅</td></tr>
+<tr><td><code>nslookup -search -ndots=2 example</code></td><td>❌</td><td>✅</td><td>❌</td></tr>
+<tr><td><code>nslookup -search -ndots=2 example.com</code></td><td>✅</td><td>❌</td><td>✅</td></tr>
+<tr><td><code>nslookup -search -ndots=2 www</code></td><td>❌</td><td>❌</td><td>✅</td></tr>
+<tr><td><code>nslookup -search -ndots=2 www.example</code></td><td>❌</td><td>✅</td><td>❌</td></tr>
+<tr><td><code>nslookup -search -ndots=2 www.example.com</code></td><td>✅</td><td>✅</td><td>✅</td></tr>
+<tr><td><code>nslookup -search -ndots=3 example</code></td><td>❌</td><td>✅</td><td>❌</td></tr>
+<tr><td><code>nslookup -search -ndots=3 example.com</code></td><td>✅</td><td>❌</td><td>✅</td></tr>
+<tr><td><code>nslookup -search -ndots=3 www</code></td><td>❌</td><td>❌</td><td>✅</td></tr>
+<tr><td><code>nslookup -search -ndots=3 www.example</code></td><td>❌</td><td>✅</td><td>❌</td></tr>
+<tr><td><code>nslookup -search -ndots=3 www.example.com</code></td><td>✅</td><td>❌</td><td>✅</td></tr>
+<tr><td><code>host example</code></td><td>❌</td><td>✅</td><td>❌</td></tr>
+<tr><td><code>host example.com</code></td><td>✅</td><td>✅</td><td>✅</td></tr>
+<tr><td><code>host www</code></td><td>❌</td><td>❌</td><td>✅</td></tr>
+<tr><td><code>host www.example</code></td><td>❌</td><td>❌</td><td>❌</td></tr>
+<tr><td><code>host www.example.com</code></td><td>✅</td><td>✅</td><td>✅</td></tr>
+<tr><td><code>host -N=2 example</code></td><td>❌</td><td>❌</td><td>❌</td></tr>
+<tr><td><code>host -N=2 example.com</code></td><td>✅</td><td>✅</td><td>✅</td></tr>
+<tr><td><code>host -N=2 www</code></td><td>❌</td><td>❌</td><td>❌</td></tr>
+<tr><td><code>host -N=2 www.example</code></td><td>❌</td><td>❌</td><td>❌</td></tr>
+<tr><td><code>host -N=2 www.example.com</code></td><td>✅</td><td>✅</td><td>✅</td></tr>
+<tr><td><code>host -N=3 example</code></td><td>❌</td><td>❌</td><td>❌</td></tr>
+<tr><td><code>host -N=3 example.com</code></td><td>✅</td><td>✅</td><td>✅</td></tr>
+<tr><td><code>host -N=3 www</code></td><td>❌</td><td>❌</td><td>❌</td></tr>
+<tr><td><code>host -N=3 www.example</code></td><td>❌</td><td>❌</td><td>❌</td></tr>
+<tr><td><code>host -N=3 www.example.com</code></td><td>✅</td><td>✅</td><td>✅</td></tr>
+<tr><td><code>dig example</code></td><td>❌</td><td>❌</td><td>❌</td></tr>
+<tr><td><code>dig example.com</code></td><td>✅</td><td>✅</td><td>✅</td></tr>
+<tr><td><code>dig www</code></td><td>❌</td><td>❌</td><td>❌</td></tr>
+<tr><td><code>dig www.example</code></td><td>❌</td><td>❌</td><td>❌</td></tr>
+<tr><td><code>dig www.example.com</code></td><td>✅</td><td>✅</td><td>✅</td></tr>
+<tr><td><code>dig +search example</code></td><td>❌</td><td>✅</td><td>❌</td></tr>
+<tr><td><code>dig +search example.com</code></td><td>✅</td><td>✅</td><td>✅</td></tr>
+<tr><td><code>dig +search www</code></td><td>❌</td><td>❌</td><td>✅</td></tr>
+<tr><td><code>dig +search www.example</code></td><td>❌</td><td>❌</td><td>❌</td></tr>
+<tr><td><code>dig +search www.example.com</code></td><td>✅</td><td>✅</td><td>✅</td></tr>
+<tr><td><code>dig +search +ndots=2 example</code></td><td>❌</td><td>✅</td><td>❌</td></tr>
+<tr><td><code>dig +search +ndots=2 example.com</code></td><td>✅</td><td>❌</td><td>✅</td></tr>
+<tr><td><code>dig +search +ndots=2 www</code></td><td>❌</td><td>❌</td><td>✅</td></tr>
+<tr><td><code>dig +search +ndots=2 www.example</code></td><td>❌</td><td>✅</td><td>❌</td></tr>
+<tr><td><code>dig +search +ndots=2 www.example.com</code></td><td>✅</td><td>✅</td><td>✅</td></tr>
+<tr><td><code>dig +search +ndots=3 example</code></td><td>❌</td><td>✅</td><td>❌</td></tr>
+<tr><td><code>dig +search +ndots=3 example.com</code></td><td>✅</td><td>❌</td><td>✅</td></tr>
+<tr><td><code>dig +search +ndots=3 www</code></td><td>❌</td><td>❌</td><td>✅</td></tr>
+<tr><td><code>dig +search +ndots=3 www.example</code></td><td>❌</td><td>✅</td><td>❌</td></tr>
+<tr><td><code>dig +search +ndots=3 www.example.com</code></td><td>✅</td><td>❌</td><td>✅</td></tr>
+<tr><td><code>resolvectl query example</code></td><td>❌</td><td>✅</td><td>❌</td></tr>
+<tr><td><code>resolvectl query example.com</code></td><td>✅</td><td>✅</td><td>✅</td></tr>
+<tr><td><code>resolvectl query www</code></td><td>❌</td><td>❌</td><td>✅</td></tr>
+<tr><td><code>resolvectl query www.example</code></td><td>❌</td><td>❌</td><td>❌</td></tr>
+<tr><td><code>resolvectl query www.example.com</code></td><td>✅</td><td>✅</td><td>✅</td></tr>
+<tr><td><code>resolvectl query --search=no example</code></td><td>❌</td><td>❌</td><td>❌</td></tr>
+<tr><td><code>resolvectl query --search=no example.com</code></td><td>✅</td><td>✅</td><td>✅</td></tr>
+<tr><td><code>resolvectl query --search=no www</code></td><td>❌</td><td>❌</td><td>❌</td></tr>
+<tr><td><code>resolvectl query --search=no www.example</code></td><td>❌</td><td>❌</td><td>❌</td></tr>
+<tr><td><code>resolvectl query --search=no www.example.com</code></td><td>✅</td><td>✅</td><td>✅</td></tr>
+<tr><td><code>resolvectl query --search=yes example</code></td><td>❌</td><td>✅</td><td>❌</td></tr>
+<tr><td><code>resolvectl query --search=yes example.com</code></td><td>✅</td><td>✅</td><td>✅</td></tr>
+<tr><td><code>resolvectl query --search=yes www</code></td><td>❌</td><td>❌</td><td>✅</td></tr>
+<tr><td><code>resolvectl query --search=yes www.example</code></td><td>❌</td><td>❌</td><td>❌</td></tr>
+<tr><td><code>resolvectl query --search=yes www.example.com</code></td><td>✅</td><td>✅</td><td>✅</td></tr>
+<tr><td><code>drill example</code></td><td>❌</td><td>❌</td><td>❌</td></tr>
+<tr><td><code>drill example.com</code></td><td>✅</td><td>✅</td><td>✅</td></tr>
+<tr><td><code>drill www</code></td><td>❌</td><td>❌</td><td>❌</td></tr>
+<tr><td><code>drill www.example</code></td><td>❌</td><td>❌</td><td>❌</td></tr>
+<tr><td><code>drill www.example.com</code></td><td>✅</td><td>✅</td><td>✅</td></tr>
+</tbody></table>
+<p>Above table generated using <a href="check.sh">this script</a>. Note that this script <strong>will override your <code>/etc/resolv.conf</code> file and not restore it. Use only in disposable VMs!</strong></p>
+<h2 id="sources"><a class="zola-anchor" href="#sources" aria-label="Anchor link for: sources">Sources</a></h2>
+<ol>
+<li><a href="https://www.man7.org/linux/man-pages/index.html">Linux man-pages</a></li>
+<li><a href="https://stgraber.org/2012/02/24/dns-in-ubuntu-12-04/">Stéphane Graber's &quot;DNS in Ubuntu 12.04&quot; from 2012</a></li>
+<li><a href="https://askubuntu.com/questions/368435/how-do-i-fix-dns-resolving-which-doesnt-work-after-upgrading-to-ubuntu-13-10-s">StackOverflow answer by Zanna to DNS Resolution question from 2013</a></li>
+</ol>
+
+	</div>
+	<hr class="post-end">
+	<footer class="post-info">
+    
+	  <p>
+		<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-tag meta-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7" y2="7"></line></svg>
+		
+		
+		<span class="tag"><a href="https://datavirke.dk/tags/systemd/">systemd</a></span>
+		
+		<span class="tag"><a href="https://datavirke.dk/tags/dns/">dns</a></span>
+		
+		<span class="tag"><a href="https://datavirke.dk/tags/ubuntu/">ubuntu</a></span>
+		
+		<span class="tag"><a href="https://datavirke.dk/tags/nameserver/">nameserver</a></span>
+		
+		<span class="tag"><a href="https://datavirke.dk/tags/domain-name-resolution/">domain name resolution</a></span>
+		
+		
+    </p>
+    
+    <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>2442 Words</p>
+    
+    <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>2022-07-12</p>
+    
+	</footer>
+  </article>
+    
+  
+  <div class="post-nav thin">
+	
+	
+  </div>
+
+  
+</main>
+
+	  </div>
+	  
+	  
+
+
+
+<footer id="site-footer" class="section-inner thin animated fadeIn faster">
+  <p>&copy; 2024 <a href="https:&#x2F;&#x2F;datavirke.dk">Mathias Pius</a> &mdash; CVR: 43033336</p>
+  <p>Made with <a href="https://www.getzola.org" target="_blank" rel="noopener">Zola</a> &#183; Theme <a href="https://github.com/VersBinarii/hermit_zola" target="_blank" rel="noopener">Hermit_Zola</a>
+	
+	&#183; <a href="https://datavirke.dk/atom.xml" target="_blank" title="rss"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-rss"><path d="M4 11a9 9 0 0 1 9 9"></path><path d="M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1"></circle></svg></a>
+	
+  </p>
+</footer>
+
+
+
+
+	</div>
+	
+	<script src="https://datavirke.dk/js/main.js"></script>
+
+	<!-- Math rendering -->
+	<link rel="stylesheet" href="/katex.min.css">
+    <script defer src="/katex.min.js"></script>
+    <script defer src="/auto-render.min.js" onload="renderMathInElement(document.body, { delimiters: [ {left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}, {left: '\\[', right: '\\]', display: true}, {left: '\\(', right: '\\)', display: false}]});"></script>
+
+    
+		<link href="/vs2015.css" rel="stylesheet">
+		<script src="/highlight.pack.js"></script>
+		<script src="/highlightjs-badge.min.js"></script>
+		<script>
+			var pres = document.querySelectorAll("pre>code");
+			for (var i = 0; i < pres.length; i++) {
+				hljs.highlightBlock(pres[i]);
+			}
+		</script>
+		
+			<script src="/clipboard.min.js"></script>
+			<script>
+				var options = {
+					copyIconClass: "gg-clipboard",
+					checkIconClass: "gg-check"
+				};
+				window.highlightJsBadge(options);
+			</script>
+		
+
+	
+
+	
+	<script src="https://datavirke.dk/js/main.js"></script>
+
+    
+    
+
+	
+  </body>
+</html>

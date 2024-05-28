@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <meta name="robots" content="max-snippet:0, max-image-preview:large">
+    <meta name="description" content="Freelance DevOps Engineer building reliable infrastructure using Kubernetes, Cloud &amp; Rust.">
+  
+    <!-- Google / Search Engine Tags -->
+
+	
+    <title>Bare-metal Kubernetes, Part VI: Persistent Storage with Rook Ceph - Datavirke</title>
+	<meta itemprop="name" content="Bare-metal Kubernetes, Part VI: Persistent Storage with Rook Ceph - Datavirke">
+	<meta property="og:title" content="Bare-metal Kubernetes, Part VI: Persistent Storage with Rook Ceph - Datavirke">
+	<meta name="twitter:title" content="Bare-metal Kubernetes, Part VI: Persistent Storage with Rook Ceph - Datavirke">
+    
+
+	
+	<meta itemprop="description" content="Freelance DevOps Engineer building reliable infrastructure using Kubernetes, Cloud &amp; Rust.">
+	<meta property="og:description" content="Freelance DevOps Engineer building reliable infrastructure using Kubernetes, Cloud &amp; Rust.">
+	<meta name="twitter:description" content="Freelance DevOps Engineer building reliable infrastructure using Kubernetes, Cloud &amp; Rust.">
+	
+
+	<meta name="twitter:card" content="summary_large_image">    
+    <meta name="twitter:image" content="https://datavirke.dk/logo.svg">
+	<meta itemprop="image" content="https://datavirke.dk/logo.svg">
+	<meta property="og:image" content="https://datavirke.dk/logo.svg">
+    <meta property="og:url" content="https:&#x2F;&#x2F;datavirke.dk">
+    <meta property="og:type" content="website">
+    
+    <link rel="apple-touch-icon" sizes="180x180" href="https://datavirke.dk/apple-touch-icon.png"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="https://datavirke.dk/favicon-32x32.png" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="https://datavirke.dk/favicon-16x16.png"
+    />
+    <link
+      rel="shortcut icon"
+      href="https://datavirke.dk/favicon.ico"
+    />
+    <link rel="stylesheet" href="https://datavirke.dk/style.css"/>
+    
+    
+    <link rel="alternate" type="application/rss+xml" title="RSS" href="https://datavirke.dk/atom.xml">
+    
+
+	<script src="https://datavirke.dk/mermaid.min.js"></script>
+	<script>
+		let config = { 
+			startOnLoad: true, 
+
+			darkMode: true
+		};
+		mermaid.initialize(config);
+	
+	</script>
+
+	<script type="application/ld+json">
+		{
+		"@context": "https://schema.org",
+		"@type": "Organization",
+		"url": "https://datavirke.dk",
+		"logo": "https://datavirke.dk/logo.svg"
+		}
+	</script>
+  </head>
+  <body id="page">
+
+	
+<header id="site-header" class="animated faster">
+  <div class="hdr-wrapper section-inner">
+    <div class="hdr-left">
+      <div class="site-branding">
+        <a href="https:&#x2F;&#x2F;datavirke.dk">Datavirke</a>
+      </div>
+      <nav class="site-nav hide-in-mobile">
+            
+        
+        <a href="https://datavirke.dk/about">About</a>
+        
+        <a href="https://datavirke.dk/experience">Experience</a>
+        
+        <a href="https://datavirke.dk/posts">Blog</a>
+        
+      </nav>
+    </div>
+    <div class="hdr-right hdr-icons">
+      <span class="hdr-social hide-in-mobile">
+        
+
+<a href="https:&#x2F;&#x2F;github.com&#x2F;MathiasPius" target="_blank" rel="noopener me"
+   title="github">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+  
+</a>
+
+<a href="https:&#x2F;&#x2F;www.linkedin.com&#x2F;in&#x2F;mathias-pius&#x2F;" target="_blank" rel="noopener me"
+   title="linkedin">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+  
+</a>
+
+<a href="mailto:mathias@datavirke.dk" target="_blank" rel="noopener me"
+   title="email">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+  
+</a>
+
+<a href="https:&#x2F;&#x2F;fosstodon.org&#x2F;@MathiasPius" target="_blank" rel="noopener me"
+   title="twitter">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path></svg>
+  
+</a>
+
+
+      </span>
+      <button id="menu-btn" class="hdr-btn" title="Menu">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="feather feather-menu"
+        >
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>
+<div id="mobile-menu" class="animated fast">
+  <ul>
+    
+    <li><a href="https://datavirke.dk/about">About</a></li>
+    
+    <li><a href="https://datavirke.dk/experience">Experience</a></li>
+    
+    <li><a href="https://datavirke.dk/posts">Blog</a></li>
+    
+  </ul>
+</div>
+
+	
+	
+
+		
+<main class="site-main section-inner animated fadeIn faster">
+  <article class="thin">
+	<header class="post-header">
+	  <div class="post-meta">
+		
+		<span>Jun 27, 2023</span>
+		<small> - 
+<span class="reading-time" title="Estimated read time">
+  
+  9 min read
+  
+</span>
+</small>
+		
+            
+	  </div>
+	  <h1>Bare-metal Kubernetes, Part VI: Persistent Storage with Rook Ceph</h1>
+	</header>
+
+	<div class="content">
+        
+	  <p><i>Discussion on <a href="https://news.ycombinator.com/item?id=37443404">Hacker News</a></i></p>
+<p>If you've been following this series closely you might have seen the two extra hard drives with sizes ranging from 2-4TB on each of the provisioned nodes, totalling 6 disks and 16TB of capacity.</p>
+<p>All that capacity is great, but it'd be even better if we could trade some of it for a few guarantees that it won't be gone temporarily when we upgrade a node, or forever the second one of our disks or nodes die.</p>
+<p><a href="https://ceph.com/en/">Ceph</a> is a distributed storage system which takes raw <em><a href="https://en.wikipedia.org/wiki/Non-RAID_drive_architectures">JBODs</a></em> and turns it into resilient networked storage.</p>
+<p><a href="https://rook.io/">Rook</a> takes Ceph and wraps it in a neat little Kubernetes-friendly package, with a bow and everything!</p>
+<p>In this post, I'll be deploying the Rook operators into our cluster and configuring a <code>CephCluster</code> as well as a block storage <code>CephBlockPool</code> which we can then use to fulfill <code>PersistentVolumeClaims</code> in our deployments.</p>
+<p><em>Series Index</em></p>
+<ul>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-1-talos-on-hetzner/">Part I: Talos on Hetzner</a></li>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-2-cilium-and-firewalls/">Part II: Cilium CNI &amp; Firewalls</a></li>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-3-encrypted-gitops-with-fluxcd/">Part III: Encrypted GitOps with FluxCD</a></li>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-4-ingress-dns-certificates/">Part IV: Ingress, DNS and Certificates</a></li>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-5-scaling-out/">Part V: Scaling Out</a></li>
+<li><strong><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-6-persistent-storage-with-rook-ceph/">Part VI: Persistent Storage with Rook Ceph</a></strong></li>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-7-private-registry-with-harbor/">Part VII: Private Registry with Harbor</a></li>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-8-containerizing-our-work-environment/">Part VIII: Containerizing our Work Environment</a></li>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-9-renovating-old-deployments/">Part IX: Renovating old Deployments</a></li>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-10-metrics-and-monitoring-with-openobserve/">Part X: Metrics and Monitoring with OpenObserve</a></li>
+</ul>
+<p>Complete source code for the live cluster is available <a href="https://github.com/MathiasPius/kronform">@github/MathiasPius/kronform</a></p>
+<h1 id="considerations"><a class="zola-anchor" href="#considerations" aria-label="Anchor link for: considerations">Considerations</a></h1>
+<p>Ceph is designed to host truly massive amounts of data, and generally becomes safer and more performant the more nodes and disks you have to spread your data across. While 3 nodes and 6 disks is a decent size for a hobby cluster, it barely registers in the world of Ceph. That being said, I've had Rook/Ceph running in a cluster of this size before and never experienced any problems, even though I broke several guidelines and fucked up the dreaded <em>placement group</em> count.</p>
+<p>Trying to understand failures in a system as complex and <em>different</em> as Ceph is to a regular filesystem can be pretty daunting, and I wouldn't advise anyone to jump into the deep end if their livelihood depends on it. There are several much simpler solutions to this problem, especially if you're willing to go the managed route.</p>
+<p>That being said, my experience with Ceph has been really good, and for my use case I have a strong enough grasp of it to <em>probably</em> not experience data loss, and that's good enough for me.</p>
+<h1 id="setting-up"><a class="zola-anchor" href="#setting-up" aria-label="Anchor link for: setting-up">Setting up</a></h1>
+<p>Rook provides a handy <a href="https://github.com/rook/rook/blob/release-1.11/Documentation/Helm-Charts/operator-chart.md">helm chart</a> for deploying their operator with roughly a milion knobs for supporting all kinds of configurations, including accessing an external Ceph cluster. Most of these are not super important, and can be adjusted later when you find out you need to expose your storage as an <a href="https://rook.io/docs/nfs/v1.7/">NFS</a> server, or what have you.</p>
+<p>First we need a namespace to put our cluster and operator in. Since Ceph necessarily needs access to the host devices, we need to relax the security a bit, like we did with the ingress controller:</p>
+<pre data-lang="yaml" style="background-color:#2b303b;color:#c0c5ce;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#65737e;"># manifests/infrastructure/rook-ceph/namespace.yaml
+</span><span>---
+</span><span style="color:#bf616a;">apiVersion</span><span>: </span><span style="color:#a3be8c;">v1
+</span><span style="color:#bf616a;">kind</span><span>: </span><span style="color:#a3be8c;">Namespace
+</span><span style="color:#bf616a;">metadata</span><span>:
+</span><span>  </span><span style="color:#bf616a;">name</span><span>: </span><span style="color:#a3be8c;">rook-ceph
+</span><span>  </span><span style="color:#bf616a;">labels</span><span>:
+</span><span>    </span><span style="color:#bf616a;">pod-security.kubernetes.io/enforce</span><span>: </span><span style="color:#a3be8c;">privileged
+</span><span>    </span><span style="color:#bf616a;">pod-security.kubernetes.io/enforce-version</span><span>: </span><span style="color:#a3be8c;">latest
+</span></code></pre>
+<p>Next up is the rook operator deployment:</p>
+<pre data-lang="yaml" style="background-color:#2b303b;color:#c0c5ce;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#65737e;"># manifests/infrastructure/rook-ceph/rook-ceph.yaml
+</span><span>---
+</span><span style="color:#bf616a;">apiVersion</span><span>: </span><span style="color:#a3be8c;">source.toolkit.fluxcd.io/v1beta2
+</span><span style="color:#bf616a;">kind</span><span>: </span><span style="color:#a3be8c;">HelmRepository
+</span><span style="color:#bf616a;">metadata</span><span>:
+</span><span>  </span><span style="color:#bf616a;">name</span><span>: </span><span style="color:#a3be8c;">rook-release
+</span><span>  </span><span style="color:#bf616a;">namespace</span><span>: </span><span style="color:#a3be8c;">rook-ceph
+</span><span style="color:#bf616a;">spec</span><span>:
+</span><span>  </span><span style="color:#bf616a;">interval</span><span>: </span><span style="color:#a3be8c;">5m0s
+</span><span>  </span><span style="color:#bf616a;">url</span><span>: </span><span style="color:#a3be8c;">https://charts.rook.io/release
+</span><span>---
+</span><span style="color:#bf616a;">apiVersion</span><span>: </span><span style="color:#a3be8c;">helm.toolkit.fluxcd.io/v2beta1
+</span><span style="color:#bf616a;">kind</span><span>: </span><span style="color:#a3be8c;">HelmRelease
+</span><span style="color:#bf616a;">metadata</span><span>:
+</span><span>  </span><span style="color:#bf616a;">name</span><span>: </span><span style="color:#a3be8c;">rook-ceph
+</span><span>  </span><span style="color:#bf616a;">namespace</span><span>: </span><span style="color:#a3be8c;">rook-ceph
+</span><span style="color:#bf616a;">spec</span><span>:
+</span><span>  </span><span style="color:#bf616a;">interval</span><span>: </span><span style="color:#a3be8c;">5m
+</span><span>  </span><span style="color:#bf616a;">chart</span><span>:
+</span><span>    </span><span style="color:#bf616a;">spec</span><span>:
+</span><span>      </span><span style="color:#bf616a;">chart</span><span>: </span><span style="color:#a3be8c;">rook-ceph
+</span><span>      </span><span style="color:#bf616a;">version</span><span>: &quot;</span><span style="color:#a3be8c;">&gt;=v1.11.0 &lt;v1.12.0</span><span>&quot;
+</span><span>      </span><span style="color:#bf616a;">sourceRef</span><span>:
+</span><span>        </span><span style="color:#bf616a;">kind</span><span>: </span><span style="color:#a3be8c;">HelmRepository
+</span><span>        </span><span style="color:#bf616a;">name</span><span>: </span><span style="color:#a3be8c;">rook-release
+</span><span>        </span><span style="color:#bf616a;">namespace</span><span>: </span><span style="color:#a3be8c;">rook-ceph
+</span><span>      </span><span style="color:#bf616a;">interval</span><span>: </span><span style="color:#a3be8c;">1m
+</span><span>  </span><span style="color:#bf616a;">values</span><span>:
+</span><span>    </span><span style="color:#bf616a;">crds</span><span>:
+</span><span>      </span><span style="color:#bf616a;">enabled</span><span>: </span><span style="color:#d08770;">true
+</span><span>    </span><span style="color:#bf616a;">enableDiscoveryDaemon</span><span>: </span><span style="color:#d08770;">true
+</span></code></pre>
+<p>This chart only deploys the <em>operator</em> however, and does not in fact turn your cluster into a Ceph cluster. For that, we need to first define a <code>CephCluster</code> custom resource.</p>
+<h2 id="the-ceph-cluster"><a class="zola-anchor" href="#the-ceph-cluster" aria-label="Anchor link for: the-ceph-cluster">The Ceph Cluster</a></h2>
+<p>Defining the cluster is also relatively straightforward. Rook has a lot of example configurations both on <a href="https://www.rook.io/docs/rook/latest/CRDs/Cluster/ceph-cluster-crd/">their website</a> and in their git repository which explain most of the configuration options, like how many <em>mons</em> you want. Of course you might have to check out the official <a href="https://docs.ceph.com/en/quincy/glossary/#term-Ceph-Monitor">Ceph documentation</a> to find out what a <em>mon</em> even is.</p>
+<p>I'll be using Rook's <a href="https://rook.io/docs/rook/v1.11/CRDs/Cluster/host-cluster/">Host Storage Cluster</a> example as a template, since it is designed to work on hosts with raw devices, rather than it itself consuming <code>PersistentVolumes</code> from a different storage solution, such as managed EBS volumes or whatever one might have access to if they go with a large provider.</p>
+<pre data-lang="yaml" style="background-color:#2b303b;color:#c0c5ce;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#65737e;"># manifests/infrastructure/ceph-cluster/cluster.yaml
+</span><span style="color:#bf616a;">apiVersion</span><span>: </span><span style="color:#a3be8c;">ceph.rook.io/v1
+</span><span style="color:#bf616a;">kind</span><span>: </span><span style="color:#a3be8c;">CephCluster
+</span><span style="color:#bf616a;">metadata</span><span>:
+</span><span>  </span><span style="color:#bf616a;">name</span><span>: </span><span style="color:#a3be8c;">rook-ceph
+</span><span>  </span><span style="color:#bf616a;">namespace</span><span>: </span><span style="color:#a3be8c;">rook-ceph
+</span><span style="color:#bf616a;">spec</span><span>:
+</span><span>  </span><span style="color:#bf616a;">cephVersion</span><span>:
+</span><span>    </span><span style="color:#bf616a;">image</span><span>: </span><span style="color:#a3be8c;">quay.io/ceph/ceph:v17.2.6
+</span><span>  </span><span style="color:#bf616a;">dataDirHostPath</span><span>: </span><span style="color:#a3be8c;">/var/lib/rook
+</span><span>  </span><span style="color:#bf616a;">mon</span><span>:
+</span><span>    </span><span style="color:#bf616a;">count</span><span>: </span><span style="color:#d08770;">3
+</span><span>    </span><span style="color:#bf616a;">allowMultiplePerNode</span><span>: </span><span style="color:#d08770;">false
+</span><span>  </span><span style="color:#bf616a;">dashboard</span><span>:
+</span><span>    </span><span style="color:#bf616a;">enabled</span><span>: </span><span style="color:#d08770;">true
+</span><span>  </span><span style="color:#bf616a;">storage</span><span>:
+</span><span>    </span><span style="color:#bf616a;">useAllNodes</span><span>: </span><span style="color:#d08770;">true
+</span><span>    </span><span style="color:#bf616a;">useAllDevices</span><span>: </span><span style="color:#d08770;">true
+</span><span>  </span><span style="color:#bf616a;">placement</span><span>:
+</span><span>    </span><span style="color:#bf616a;">all</span><span>:
+</span><span>      </span><span style="color:#bf616a;">tolerations</span><span>:
+</span><span>      - </span><span style="color:#bf616a;">effect</span><span>: </span><span style="color:#a3be8c;">NoSchedule
+</span><span>        </span><span style="color:#bf616a;">key</span><span>: </span><span style="color:#a3be8c;">node-role.kubernetes.io/control-plane
+</span><span>        </span><span style="color:#bf616a;">operator</span><span>: </span><span style="color:#a3be8c;">Exists
+</span></code></pre>
+<p>Monitors (or mons) are to Ceph as etcd is to Kubernetes. They're the arbiters of truth within the cluster. By opting to go with 3 of them spread across our nodes (again, like etcd), we can ensure some level of continued operation in the face of a temporary outage.</p>
+<p>Dashboard gives us a handy overview over the critical pieces of the Ceph cluster and allows some configuration of our Object Storage Daemons (OSDs).</p>
+<p>For storage, we're electing to use all nodes and all attached devices. Of course Rook isn't Chaotic Evil, so it won't start formatting our Talos devices, but it will consume any non-provisioned devices attached, which should be all 6 of the 2TB+ hard drives.</p>
+<p>Since all our nodes are control-planes, we need to tell Rook to tolerate that.</p>
+<p>With all these things set, we can push it to git and wait for Flux to roll it out.</p>
+<h2 id="eventual-consistency"><a class="zola-anchor" href="#eventual-consistency" aria-label="Anchor link for: eventual-consistency">Eventual Consistency</a></h2>
+<p>Watching Rook slowly mold itself into a Ceph cluster through <code>kubectl get all -n rook-ceph</code> is a real pleasure</p>
+<p>.. When it works!</p>
+<p>Unfortunately, for some reason Ceph refused to take ownership of the HDDs on two of the nodes, resigning itself to deploying a grand total of two OSDs on <code>n3</code>. Not very redundant.</p>
+<p>Poring through the logs of of the <code>rook-ceph-osd-prepare-nX</code> pods showed that the devices were disqualified because they <em>were too small</em>. </p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">2023-06-27</span><span> 00:14:14.743354 D | </span><span style="color:#bf616a;">exec:</span><span> Running command: ceph-volume inventory</span><span style="color:#bf616a;"> --format</span><span> json /dev/sdb
+</span><span style="color:#bf616a;">2023-06-27</span><span> 00:14:15.004877 I | </span><span style="color:#bf616a;">cephosd:</span><span> skipping device &quot;</span><span style="color:#a3be8c;">sdb</span><span>&quot;: </span><span style="color:#b48ead;">[</span><span>&quot;</span><span style="color:#a3be8c;">Insufficient space (&lt;5GB)</span><span>&quot;</span><span style="color:#b48ead;">]</span><span>.
+</span></code></pre>
+<p>I did say our cluster was a little on the small end of the spectrum, but our hard drives are definitely larger than 5GB. What's going on here?</p>
+<p>My first thought was that perhaps some empty or corrupt partition table might be messing with the procedure. After all, it worked on one of the nodes so our settings are probably fine. I used the below script to get access on each of the two failing nodes, modifying the node-selector as I went along:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> kubectl run</span><span style="color:#bf616a;"> -it --rm </span><span>\
+</span><span style="color:#bf616a;">    -n</span><span> rook-ceph                \
+</span><span style="color:#bf616a;">    --image</span><span> ubuntu:latest       \
+</span><span style="color:#bf616a;">    --privileged                </span><span>\
+</span><span style="color:#bf616a;">    --overrides</span><span>=&#39;</span><span style="color:#a3be8c;">{&quot;spec&quot;: { &quot;nodeSelector&quot;: {&quot;kubernetes.io/hostname&quot;: &quot;n2&quot;}}}</span><span>&#39; \
+</span></code></pre>
+<p>And then used <code>sgdisk</code> to ensure all remnants of a filesystem were gone on the non-talos hard drives:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> apt update &amp;&amp; </span><span style="color:#bf616a;">apt</span><span> install gdisk</span><span style="color:#bf616a;"> -y
+</span><span style="color:#bf616a;">[mpd@ish]$</span><span> sgdisk</span><span style="color:#bf616a;"> --zap-all</span><span> /dev/sdb
+</span><span style="color:#bf616a;">[mpd@ish]$</span><span> sgdisk</span><span style="color:#bf616a;"> --zap-all</span><span> /dev/sdc
+</span></code></pre>
+<p>Killing the <code>rook-ceph-operator</code> pod to trigger a re-evaluation, produced the exact same outcome as before. Insufficient space.</p>
+<p>A little googling reveals that this is actually because of a <a href="https://github.com/rook/rook/issues/11474">bug</a> seemingly introduced in Ceph <code>17.2.4</code>, which classifies hot-swappable drives as <code>removable</code> (which Ceph does not support) and simultaneously bungles the error handling in a way that makes this particular error show up as <em>Insufficient space (&lt;5GB)</em>. As of Ceph <code>17.2.6</code>, which is the version we're on, this bug is still present.</p>
+<p>For now we'll work around the issue by rolling back to <code>17.2.3</code>. This is not ideal, and is in fact not <em>really</em> possible. Performing this rollback by just changing <code>cephVersion.image</code> in the above manifest made rook carefully remove a Monitor instance and replace it with the older version, only to have it crash loop, presumably because that kind of operation is not supported.</p>
+<p>In the end, I opted to delete the <code>CephCluster</code>, following the official <a href="https://rook.io/docs/rook/latest/CRDs/Cluster/ceph-cluster-crd/#cleanup-policy">cleanup procedure</a> and re-deploying it after rook-operator had a chance to clean up.</p>
+<h2 id="dashboard"><a class="zola-anchor" href="#dashboard" aria-label="Anchor link for: dashboard">Dashboard</a></h2>
+<p>This time around the <code>rook-ceph</code> namespace is littered with <code>osd</code> pods:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> kubectl get pods</span><span style="color:#bf616a;"> -n</span><span> rook-ceph | </span><span style="color:#bf616a;">grep</span><span> osd
+</span><span style="color:#bf616a;">rook-ceph-osd-0-5dddbd6b66-x294g</span><span>    1/1     Running
+</span><span style="color:#bf616a;">rook-ceph-osd-1-dc8bb7f6b-dmljl</span><span>     1/1     Running
+</span><span style="color:#bf616a;">rook-ceph-osd-2-8449684665-p22jp</span><span>    1/1     Running
+</span><span style="color:#bf616a;">rook-ceph-osd-3-c695bc8dd-2lhmh</span><span>     1/1     Running
+</span><span style="color:#bf616a;">rook-ceph-osd-4-6f99d7bc47-qxvgv</span><span>    1/1     Running
+</span><span style="color:#bf616a;">rook-ceph-osd-5-755689595-m98rt</span><span>     1/1     Running
+</span><span style="color:#bf616a;">rook-ceph-osd-prepare-n1-dp4wg</span><span>      0/1     Completed
+</span><span style="color:#bf616a;">rook-ceph-osd-prepare-n2-shb4d</span><span>      0/1     Completed
+</span><span style="color:#bf616a;">rook-ceph-osd-prepare-n3-bl2vv</span><span>      0/1     Completed
+</span></code></pre>
+<p>Apart from the <code>prepare</code> nodes, each of these containers correspond to a single hard drive managed by Ceph. To get a better view of the state of things, and to verify that everything is looking healthy, let's take a quick look at the Ceph Dashboard.</p>
+<p>First, we need to get the automatically generated dashboard admin password, which is stored in the <code>rook-ceph-dashboard-password</code> secret of the <code>rook-ceph</code> namespace:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> kubectl get secret     \
+</span><span style="color:#bf616a;">  -n</span><span> rook-ceph                    \
+</span><span style="color:#bf616a;">  -o</span><span> jsonpath=&#39;</span><span style="color:#a3be8c;">{.data.password}</span><span>&#39;  \
+</span><span>  rook-ceph-dashboard-password    \
+</span><span>  | </span><span style="color:#bf616a;">base64 -d </span><span>| </span><span style="color:#bf616a;">clipcopy
+</span></code></pre>
+<p>I'm grabbing the <code>data.password</code> field, base64 decoding it and shoving it directly into my clipboard.</p>
+<p>Now we could set up an ingress with automatic dns and all the bells and whistles and have access to it from anywhere, but until we know that we can stay up to date on security patches, it might be best to just port-forward the dashboard service to our local machines for now, and have a quick peek.</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> kubectl port-forward</span><span style="color:#bf616a;"> -n</span><span> rook-ceph svc/rook-ceph-mgr-dashboard 8080:7000
+</span><span style="color:#bf616a;">Forwarding</span><span> from 127.0.0.1:8080 -&gt; </span><span style="color:#d08770;">7000
+</span><span style="color:#bf616a;">Forwarding</span><span> from </span><span style="color:#b48ead;">[</span><span>::1</span><span style="color:#b48ead;">]</span><span>:8080 -&gt; </span><span style="color:#d08770;">7000
+</span></code></pre>
+<p>This lets us connect to the service inside Kubernetes from <code>localhost:8080</code> and log in as <code>admin</code> with the password from before, and what we see looks great!</p>
+<p><img src="https://datavirke.dk/posts/bare-metal-kubernetes-part-6-persistent-storage-with-rook-ceph/ceph-dashboard.png" alt="Ceph Dashboard" /></p>
+<h1 id="pools-and-storage-classes"><a class="zola-anchor" href="#pools-and-storage-classes" aria-label="Anchor link for: pools-and-storage-classes">Pools and Storage Classes</a></h1>
+<p>With Ceph working, we just have to tell it how to divide up the available storage into pools. We do this by defining a <code>CephBlockPool</code>:</p>
+<pre data-lang="yaml" style="background-color:#2b303b;color:#c0c5ce;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#bf616a;">apiVersion</span><span>: </span><span style="color:#a3be8c;">ceph.rook.io/v1
+</span><span style="color:#bf616a;">kind</span><span>: </span><span style="color:#a3be8c;">CephBlockPool
+</span><span style="color:#bf616a;">metadata</span><span>:
+</span><span>  </span><span style="color:#bf616a;">name</span><span>: </span><span style="color:#a3be8c;">replicated-x3-block-store
+</span><span>  </span><span style="color:#bf616a;">namespace</span><span>: </span><span style="color:#a3be8c;">rook-ceph
+</span><span style="color:#bf616a;">spec</span><span>:
+</span><span>  </span><span style="color:#bf616a;">failureDomain</span><span>: </span><span style="color:#a3be8c;">host
+</span><span>  </span><span style="color:#bf616a;">replicated</span><span>:
+</span><span>    </span><span style="color:#bf616a;">size</span><span>: </span><span style="color:#d08770;">3
+</span></code></pre>
+<p>Easy peasy. Our <code>replicated-x3-block-store</code> with <code>failureDomain: host</code> and <code>replicated.size: 3</code> will make sure that data is triplicated to all three of our hosts, meaning we can lose any two hosts without experiencing data loss. Of course this also reduces our available capacity from 14.6TB to just ~4TB. Luckily Ceph is pretty flexible, so if we start running into space issues, we can scale up our cluster, create an erasure-coded pool (at the expense of some cpu and memory) or scale down to 2x replication. This pool will only be used for workloads where we really don't want to lose data.</p>
+<p>With the pool created, we just need to expose it to Kubernetes through a <a href="https://kubernetes.io/docs/concepts/storage/storage-classes/">StorageClass</a> based on Rook's <a href="https://rook.io/docs/rook/v1.11/Storage-Configuration/Block-Storage-RBD/block-storage/#provision-storage">own example</a></p>
+<pre data-lang="yaml" style="background-color:#2b303b;color:#c0c5ce;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span>---
+</span><span style="color:#bf616a;">apiVersion</span><span>: </span><span style="color:#a3be8c;">storage.k8s.io/v1
+</span><span style="color:#bf616a;">kind</span><span>: </span><span style="color:#a3be8c;">StorageClass
+</span><span style="color:#bf616a;">metadata</span><span>:
+</span><span>  </span><span style="color:#bf616a;">name</span><span>: </span><span style="color:#a3be8c;">replicated-x3-block-store
+</span><span>  </span><span style="color:#bf616a;">annotations</span><span>:
+</span><span>    </span><span style="color:#bf616a;">storageclass.kubernetes.io/is-default-class</span><span>: &quot;</span><span style="color:#a3be8c;">true</span><span>&quot;
+</span><span style="color:#bf616a;">provisioner</span><span>: </span><span style="color:#a3be8c;">rook-ceph.rbd.csi.ceph.com
+</span><span style="color:#bf616a;">reclaimPolicy</span><span>: </span><span style="color:#a3be8c;">Retain
+</span><span style="color:#bf616a;">allowVolumeExpansion</span><span>: </span><span style="color:#d08770;">true
+</span><span style="color:#bf616a;">parameters</span><span>:
+</span><span>  </span><span style="color:#65737e;"># clusterID is the namespace where the rook cluster is running
+</span><span>  </span><span style="color:#bf616a;">clusterID</span><span>: </span><span style="color:#a3be8c;">rook-ceph
+</span><span>  </span><span style="color:#65737e;"># Ceph pool into which the RBD image shall be created
+</span><span>  </span><span style="color:#bf616a;">pool</span><span>: </span><span style="color:#a3be8c;">replicated-x3-block-store
+</span><span>
+</span><span>  </span><span style="color:#bf616a;">imageFormat</span><span>: &quot;</span><span style="color:#a3be8c;">2</span><span>&quot;
+</span><span>  </span><span style="color:#65737e;"># For more information about these features see:
+</span><span>  </span><span style="color:#65737e;"># https://docs.ceph.com/en/latest/rbd/rbd-config-ref/#image-features
+</span><span>  </span><span style="color:#65737e;"># tl;dr: They&#39;re available from Linux kernel 5.14
+</span><span>  </span><span style="color:#65737e;"># and improves performance.
+</span><span>  </span><span style="color:#bf616a;">imageFeatures</span><span>: </span><span style="color:#a3be8c;">layering,fast-diff,object-map,deep-flatten,exclusive-lock
+</span><span>
+</span><span>  </span><span style="color:#65737e;"># The secrets contain Ceph admin credentials.
+</span><span>  </span><span style="color:#bf616a;">csi.storage.k8s.io/provisioner-secret-name</span><span>: </span><span style="color:#a3be8c;">rook-csi-rbd-provisioner
+</span><span>  </span><span style="color:#bf616a;">csi.storage.k8s.io/provisioner-secret-namespace</span><span>: </span><span style="color:#a3be8c;">rook-ceph
+</span><span>  </span><span style="color:#bf616a;">csi.storage.k8s.io/controller-expand-secret-name</span><span>: </span><span style="color:#a3be8c;">rook-csi-rbd-provisioner
+</span><span>  </span><span style="color:#bf616a;">csi.storage.k8s.io/controller-expand-secret-namespace</span><span>: </span><span style="color:#a3be8c;">rook-ceph
+</span><span>  </span><span style="color:#bf616a;">csi.storage.k8s.io/node-stage-secret-name</span><span>: </span><span style="color:#a3be8c;">rook-csi-rbd-node
+</span><span>  </span><span style="color:#bf616a;">csi.storage.k8s.io/node-stage-secret-namespace</span><span>: </span><span style="color:#a3be8c;">rook-ceph
+</span><span>  </span><span style="color:#bf616a;">csi.storage.k8s.io/fstype</span><span>: </span><span style="color:#a3be8c;">ext4
+</span></code></pre>
+<p>Out of an abundance of caution, we set the <code>reclaimPolicy</code> to <code>Retain</code>, which means we'll have to manually prune <code>PersistentVolumes</code> to claw back space, but it also means we won't lose data if we accidentally delete a volume claim.</p>
+<h1 id="conclusion"><a class="zola-anchor" href="#conclusion" aria-label="Anchor link for: conclusion">Conclusion</a></h1>
+<p>To test if it worked, we can create a persistent volume claim:</p>
+<pre data-lang="yaml" style="background-color:#2b303b;color:#c0c5ce;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#bf616a;">apiVersion</span><span>: </span><span style="color:#a3be8c;">v1
+</span><span style="color:#bf616a;">kind</span><span>: </span><span style="color:#a3be8c;">PersistentVolumeClaim
+</span><span style="color:#bf616a;">metadata</span><span>:
+</span><span>  </span><span style="color:#bf616a;">name</span><span>: </span><span style="color:#a3be8c;">test-pvc
+</span><span style="color:#bf616a;">spec</span><span>:
+</span><span>  </span><span style="color:#bf616a;">accessModes</span><span>:
+</span><span>  - </span><span style="color:#a3be8c;">ReadWriteOnce
+</span><span>  </span><span style="color:#bf616a;">resources</span><span>:
+</span><span>    </span><span style="color:#bf616a;">requests</span><span>:
+</span><span>      </span><span style="color:#bf616a;">storage</span><span>: </span><span style="color:#a3be8c;">10Gi
+</span><span>  </span><span style="color:#bf616a;">storageClassName</span><span>: </span><span style="color:#a3be8c;">replicated-x3-block-store
+</span></code></pre>
+<p>And very soon after an allocated block &quot;image&quot; appears in the Ceph dashboard:</p>
+<p><img src="https://datavirke.dk/posts/bare-metal-kubernetes-part-6-persistent-storage-with-rook-ceph/ceph-block.png" alt="Ceph Block" /></p>
+<p>The relation between these two is not immediately obvious, except for the size, but chasing down the imageName from the <code>PersistentVolume</code> created to satisfy the <code>PersistentVolumeClaim</code> shows the relation:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> kubectl get pvc          \
+</span><span style="color:#bf616a;">  -o</span><span> jsonpath=&#39;</span><span style="color:#a3be8c;">{.spec.volumeName}</span><span>&#39;  \
+</span><span>  test-pv
+</span><span style="color:#bf616a;">pvc-e1470495-3eee-47ab-881a-c66f45a71f3b
+</span><span>
+</span><span style="color:#bf616a;">[mpd@ish]$</span><span> kubectl get pv                               \
+</span><span style="color:#bf616a;">  -o</span><span> jsonpath=&#39;</span><span style="color:#a3be8c;">{.spec.csi.volumeAttributes.imageName}</span><span>&#39;  \
+</span><span>  pvc-e1470495-3eee-47ab-881a-c66f45a71f3b
+</span><span style="color:#bf616a;">csi-vol-5039f1f5-641f-4e33-822c-7c517b629575
+</span></code></pre>
+<p>In <a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-7-private-registry-with-harbor/">Part VII: Private Registry with Harbor</a> we'll put this persistent storage to use by setting up a private container registry with a pull-through cache.</p>
+
+	</div>
+	<hr class="post-end">
+	<footer class="post-info">
+    
+	  <p>
+		<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-tag meta-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7" y2="7"></line></svg>
+		
+		
+		<span class="tag"><a href="https://datavirke.dk/tags/kubernetes/">kubernetes</a></span>
+		
+		<span class="tag"><a href="https://datavirke.dk/tags/hetzner/">hetzner</a></span>
+		
+		<span class="tag"><a href="https://datavirke.dk/tags/talos/">talos</a></span>
+		
+		<span class="tag"><a href="https://datavirke.dk/tags/ceph/">ceph</a></span>
+		
+		<span class="tag"><a href="https://datavirke.dk/tags/rook/">rook</a></span>
+		
+		<span class="tag"><a href="https://datavirke.dk/tags/storage/">storage</a></span>
+		
+		
+    </p>
+    
+    <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>2428 Words</p>
+    
+    <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>2023-06-27</p>
+    
+	</footer>
+  </article>
+    
+  
+  <div class="post-nav thin">
+	
+	
+  </div>
+
+  
+</main>
+
+	  </div>
+	  
+	  
+
+
+
+<footer id="site-footer" class="section-inner thin animated fadeIn faster">
+  <p>&copy; 2024 <a href="https:&#x2F;&#x2F;datavirke.dk">Mathias Pius</a> &mdash; CVR: 43033336</p>
+  <p>Made with <a href="https://www.getzola.org" target="_blank" rel="noopener">Zola</a> &#183; Theme <a href="https://github.com/VersBinarii/hermit_zola" target="_blank" rel="noopener">Hermit_Zola</a>
+	
+	&#183; <a href="https://datavirke.dk/atom.xml" target="_blank" title="rss"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-rss"><path d="M4 11a9 9 0 0 1 9 9"></path><path d="M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1"></circle></svg></a>
+	
+  </p>
+</footer>
+
+
+
+
+	</div>
+	
+	<script src="https://datavirke.dk/js/main.js"></script>
+
+	<!-- Math rendering -->
+	<link rel="stylesheet" href="/katex.min.css">
+    <script defer src="/katex.min.js"></script>
+    <script defer src="/auto-render.min.js" onload="renderMathInElement(document.body, { delimiters: [ {left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}, {left: '\\[', right: '\\]', display: true}, {left: '\\(', right: '\\)', display: false}]});"></script>
+
+    
+		<link href="/vs2015.css" rel="stylesheet">
+		<script src="/highlight.pack.js"></script>
+		<script src="/highlightjs-badge.min.js"></script>
+		<script>
+			var pres = document.querySelectorAll("pre>code");
+			for (var i = 0; i < pres.length; i++) {
+				hljs.highlightBlock(pres[i]);
+			}
+		</script>
+		
+			<script src="/clipboard.min.js"></script>
+			<script>
+				var options = {
+					copyIconClass: "gg-clipboard",
+					checkIconClass: "gg-check"
+				};
+				window.highlightJsBadge(options);
+			</script>
+		
+
+	
+
+	
+	<script src="https://datavirke.dk/js/main.js"></script>
+
+    
+    
+
+	
+  </body>
+</html>

@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <meta name="robots" content="max-snippet:0, max-image-preview:large">
+    <meta name="description" content="Freelance DevOps Engineer building reliable infrastructure using Kubernetes, Cloud &amp; Rust.">
+  
+    <!-- Google / Search Engine Tags -->
+
+	
+    <title>Fallible - The Lost Sibling of Result and Option - Datavirke</title>
+	<meta itemprop="name" content="Fallible - The Lost Sibling of Result and Option - Datavirke">
+	<meta property="og:title" content="Fallible - The Lost Sibling of Result and Option - Datavirke">
+	<meta name="twitter:title" content="Fallible - The Lost Sibling of Result and Option - Datavirke">
+    
+
+	
+	<meta itemprop="description" content="Freelance DevOps Engineer building reliable infrastructure using Kubernetes, Cloud &amp; Rust.">
+	<meta property="og:description" content="Freelance DevOps Engineer building reliable infrastructure using Kubernetes, Cloud &amp; Rust.">
+	<meta name="twitter:description" content="Freelance DevOps Engineer building reliable infrastructure using Kubernetes, Cloud &amp; Rust.">
+	
+
+	<meta name="twitter:card" content="summary_large_image">    
+    <meta name="twitter:image" content="https://datavirke.dk/logo.svg">
+	<meta itemprop="image" content="https://datavirke.dk/logo.svg">
+	<meta property="og:image" content="https://datavirke.dk/logo.svg">
+    <meta property="og:url" content="https:&#x2F;&#x2F;datavirke.dk">
+    <meta property="og:type" content="website">
+    
+    <link rel="apple-touch-icon" sizes="180x180" href="https://datavirke.dk/apple-touch-icon.png"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="https://datavirke.dk/favicon-32x32.png" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="https://datavirke.dk/favicon-16x16.png"
+    />
+    <link
+      rel="shortcut icon"
+      href="https://datavirke.dk/favicon.ico"
+    />
+    <link rel="stylesheet" href="https://datavirke.dk/style.css"/>
+    
+    
+    <link rel="alternate" type="application/rss+xml" title="RSS" href="https://datavirke.dk/atom.xml">
+    
+
+	<script src="https://datavirke.dk/mermaid.min.js"></script>
+	<script>
+		let config = { 
+			startOnLoad: true, 
+
+			darkMode: true
+		};
+		mermaid.initialize(config);
+	
+	</script>
+
+	<script type="application/ld+json">
+		{
+		"@context": "https://schema.org",
+		"@type": "Organization",
+		"url": "https://datavirke.dk",
+		"logo": "https://datavirke.dk/logo.svg"
+		}
+	</script>
+  </head>
+  <body id="page">
+
+	
+<header id="site-header" class="animated faster">
+  <div class="hdr-wrapper section-inner">
+    <div class="hdr-left">
+      <div class="site-branding">
+        <a href="https:&#x2F;&#x2F;datavirke.dk">Datavirke</a>
+      </div>
+      <nav class="site-nav hide-in-mobile">
+            
+        
+        <a href="https://datavirke.dk/about">About</a>
+        
+        <a href="https://datavirke.dk/experience">Experience</a>
+        
+        <a href="https://datavirke.dk/posts">Blog</a>
+        
+      </nav>
+    </div>
+    <div class="hdr-right hdr-icons">
+      <span class="hdr-social hide-in-mobile">
+        
+
+<a href="https:&#x2F;&#x2F;github.com&#x2F;MathiasPius" target="_blank" rel="noopener me"
+   title="github">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+  
+</a>
+
+<a href="https:&#x2F;&#x2F;www.linkedin.com&#x2F;in&#x2F;mathias-pius&#x2F;" target="_blank" rel="noopener me"
+   title="linkedin">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+  
+</a>
+
+<a href="mailto:mathias@datavirke.dk" target="_blank" rel="noopener me"
+   title="email">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+  
+</a>
+
+<a href="https:&#x2F;&#x2F;fosstodon.org&#x2F;@MathiasPius" target="_blank" rel="noopener me"
+   title="twitter">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path></svg>
+  
+</a>
+
+
+      </span>
+      <button id="menu-btn" class="hdr-btn" title="Menu">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="feather feather-menu"
+        >
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>
+<div id="mobile-menu" class="animated fast">
+  <ul>
+    
+    <li><a href="https://datavirke.dk/about">About</a></li>
+    
+    <li><a href="https://datavirke.dk/experience">Experience</a></li>
+    
+    <li><a href="https://datavirke.dk/posts">Blog</a></li>
+    
+  </ul>
+</div>
+
+	
+	
+
+		
+<main class="site-main section-inner animated fadeIn faster">
+  <article class="thin">
+	<header class="post-header">
+	  <div class="post-meta">
+		
+		<span>Jan 11, 2023</span>
+		<small> - 
+<span class="reading-time" title="Estimated read time">
+  
+  4 min read
+  
+</span>
+</small>
+		
+            
+	  </div>
+	  <h1>Fallible - The Lost Sibling of Result and Option</h1>
+	</header>
+
+	<div class="content">
+        
+	  <a href="https://crates.io/crates/fallible-option" style="box-shadow: none">
+    <img src="https://img.shields.io/crates/v/fallible-option" style="display: inline;" />
+</a>
+<a href="https://docs.rs/fallible-option/latest/fallible_option" style="box-shadow: none">
+    <img src="https://docs.rs/fallible-option/badge.svg" style="display: inline;" />
+</a>
+<a href="https://github.com/MathiasPius/fallible-option" style="box-shadow: none">
+    <img src="https://img.shields.io/badge/GitHub-fallible--option-blue" style="display: inline;" />
+</a>
+<p>If you're familiar with Rust, then <a href="https://doc.rust-lang.org/std/result/enum.Result.html">Result</a>
+and <a href="https://doc.rust-lang.org/std/option/enum.Option.html">Option</a> are probably second nature to you,
+and they're amazing tools! Sum-types enable performant error handling, and language attributes like
+<a href="https://rust-lang.github.io/rfcs/1940-must-use-functions.html"><code>#[must_use]</code></a> ensures errors are not left unaddressed.</p>
+<p>But you will also almost certainly have encountered or written a function which could produce either
+an error <em>or</em> side-effects, with no actual return value in the successful case.</p>
+<p>A great example of this is the <a href="https://doc.rust-lang.org/std/fmt/trait.Display.html"><code>std::fmt::Display</code></a> trait. 
+Implementing this trait requires you to fulfill the following contract:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">fmt</span><span>(&amp;</span><span style="color:#bf616a;">self</span><span>, </span><span style="color:#bf616a;">f</span><span>: &amp;</span><span style="color:#b48ead;">mut </span><span>Formatter&lt;&#39;_&gt;) -&gt; Result&lt;(), Error&gt;;
+</span></code></pre>
+<p>But what's with the <code>Result&lt;(), Error&gt;</code>? Obviously the function can fail, so the <code>Error</code> makes sense, but why is the Rust standard library using a <code>Result</code> for a function which clearly produces no output value? The description for <code>Result</code> even says that:</p>
+<blockquote>
+<p>It is an enum with the variants, Ok(T), representing success <strong>and containing a value</strong>, and Err(E) (...)</p>
+</blockquote>
+<p>Yet our result contains no value! A better definition might use <code>Option&lt;Error&gt;</code> instead, which clearly conveys that this function <em>may</em> produce an error, but that forces you to give up the incredibly powerful and ergonomic <code>?</code> (or <a href="https://doc.rust-lang.org/std/ops/trait.Try.html"><code>Try</code></a>) syntax:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">might_fail</span><span>() -&gt; Option&lt;Error&gt; { </span><span style="color:#65737e;">/* ... */ </span><span>}
+</span><span>
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">do_thing</span><span>() -&gt; Option&lt;OtherError&gt; {
+</span><span>    </span><span style="color:#65737e;">// Causes do_thing to return None, if might_fail() succeeds,
+</span><span>    </span><span style="color:#65737e;">// this is the *opposite* of what we want!
+</span><span>    </span><span style="color:#96b5b4;">might_fail</span><span>()?;
+</span><span>    
+</span><span>    </span><span style="color:#65737e;">// Instead you&#39;ll have to do the following to propagate
+</span><span>    </span><span style="color:#65737e;">// the error, but if you find this appealing, you&#39;d 
+</span><span>    </span><span style="color:#65737e;">// probably be much happier writing Go ;)
+</span><span>    </span><span style="color:#b48ead;">if let </span><span>Some(err) = </span><span style="color:#96b5b4;">might_fail</span><span>() {
+</span><span>        </span><span style="color:#b48ead;">return </span><span>Some(err.</span><span style="color:#96b5b4;">into</span><span>());
+</span><span>    }
+</span><span>
+</span><span>    None
+</span><span>}
+</span></code></pre>
+<p>Clearly <code>Option</code> is a dead end, but <code>Result</code> is still misleading..</p>
+<p>What we <em>really</em> want is the intention of <code>Option</code> with the <code>Try</code>-semantics of <code>Result</code>!</p>
+<h2 id="introducing-fallible"><a class="zola-anchor" href="#introducing-fallible" aria-label="Anchor link for: introducing-fallible">Introducing Fallible</a></h2>
+<p><a href="https://docs.rs/fallible-option/latest/fallible_option/">Fallible</a> is to quote the crate documentation:</p>
+<blockquote>
+<p>an Option with inverted Try-semantics.</p>
+</blockquote>
+<p>It fills the gap left by <code>Option</code> and <code>Result</code> by providing a type that signifies either the successful completion of an operation <em>or</em> an error.</p>
+<table style="width: 200px; margin-left: auto; margin-right: auto; text-align: center">
+    <thead>
+        <tr>
+            <th>Success</th>
+            <th>Failure</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Result&lt;T</td>
+            <td>E&gt;</td>
+        </tr>
+        <tr>
+            <td>Option&lt;T&gt;</td>
+            <td><b>Fallible&lt;E&gt;</b></td>
+        </tr>
+    </tbody>
+</table>
+<p>This means that we can rewrite our example above as succinctly as:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">might_fail</span><span>() -&gt; Fallible&lt;Error&gt; { </span><span style="color:#65737e;">/* ... */ </span><span>}
+</span><span>
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">do_thing</span><span>() -&gt; Fallible&lt;OtherError&gt; {
+</span><span>    </span><span style="color:#96b5b4;">might_fail</span><span>()?;
+</span><span>    </span><span style="color:#96b5b4;">might_fail</span><span>()?;
+</span><span>    </span><span style="color:#96b5b4;">might_fail</span><span>()?;
+</span><span>    
+</span><span>    Success
+</span><span>}
+</span></code></pre>
+<p>And that's it, the best of both worlds!</p>
+<p>More practical and in-depth information about how to use this library can be found in the <a href="https://docs.rs/fallible-option/latest/fallible-option/">docs</a></p>
+<hr />
+<p>Feedback and comments are extremely welcome on the GitHub <a href="https://github.com/MathiasPius/fallible-option/issues">issues</a> page for the project.
+It wouldn't be first time I dedicated hours of my life to fulfilling a niche, only to find out afterwards that the problem I was solving didn't exist,
+and by the way my solution doesn't <em>actually</em> solve it, so please shoot this down!</p>
+<h2 id="so-why-isn-t-this-in-the-standard-library-not-already-a-thing"><a class="zola-anchor" href="#so-why-isn-t-this-in-the-standard-library-not-already-a-thing" aria-label="Anchor link for: so-why-isn-t-this-in-the-standard-library-not-already-a-thing">So why isn't this in the standard library/not already a thing?</a></h2>
+<p>I don't know. And I'm definitely not saying it should be!</p>
+<p>It's incredibly hard to google why something <em>doesn't</em> exist and it was pretty hard to explain why I didn't just use <code>Result&lt;(), E&gt;</code> like literally everybody else.</p>
+<p>That being said, I can think of a couple of decent reasons off the top of my head:</p>
+<ol>
+<li>
+<p>The use case is adequately covered by <code>Result&lt;(), E&gt;</code>.</p>
+<p>This is the most obvious one, evidently it works, since the entire standard library is riddled with it, and nobody is rioting in the streets.</p>
+<p>If I were to be a little provocative, I would perhaps ask why <code>Option</code> exists, when its use cases could just as easily be covered by <code>Result&lt;T, ()&gt;</code>.</p>
+</li>
+<li>
+<p>Rust's standard library is not intended to be all-encompassing.</p>
+<p>The Rust core language makes a point of <em>not</em> being an &quot;everything and the kitchen sink&quot; language, which is part of what makes it so agile.</p>
+<p>By delegating implementation of features that might be considered &quot;standard&quot; in other languages, Rust is able to iterate
+and improve, without introducing major breaking changes to core language features, such as the ongoing evolution of error handling crates
+over the years, or the multiple competing asynchronous runtimes.</p>
+</li>
+<li>
+<p>It adds even more ways of doing the same thing.</p>
+<p>I really like this point. I'm a huge fan of having just one way of doing things, and this no doubt adds complexity by simply existing,
+but I would argue that clearly communicating intent when designing the signatures of your functions is an absolute readability win.</p>
+</li>
+</ol>
+<p>I think it comes down to the 80/20 rule, or perhaps more like 95/5 rule in this case. 95% of use cases can be covered by Result and Option,
+and introducing 500+ lines of code to cover the 5% case, and then forcing it down the Rust population's collective throats is wildly disproportionate.</p>
+<hr />
+<p>It's been said that perfection is achieved when there's nothing left to take away, and that feckin' <code>()</code> needs to <em>go</em>!</p>
+
+	</div>
+	<hr class="post-end">
+	<footer class="post-info">
+    
+	  <p>
+		<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-tag meta-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7" y2="7"></line></svg>
+		
+		
+		<span class="tag"><a href="https://datavirke.dk/tags/rust/">rust</a></span>
+		
+		<span class="tag"><a href="https://datavirke.dk/tags/error-handling/">error handling</a></span>
+		
+		<span class="tag"><a href="https://datavirke.dk/tags/fallible/">fallible</a></span>
+		
+		
+    </p>
+    
+    <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>949 Words</p>
+    
+    <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>2023-01-11</p>
+    
+	</footer>
+  </article>
+    
+  
+  <div class="post-nav thin">
+	
+	
+  </div>
+
+  
+</main>
+
+	  </div>
+	  
+	  
+
+
+
+<footer id="site-footer" class="section-inner thin animated fadeIn faster">
+  <p>&copy; 2024 <a href="https:&#x2F;&#x2F;datavirke.dk">Mathias Pius</a> &mdash; CVR: 43033336</p>
+  <p>Made with <a href="https://www.getzola.org" target="_blank" rel="noopener">Zola</a> &#183; Theme <a href="https://github.com/VersBinarii/hermit_zola" target="_blank" rel="noopener">Hermit_Zola</a>
+	
+	&#183; <a href="https://datavirke.dk/atom.xml" target="_blank" title="rss"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-rss"><path d="M4 11a9 9 0 0 1 9 9"></path><path d="M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1"></circle></svg></a>
+	
+  </p>
+</footer>
+
+
+
+
+	</div>
+	
+	<script src="https://datavirke.dk/js/main.js"></script>
+
+	<!-- Math rendering -->
+	<link rel="stylesheet" href="/katex.min.css">
+    <script defer src="/katex.min.js"></script>
+    <script defer src="/auto-render.min.js" onload="renderMathInElement(document.body, { delimiters: [ {left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}, {left: '\\[', right: '\\]', display: true}, {left: '\\(', right: '\\)', display: false}]});"></script>
+
+    
+		<link href="/vs2015.css" rel="stylesheet">
+		<script src="/highlight.pack.js"></script>
+		<script src="/highlightjs-badge.min.js"></script>
+		<script>
+			var pres = document.querySelectorAll("pre>code");
+			for (var i = 0; i < pres.length; i++) {
+				hljs.highlightBlock(pres[i]);
+			}
+		</script>
+		
+			<script src="/clipboard.min.js"></script>
+			<script>
+				var options = {
+					copyIconClass: "gg-clipboard",
+					checkIconClass: "gg-check"
+				};
+				window.highlightJsBadge(options);
+			</script>
+		
+
+	
+
+	
+	<script src="https://datavirke.dk/js/main.js"></script>
+
+    
+    
+
+	
+  </body>
+</html>

@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <meta name="robots" content="max-snippet:0, max-image-preview:large">
+    <meta name="description" content="Freelance DevOps Engineer building reliable infrastructure using Kubernetes, Cloud &amp; Rust.">
+  
+    <!-- Google / Search Engine Tags -->
+
+	
+    <title>Bare-metal Kubernetes, Part X: Metrics and Monitoring with OpenObserve - Datavirke</title>
+	<meta itemprop="name" content="Bare-metal Kubernetes, Part X: Metrics and Monitoring with OpenObserve - Datavirke">
+	<meta property="og:title" content="Bare-metal Kubernetes, Part X: Metrics and Monitoring with OpenObserve - Datavirke">
+	<meta name="twitter:title" content="Bare-metal Kubernetes, Part X: Metrics and Monitoring with OpenObserve - Datavirke">
+    
+
+	
+	<meta itemprop="description" content="Freelance DevOps Engineer building reliable infrastructure using Kubernetes, Cloud &amp; Rust.">
+	<meta property="og:description" content="Freelance DevOps Engineer building reliable infrastructure using Kubernetes, Cloud &amp; Rust.">
+	<meta name="twitter:description" content="Freelance DevOps Engineer building reliable infrastructure using Kubernetes, Cloud &amp; Rust.">
+	
+
+	<meta name="twitter:card" content="summary_large_image">    
+    <meta name="twitter:image" content="https://datavirke.dk/logo.svg">
+	<meta itemprop="image" content="https://datavirke.dk/logo.svg">
+	<meta property="og:image" content="https://datavirke.dk/logo.svg">
+    <meta property="og:url" content="https:&#x2F;&#x2F;datavirke.dk">
+    <meta property="og:type" content="website">
+    
+    <link rel="apple-touch-icon" sizes="180x180" href="https://datavirke.dk/apple-touch-icon.png"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="https://datavirke.dk/favicon-32x32.png" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="https://datavirke.dk/favicon-16x16.png"
+    />
+    <link
+      rel="shortcut icon"
+      href="https://datavirke.dk/favicon.ico"
+    />
+    <link rel="stylesheet" href="https://datavirke.dk/style.css"/>
+    
+    
+    <link rel="alternate" type="application/rss+xml" title="RSS" href="https://datavirke.dk/atom.xml">
+    
+
+	<script src="https://datavirke.dk/mermaid.min.js"></script>
+	<script>
+		let config = { 
+			startOnLoad: true, 
+
+			darkMode: true
+		};
+		mermaid.initialize(config);
+	
+	</script>
+
+	<script type="application/ld+json">
+		{
+		"@context": "https://schema.org",
+		"@type": "Organization",
+		"url": "https://datavirke.dk",
+		"logo": "https://datavirke.dk/logo.svg"
+		}
+	</script>
+  </head>
+  <body id="page">
+
+	
+<header id="site-header" class="animated faster">
+  <div class="hdr-wrapper section-inner">
+    <div class="hdr-left">
+      <div class="site-branding">
+        <a href="https:&#x2F;&#x2F;datavirke.dk">Datavirke</a>
+      </div>
+      <nav class="site-nav hide-in-mobile">
+            
+        
+        <a href="https://datavirke.dk/about">About</a>
+        
+        <a href="https://datavirke.dk/experience">Experience</a>
+        
+        <a href="https://datavirke.dk/posts">Blog</a>
+        
+      </nav>
+    </div>
+    <div class="hdr-right hdr-icons">
+      <span class="hdr-social hide-in-mobile">
+        
+
+<a href="https:&#x2F;&#x2F;github.com&#x2F;MathiasPius" target="_blank" rel="noopener me"
+   title="github">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+  
+</a>
+
+<a href="https:&#x2F;&#x2F;www.linkedin.com&#x2F;in&#x2F;mathias-pius&#x2F;" target="_blank" rel="noopener me"
+   title="linkedin">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+  
+</a>
+
+<a href="mailto:mathias@datavirke.dk" target="_blank" rel="noopener me"
+   title="email">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+  
+</a>
+
+<a href="https:&#x2F;&#x2F;fosstodon.org&#x2F;@MathiasPius" target="_blank" rel="noopener me"
+   title="twitter">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path></svg>
+  
+</a>
+
+
+      </span>
+      <button id="menu-btn" class="hdr-btn" title="Menu">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="feather feather-menu"
+        >
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>
+<div id="mobile-menu" class="animated fast">
+  <ul>
+    
+    <li><a href="https://datavirke.dk/about">About</a></li>
+    
+    <li><a href="https://datavirke.dk/experience">Experience</a></li>
+    
+    <li><a href="https://datavirke.dk/posts">Blog</a></li>
+    
+  </ul>
+</div>
+
+	
+	
+
+		
+<main class="site-main section-inner animated fadeIn faster">
+  <article class="thin">
+	<header class="post-header">
+	  <div class="post-meta">
+		
+		<span>May 16, 2024</span>
+		<small> - 
+<span class="reading-time" title="Estimated read time">
+  
+  10 min read
+  
+</span>
+</small>
+		
+            
+	  </div>
+	  <h1>Bare-metal Kubernetes, Part X: Metrics and Monitoring with OpenObserve</h1>
+	</header>
+
+	<div class="content">
+        
+	  <p>I intended to write this section much earlier, especially after <a href="https://datavirke.dk/posts/bare-metal-kubernetes-first-incident/">the incident</a> where monitoring would have proven very helpful,
+but my previous experience configuring my cluster for metrics and log aggregation using a combination of Prometheus, Grafana and Loki was a little lackluster.</p>
+<p>At the time Loki was a somewhat new product which might have contributed to my impression, but it felt very sluggish and not very easy to use, so I was reluctant to put a lot of effort into setting it up just to get disappointed again.</p>
+<p>My enthusiasm increased a little bit when <a href="https://openobserve.ai/">OpenObserve</a> recently popped up on my radar. It sells itself as a sort of all-in-one observability platform with a self-hosting option. While the do-one-thing-well and protocol-first approach of products like Prometheus works extremely well for creating an ecosystem of services which can seamlessly integrate it (like Grafana), for something like observability you <em>really</em> want an all-encompassing interface which can provide visibility into all aspects of your workloads at once, and not have to switch between Kibana and Grafana to make sense of when exactly your application shit the bed.</p>
+<p>So let's give OpenObserve a whirl!</p>
+<p><em>Series Index</em></p>
+<ul>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-1-talos-on-hetzner/">Part I: Talos on Hetzner</a></li>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-2-cilium-and-firewalls/">Part II: Cilium CNI &amp; Firewalls</a></li>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-3-encrypted-gitops-with-fluxcd/">Part III: Encrypted GitOps with FluxCD</a></li>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-4-ingress-dns-certificates/">Part IV: Ingress, DNS and Certificates</a></li>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-5-scaling-out/">Part V: Scaling Out</a></li>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-6-persistent-storage-with-rook-ceph/">Part VI: Persistent Storage with Rook Ceph</a></li>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-7-private-registry-with-harbor/">Part VII: Private Registry with Harbor</a></li>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-8-containerizing-our-work-environment/">Part VIII: Containerizing our Work Environment</a></li>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-9-renovating-old-deployments/">Part IX: Renovating old Deployments</a></li>
+<li><strong><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-10-metrics-and-monitoring-with-openobserve/">Part X: Metrics and Monitoring with OpenObserve</a></strong></li>
+</ul>
+<p>Complete source code for the live cluster is available <a href="https://github.com/MathiasPius/kronform">@github/MathiasPius/kronform</a></p>
+<h2 id="figuring-out-how-to-deploy-the-platform"><a class="zola-anchor" href="#figuring-out-how-to-deploy-the-platform" aria-label="Anchor link for: figuring-out-how-to-deploy-the-platform">(Figuring out how to) Deploy the Platform</a></h2>
+<p>Right off the bat, we get the first stick-in-the-spokes of our deployment vehicle: OpenObserve's <a href="https://openobserve.ai/docs/getting-started/">Getting Started</a> documentation contains a youtube video which acts as more of an introduction to the platform itself, but does provide some help for getting started with their cloud platform. Digging a bit deeper in their docs, the <a href="https://openobserve.ai/docs/quickstart/#self-hosted-installation">Quickstart Guide</a> has a self-hosted installation section, which immediately shows us how to launch OpenObserve on a Windows platform, but upon further inspection also points to a yaml-file in their repository which contains a <code>StatefulSet</code> deployment of the platform. This is indeed a Quick Start, but I was hoping for something a little more refined.</p>
+<p>The <a href="https://openobserve.ai/docs/ha_deployment/#helm-charts">High Availability Deployment</a> section seems to have what we actually want: A helm chart!</p>
+<p>We'll be using the <a href="https://github.com/openobserve/openobserve-helm-chart/tree/main/charts/openobserve-standalone">Standalone</a> deployment since it seems to be configured with the kinds of defaults we need. We don't want external S3 storage (although it might make sense to integrate our <a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-6-persistent-storage-with-rook-ceph/">Rook Ceph</a> as an S3-compatible backend in the future) or any of the other cloud features.</p>
+<p>Again, the helm chart leaves some things to be desired. The chart doesn't allow you to configure a separate <code>secretKeyRef</code> for your <a href="https://github.com/openobserve/openobserve-helm-chart/issues/45">admin credentials</a>, instead forcing you to create secret through the helm chart itself.</p>
+<p>This is hazardous for (at least) two reasons:</p>
+<ol>
+<li>
+<p>Your secret and not-secret information is now co-mingled in your version control. If we want to update the <code>HelmRelease</code> resource in the future (or have Renovate do it), we need to decrypt, modify, and then re-encrypt the file. This process is error prone, and the consequence is credential leakage!</p>
+</li>
+<li>
+<p>The <code>HelmRelease</code> resource which users may well want access to contains the plaintext non-obfuscated <code>values</code> declaration for the deployed resource, meaning they can now read the root username and password!</p>
+</li>
+</ol>
+<p>Luckily the helm chart does provide an override of sorts in the form of <code>extraEnv</code>, and with that our final <code>values</code> section of the HelmRelease looks like this:</p>
+<pre data-lang="yaml" style="background-color:#2b303b;color:#c0c5ce;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#65737e;"># manifests/infrastructure/openobserve/openobserve.yaml
+</span><span style="color:#bf616a;">config</span><span>:
+</span><span>  </span><span style="color:#bf616a;">ZO_TELEMETRY</span><span>: &quot;</span><span style="color:#a3be8c;">false</span><span>&quot;
+</span><span>  </span><span style="color:#bf616a;">ZO_TELEMETRY_URL</span><span>: &quot;</span><span style="color:#a3be8c;">http://127.0.0.1</span><span>&quot;
+</span><span>  </span><span style="color:#bf616a;">ZO_WEB_URL</span><span>: &quot;</span><span style="color:#a3be8c;">https://obs.kronform.pius.dev</span><span>&quot;
+</span><span style="color:#bf616a;">persistence</span><span>:
+</span><span>  </span><span style="color:#bf616a;">size</span><span>: </span><span style="color:#a3be8c;">50Gi
+</span><span style="color:#bf616a;">ingress</span><span>:
+</span><span>  </span><span style="color:#bf616a;">enabled</span><span>: </span><span style="color:#d08770;">true
+</span><span>  </span><span style="color:#bf616a;">annotations</span><span>:
+</span><span>    </span><span style="color:#bf616a;">cert-manager.io/issuer</span><span>: &quot;&quot;
+</span><span>    </span><span style="color:#bf616a;">cert-manager.io/cluster-issuer</span><span>: </span><span style="color:#a3be8c;">letsencrypt-production
+</span><span>    </span><span style="color:#bf616a;">nginx.ingress.kubernetes.io/enable-cors</span><span>: &quot;</span><span style="color:#a3be8c;">true</span><span>&quot;
+</span><span>  </span><span style="color:#bf616a;">hosts</span><span>:
+</span><span>    - </span><span style="color:#bf616a;">host</span><span>: </span><span style="color:#a3be8c;">obs.kronform.pius.dev
+</span><span>      </span><span style="color:#bf616a;">paths</span><span>:
+</span><span>        - </span><span style="color:#bf616a;">path</span><span>: </span><span style="color:#a3be8c;">/
+</span><span>          </span><span style="color:#bf616a;">pathType</span><span>: </span><span style="color:#a3be8c;">ImplementationSpecific
+</span><span>  </span><span style="color:#bf616a;">tls</span><span>:
+</span><span>    - </span><span style="color:#bf616a;">secretName</span><span>: </span><span style="color:#a3be8c;">obs.kronform.pius.dev-tls
+</span><span>      </span><span style="color:#bf616a;">hosts</span><span>:
+</span><span>        - </span><span style="color:#a3be8c;">obs.kronform.pius.dev
+</span><span style="color:#bf616a;">extraEnv</span><span>:
+</span><span>  - </span><span style="color:#bf616a;">name</span><span>: </span><span style="color:#a3be8c;">ZO_ROOT_USER_EMAIL
+</span><span>    </span><span style="color:#bf616a;">valueFrom</span><span>:
+</span><span>      </span><span style="color:#bf616a;">secretKeyRef</span><span>:
+</span><span>        </span><span style="color:#bf616a;">name</span><span>: </span><span style="color:#a3be8c;">openobserve-credentials
+</span><span>        </span><span style="color:#bf616a;">key</span><span>: </span><span style="color:#a3be8c;">ZO_ROOT_USER_EMAIL
+</span><span>  - </span><span style="color:#bf616a;">name</span><span>: </span><span style="color:#a3be8c;">ZO_ROOT_USER_PASSWORD
+</span><span>    </span><span style="color:#bf616a;">valueFrom</span><span>:
+</span><span>      </span><span style="color:#bf616a;">secretKeyRef</span><span>:
+</span><span>        </span><span style="color:#bf616a;">name</span><span>: </span><span style="color:#a3be8c;">openobserve-credentials
+</span><span>        </span><span style="color:#bf616a;">key</span><span>: </span><span style="color:#a3be8c;">ZO_ROOT_USER_PASSWORD
+</span></code></pre>
+<p>Apart from the security stuff, I've also disabled telemetry (really, this needs to be opt-in), granted it a little more local storage, and configured ingress using our previously configured cert-manager cluster issuer <code>letsencrypt-production</code>.</p>
+<p>That last part actually <a href="https://github.com/openobserve/openobserve-helm-chart/issues/60">did not work</a>. The default <code>values.yaml</code> definition for the chart explicitly sets <code>cert-manager.io/issuer: letsencrypt</code>, but since we're using a <em>cluster</em> issuer, adding our annotation as above breaks the ingress definitions since it now contains the merged values with both the <code>cert-manager.io/issuer</code> and <code>cert-manager.io/cluster-issuer</code> annotations, meaning cert-manager doesn't know which to use and defaults to the safe choice of using neither.</p>
+<p>I initially got around this by simply editing the ingress directly and removing the <code>cert-manager.io/issuer</code> annotation, which allowed cert-manager to proceed with the certificate issuing process. Another fix would be to simply use the built-in namespaced issuer configured in the chart. After sleeping on the problem and googling a bit, it dawned on me that you can actually <em>remove</em> default values using <code>null</code> as the value, so the real fix was as easy as:</p>
+<pre data-lang="yaml" style="background-color:#2b303b;color:#c0c5ce;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#65737e;"># manifests/infrastructure/openobserve/openobserve.yaml
+</span><span style="color:#bf616a;">annotations</span><span>:
+</span><span>  </span><span style="color:#bf616a;">cert-manager.io/issuer</span><span>: </span><span style="color:#d08770;">null
+</span></code></pre>
+<p>With all those headaches out of the way, we finally have OpenObserve up and running!</p>
+<p><img src="https://datavirke.dk/posts/bare-metal-kubernetes-part-10-metrics-and-monitoring-with-openobserve/obs-first-view.png" alt="OpenObserve Dashboard" /></p>
+<h2 id="a-significant-detour"><a class="zola-anchor" href="#a-significant-detour" aria-label="Anchor link for: a-significant-detour">A Significant Detour</a></h2>
+<p>Now that the OpenObserve platform appears to be up and running, it's time to set up the <a href="https://opentelemetry.io/docs/what-is-opentelemetry/">OpenTelemetry</a> operators, which gives us a Kubernetes-native and very flexible way of gathering metrics and logs from our cluster.</p>
+<p>Deployment is as easy as <code>kubect apply</code>ing <a href="https://github.com/open-telemetry/opentelemetry-operator/releases/download/v0.100.0/opentelemetry-operator.yaml">this</a> manifest, or in our case pointing a Kustomization at it instead:</p>
+<pre data-lang="yaml" style="background-color:#2b303b;color:#c0c5ce;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#65737e;"># manifests/infrastructure/openobserve/kustomization.yaml
+</span><span>---
+</span><span style="color:#bf616a;">apiVersion</span><span>: </span><span style="color:#a3be8c;">kustomize.config.k8s.io/v1beta1
+</span><span style="color:#bf616a;">kind</span><span>: </span><span style="color:#a3be8c;">Kustomization
+</span><span style="color:#bf616a;">resources</span><span>:
+</span><span> - </span><span style="color:#a3be8c;">namespace.yaml
+</span><span> - </span><span style="color:#a3be8c;">secret.yaml
+</span><span> - </span><span style="color:#a3be8c;">openobserve.yaml
+</span><span> - </span><span style="color:#a3be8c;">https://github.com/open-telemetry/opentelemetry-operator/releases/download/v0.99.0/opentelemetry-operator.yaml
+</span></code></pre>
+<p>The next obvious step is to deploy the <a href="https://github.com/openobserve/openobserve-helm-chart/tree/main/charts/openobserve-collector">openobserve-collector</a> which claims to be an opinionated <a href="https://opentelemetry.io/docs/collector/"><code>OpentelemetryCollector</code></a>, but this is where things kind of got out of hand.</p>
+<p>The openobserve-collector spawns a <code>DaemonSet</code> of agents which are responsible for collecting metrics and logs from each of the Kubernetes nodes in our cluster, and neither of these worked as expected out of the gate.</p>
+<h3 id="kubelet-metrics"><a class="zola-anchor" href="#kubelet-metrics" aria-label="Anchor link for: kubelet-metrics">Kubelet Metrics</a></h3>
+<p>Openobserve's Collector runs as a pod on each node, speaking directly to the Kubelet on port <code>10250/tcp</code>. The way it goes about doing this, is by getting the <code>spec.nodeName</code> from its own pod using <a href="https://kubernetes.io/docs/tasks/inject-data-application/environment-variable-expose-pod-information/">fieldRef</a>, and then relying on DNS resolution to turn this node name into an IP address. Unfortunately, this node name does <em>not</em> resolve to an IP address, at least not on Talos 1.6.4 which I was running at the time, but by some chance this feature just happened to added in <a href="https://www.talos.dev/v1.7/talos-guides/network/host-dns/#resolving-talos-cluster-member-names">1.7.0</a>.</p>
+<p>After upgrading to 1.7.0 and enabling both <code>resolveMembers</code> and <code>kubeDNSForwardToHost</code>, thereby having the in-cluster coredns deployment forward queries it can't answer to the talos host DNS service which <em>can</em> resolve node names, it still doesn't work and what's more loads of other things are experiencing problems too! Upon inspecting the coredns deployment, its logs were full of I/O Timeouts:</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>[ERROR] plugin/errors: 2 n1. AAAA: read udp 10.244.2.224:44731-&gt;10.96.0.9:53: i/o timeout
+</span><span>[INFO] 127.0.0.1:52536 - 21131 &quot;HINFO IN 1257736523734931135.7903262571643399098. udp 57 false 512&quot; - - 0 2.000614444s
+</span><span>[ERROR] plugin/errors: 2 1257736523734931135.7903262571643399098. HINFO: read udp 10.244.2.224:60119-&gt;10.96.0.9:53: i/o timeout
+</span><span>[INFO] 10.244.0.177:49041 - 60274 &quot;A IN n1. udp 31 false 1232&quot; - - 0 2.001034212s
+</span><span>[ERROR] plugin/errors: 2 n1. A: read udp 10.244.2.224:37690-&gt;10.96.0.9:53: i/o timeout
+</span><span>[INFO] 10.244.0.177:59943 - 33782 &quot;AAAA IN n1. udp 31 false 1232&quot; - - 0 2.001026451s
+</span><span>[ERROR] plugin/errors: 2 n1. AAAA: read udp 10.244.2.224:60033-&gt;10.96.0.9:53: i/o timeout
+</span></code></pre>
+<p>Asking around in the Talos community <a href="https://mahdtech.com/">Matthew Duncan</a> pointed me to an issue in the Talos repository showing a nearly <a href="https://github.com/siderolabs/talos/issues/8661">identical issue</a> which was supposedly resolved in Talos 1.7.1. Unfortunately after upgrading all the nodes once again, the problem persisted. Looking through the Talos issues, another one caught my eye: <a href="https://github.com/siderolabs/talos/issues/8698">1.7.1 with hostdns and forwardKubeDNSToHost doesn't resolve anything</a>. The conditions and outcome matched mine, and after providing my own discoveries, someone suggested it might be caused by IPv4 masquerading performed by Cilium. This seemed a very reasonable suggestion, since I could see in the Hubble UI that UDP packets were going out to the host, but the return packets to the CoreDNS service were dropped!</p>
+<p>Messing around with the masquerading options in Cilium, I tried a number of different combinations:</p>
+<ol>
+<li>Iptables masquerade enabled for IPv4.</li>
+<li>Masquerading disabled entirely.</li>
+<li>bpf masquerading enabled for IPv4.</li>
+</ol>
+<p>Unfortunately none of these worked out, and I had spent roughly 10 hours attempting to get this to work at this point, so I decided to take a few steps back..</p>
+<p>Going back to the original issue which was Openobserve Collector attempting to call out to:</p>
+<blockquote>
+<p><code>https://{{ spec.nodeName }}:10250</code></p>
+</blockquote>
+<p>I realized that I could of course just use the IP address instead! All I needed to do was replace the target with (effectively):</p>
+<blockquote>
+<p><code>https://{{ status.nodeIp }}:10250</code></p>
+</blockquote>
+<p>True to form however, the OpenObserve Helm chart provided no way of doing so, so I was forced extract the otherwise quite well designed <a href="https://github.com/MathiasPius/kronform/blob/main/manifests/infrastructure/openobserve/agent-collector.yaml">OpenTelemetryCollector</a> manifests which the helm chart would generate and deploy them manually, allowing me to override the necessary fields.</p>
+<p>The change was rather simple. By injecting the node IP into the Pod's environment:</p>
+<pre data-lang="yaml" style="background-color:#2b303b;color:#c0c5ce;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#65737e;"># manifests/infrastructure/openobserve/agent-collector.yaml
+</span><span style="color:#bf616a;">env</span><span>:
+</span><span>  - </span><span style="color:#bf616a;">name</span><span>: </span><span style="color:#a3be8c;">K8S_NODE_IP
+</span><span>    </span><span style="color:#bf616a;">valueFrom</span><span>:
+</span><span>      </span><span style="color:#bf616a;">fieldRef</span><span>:
+</span><span>        </span><span style="color:#bf616a;">fieldPath</span><span>: </span><span style="color:#a3be8c;">status.hostIP
+</span></code></pre>
+<p>I could modify the endpoint value for the <code>kubeletstat</code> receiver:</p>
+<pre data-lang="yaml" style="background-color:#2b303b;color:#c0c5ce;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#65737e;"># manifests/infrastructure/openobserve/agent-collector.yaml
+</span><span style="color:#bf616a;">kubeletstats</span><span>:
+</span><span>  </span><span style="color:#bf616a;">endpoint</span><span>: </span><span style="color:#a3be8c;">https://${env:K8S_NODE_IP}:10250
+</span></code></pre>
+<p>And now we're getting metrics!</p>
+<p><img src="https://datavirke.dk/posts/bare-metal-kubernetes-part-10-metrics-and-monitoring-with-openobserve/streams.png" alt="OpenObserve Streams Ingestion" /></p>
+<h3 id="pod-logs"><a class="zola-anchor" href="#pod-logs" aria-label="Anchor link for: pod-logs">Pod Logs</a></h3>
+<p>Next up on the list of things not working out of the box is log collection. OpenTelemetryCollector is configured to mount the <code>/var/log</code> directory of the host it is running on and continuously hoover up log data from pods running on the server.</p>
+<p>Unfortunately, it just so happens that for some reason the <code>filelog</code> receiver module of the OpenTelemetry Collector is hitting some kind of <code>permission denied</code> error when attempting to traverse the <code>/var/log/pods</code> directory.</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>2024-05-15T12:40:06.200Z        warn    fileconsumer/file.go:43 finding files: no files match the configured criteria
+</span><span>find files with &#39;/var/log/pods/*/*/*.log&#39; pattern: open .: permission denied    {&quot;kind&quot;: &quot;receiver&quot;, &quot;name&quot;: &quot;filelog/std&quot;, &quot;data_type&quot;: &quot;logs&quot;, &quot;component&quot;: &quot;fileconsumer&quot;}
+</span></code></pre>
+<p>I reached out (again) in the Sidero Labs' slack support channel for some help in narrowing down whether this was a Talos-ism causing the problems, or if the filelog receiver was doing something dodgy, and <a href="https://github.com/frezbo">@frezbo</a> helpfully pointed out that in the <a href="https://www.talos.dev/v1.7/learn-more/knowledge-base/#logging-kubernetes-audit-logs-with-loki">official Loki audit logging example</a>, the <code>CAP_DAC_READ_SEARCH</code> capability is added to the container, which <em>could</em> also be necessary for the filelog receiver.</p>
+<p>Modifying the helm chart as follows, sprinkling in some <code>CAP_SYS_ADMIN</code> and <code>privileged: true</code> just for good measure...</p>
+<pre data-lang="yaml" style="background-color:#2b303b;color:#c0c5ce;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#65737e;"># manifests/infrastructure/openobserve/agent-collector.yaml
+</span><span style="color:#bf616a;">securityContext</span><span>:
+</span><span>    </span><span style="color:#bf616a;">privileged</span><span>: </span><span style="color:#d08770;">true
+</span><span>    </span><span style="color:#bf616a;">capabilities</span><span>:
+</span><span>      </span><span style="color:#bf616a;">add</span><span>:
+</span><span>        - </span><span style="color:#a3be8c;">DAC_READ_SEARCH
+</span><span>        - </span><span style="color:#a3be8c;">SYS_ADMIN
+</span></code></pre>
+<p>.. Yielded the same exact result.</p>
+<p>Slightly frustrated with the experience and now easily 20 hours into this process, I filed a <a href="https://github.com/open-telemetry/opentelemetry-collector-contrib/issues/33083">bug report</a> and simply outsourced the log collection part to fluent-bit, which has a <a href="https://www.talos.dev/v1.7/talos-guides/configuration/logging/#fluent-bit-example">documented example</a> on the Talos documentation website, easy peasy!</p>
+<p>Now we just configure a processor for the logs in the OpenTelemetry Collector:</p>
+<pre data-lang="yaml" style="background-color:#2b303b;color:#c0c5ce;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#65737e;"># manifests/infrastructure/openobserve/gateway-collector.yaml
+</span><span style="color:#bf616a;">config</span><span>:
+</span><span>  </span><span style="color:#bf616a;">processors</span><span>:
+</span><span>    </span><span style="color:#bf616a;">batch</span><span>:
+</span><span>  </span><span style="color:#bf616a;">receivers</span><span>:
+</span><span>    </span><span style="color:#bf616a;">otlp/logs</span><span>:
+</span><span>      </span><span style="color:#bf616a;">protocols</span><span>:
+</span><span>        </span><span style="color:#bf616a;">http</span><span>:
+</span><span>          </span><span style="color:#bf616a;">endpoint</span><span>: </span><span style="color:#a3be8c;">0.0.0.0:4418
+</span><span>  </span><span style="color:#bf616a;">service</span><span>:
+</span><span>    </span><span style="color:#bf616a;">pipelines</span><span>:
+</span><span>      </span><span style="color:#bf616a;">logs/fluentbit-forward</span><span>:
+</span><span>        </span><span style="color:#bf616a;">exporters</span><span>:
+</span><span>          - </span><span style="color:#a3be8c;">otlphttp/openobserve
+</span><span>        </span><span style="color:#bf616a;">processors</span><span>:
+</span><span>          - </span><span style="color:#a3be8c;">batch
+</span><span>        </span><span style="color:#bf616a;">receivers</span><span>:
+</span><span>          - </span><span style="color:#a3be8c;">otlp/logs
+</span></code></pre>
+<p>And add the <code>[OUTPUT]</code> section to forward the data to our gateway collector:</p>
+<pre data-lang="yaml" style="background-color:#2b303b;color:#c0c5ce;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#65737e;"># manifests/infrastructure/openobserve/fluentbit.yaml
+</span><span style="color:#bf616a;">outputs</span><span>: </span><span style="color:#b48ead;">|
+</span><span style="color:#a3be8c;">  [OUTPUT]
+</span><span style="color:#a3be8c;">    Name                 opentelemetry
+</span><span style="color:#a3be8c;">    Match                *
+</span><span style="color:#a3be8c;">    Host                 openobserve-collector-gateway-collector
+</span><span style="color:#a3be8c;">    Port                 4418
+</span><span style="color:#a3be8c;">    Log_response_payload True
+</span><span style="color:#a3be8c;">    Tls                  Off
+</span><span style="color:#a3be8c;">    logs_body_key $message
+</span><span style="color:#a3be8c;">    logs_span_id_message_key span_id
+</span><span style="color:#a3be8c;">    logs_trace_id_message_key trace_id
+</span><span style="color:#a3be8c;">    logs_severity_text_message_key loglevel
+</span><span style="color:#a3be8c;">    logs_severity_number_message_key lognum
+</span></code></pre>
+<p>Of course nothing about this is that easy. For some unknown reason, the fluent-bit daemonset continuously failed liveness and readiness probes for reasons I have not had time to investigate, this despite the fact that the pods are actually doing exactly what they're supposed to. Logs are getting picked up and sent on to the OpenTelemetry Collector, and then forwarded to the OpenObserve platform as intended.s</p>
+<p>For now I've resolved this using the power of <code>null</code>, picked up in the cert-manager ingress section:</p>
+<pre data-lang="yaml" style="background-color:#2b303b;color:#c0c5ce;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#65737e;"># manifests/infrastructure/openobserve/fluentbit.yaml
+</span><span style="color:#bf616a;">livenessProbe</span><span>: </span><span style="color:#d08770;">null
+</span><span style="color:#bf616a;">readinessProbe</span><span>: </span><span style="color:#d08770;">null
+</span></code></pre>
+<h2 id="making-use-of-the-data"><a class="zola-anchor" href="#making-use-of-the-data" aria-label="Anchor link for: making-use-of-the-data">Making use of the Data</a></h2>
+<p>With all this setup finally done, my plan was to design some dashboards to monitor the things I actually cared about, but at this point I was just happy to finally be done with it, and to have some historical data to look at in case the cluster ever acts up again, so I decided to take the easy route and just import some of the <a href="https://github.com/openobserve/dashboards">OpenObserve Dashboards</a> and customizing them to my liking.</p>
+<p><img src="https://datavirke.dk/posts/bare-metal-kubernetes-part-10-metrics-and-monitoring-with-openobserve/node-metrics.png" alt="Kubernetes Node Metrics" /></p>
+<p>There are still a bunch of tasks left, like configuring the Talos nodes to forward their internal logs to the Fluent-bit forwarder for example, but I think I'll leave that for the next post where I might also setup some alerting for some of the critical services running in the cluster, like my friends' TeamSpeak server, once I've familiarized myself a bit with the OpenObserve platform.</p>
+<h2 id="conclusion"><a class="zola-anchor" href="#conclusion" aria-label="Anchor link for: conclusion">Conclusion</a></h2>
+<p>In conclusion, I think OpenObserve is a very interesting platform, and it definitely feels snappy and looks very good. With that said, it's pretty obvious that the platform is new, and (rationally) focusing heavily on their paid/cloud platform which unfortunately leaves the self-hosted option with quite a few gaps as far as deployment process, documentation and standardization goes.</p>
+<p>All in all, it's <em>promising</em> and hopefully some of the gotchas experienced above will be ironed out in time.</p>
+
+	</div>
+	<hr class="post-end">
+	<footer class="post-info">
+    
+	  <p>
+		<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-tag meta-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7" y2="7"></line></svg>
+		
+		
+		<span class="tag"><a href="https://datavirke.dk/tags/openobserve/">openobserve</a></span>
+		
+		<span class="tag"><a href="https://datavirke.dk/tags/metrics/">metrics</a></span>
+		
+		<span class="tag"><a href="https://datavirke.dk/tags/monitoring/">monitoring</a></span>
+		
+		<span class="tag"><a href="https://datavirke.dk/tags/talos/">talos</a></span>
+		
+		<span class="tag"><a href="https://datavirke.dk/tags/kubernetes/">kubernetes</a></span>
+		
+		
+    </p>
+    
+    <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>2578 Words</p>
+    
+    <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>2024-05-16</p>
+    
+	</footer>
+  </article>
+    
+  
+  <div class="post-nav thin">
+	
+	
+  </div>
+
+  
+</main>
+
+	  </div>
+	  
+	  
+
+
+
+<footer id="site-footer" class="section-inner thin animated fadeIn faster">
+  <p>&copy; 2024 <a href="https:&#x2F;&#x2F;datavirke.dk">Mathias Pius</a> &mdash; CVR: 43033336</p>
+  <p>Made with <a href="https://www.getzola.org" target="_blank" rel="noopener">Zola</a> &#183; Theme <a href="https://github.com/VersBinarii/hermit_zola" target="_blank" rel="noopener">Hermit_Zola</a>
+	
+	&#183; <a href="https://datavirke.dk/atom.xml" target="_blank" title="rss"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-rss"><path d="M4 11a9 9 0 0 1 9 9"></path><path d="M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1"></circle></svg></a>
+	
+  </p>
+</footer>
+
+
+
+
+	</div>
+	
+	<script src="https://datavirke.dk/js/main.js"></script>
+
+	<!-- Math rendering -->
+	<link rel="stylesheet" href="/katex.min.css">
+    <script defer src="/katex.min.js"></script>
+    <script defer src="/auto-render.min.js" onload="renderMathInElement(document.body, { delimiters: [ {left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}, {left: '\\[', right: '\\]', display: true}, {left: '\\(', right: '\\)', display: false}]});"></script>
+
+    
+		<link href="/vs2015.css" rel="stylesheet">
+		<script src="/highlight.pack.js"></script>
+		<script src="/highlightjs-badge.min.js"></script>
+		<script>
+			var pres = document.querySelectorAll("pre>code");
+			for (var i = 0; i < pres.length; i++) {
+				hljs.highlightBlock(pres[i]);
+			}
+		</script>
+		
+			<script src="/clipboard.min.js"></script>
+			<script>
+				var options = {
+					copyIconClass: "gg-clipboard",
+					checkIconClass: "gg-check"
+				};
+				window.highlightJsBadge(options);
+			</script>
+		
+
+	
+
+	
+	<script src="https://datavirke.dk/js/main.js"></script>
+
+    
+    
+
+	
+  </body>
+</html>

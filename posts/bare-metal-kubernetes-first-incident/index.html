@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <meta name="robots" content="max-snippet:0, max-image-preview:large">
+    <meta name="description" content="Freelance DevOps Engineer building reliable infrastructure using Kubernetes, Cloud &amp; Rust.">
+  
+    <!-- Google / Search Engine Tags -->
+
+	
+    <title>Bare-metal Kubernetes: First Incident - Datavirke</title>
+	<meta itemprop="name" content="Bare-metal Kubernetes: First Incident - Datavirke">
+	<meta property="og:title" content="Bare-metal Kubernetes: First Incident - Datavirke">
+	<meta name="twitter:title" content="Bare-metal Kubernetes: First Incident - Datavirke">
+    
+
+	
+	<meta itemprop="description" content="Freelance DevOps Engineer building reliable infrastructure using Kubernetes, Cloud &amp; Rust.">
+	<meta property="og:description" content="Freelance DevOps Engineer building reliable infrastructure using Kubernetes, Cloud &amp; Rust.">
+	<meta name="twitter:description" content="Freelance DevOps Engineer building reliable infrastructure using Kubernetes, Cloud &amp; Rust.">
+	
+
+	<meta name="twitter:card" content="summary_large_image">    
+    <meta name="twitter:image" content="https://datavirke.dk/logo.svg">
+	<meta itemprop="image" content="https://datavirke.dk/logo.svg">
+	<meta property="og:image" content="https://datavirke.dk/logo.svg">
+    <meta property="og:url" content="https:&#x2F;&#x2F;datavirke.dk">
+    <meta property="og:type" content="website">
+    
+    <link rel="apple-touch-icon" sizes="180x180" href="https://datavirke.dk/apple-touch-icon.png"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="https://datavirke.dk/favicon-32x32.png" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="https://datavirke.dk/favicon-16x16.png"
+    />
+    <link
+      rel="shortcut icon"
+      href="https://datavirke.dk/favicon.ico"
+    />
+    <link rel="stylesheet" href="https://datavirke.dk/style.css"/>
+    
+    
+    <link rel="alternate" type="application/rss+xml" title="RSS" href="https://datavirke.dk/atom.xml">
+    
+
+	<script src="https://datavirke.dk/mermaid.min.js"></script>
+	<script>
+		let config = { 
+			startOnLoad: true, 
+
+			darkMode: true
+		};
+		mermaid.initialize(config);
+	
+	</script>
+
+	<script type="application/ld+json">
+		{
+		"@context": "https://schema.org",
+		"@type": "Organization",
+		"url": "https://datavirke.dk",
+		"logo": "https://datavirke.dk/logo.svg"
+		}
+	</script>
+  </head>
+  <body id="page">
+
+	
+<header id="site-header" class="animated faster">
+  <div class="hdr-wrapper section-inner">
+    <div class="hdr-left">
+      <div class="site-branding">
+        <a href="https:&#x2F;&#x2F;datavirke.dk">Datavirke</a>
+      </div>
+      <nav class="site-nav hide-in-mobile">
+            
+        
+        <a href="https://datavirke.dk/about">About</a>
+        
+        <a href="https://datavirke.dk/experience">Experience</a>
+        
+        <a href="https://datavirke.dk/posts">Blog</a>
+        
+      </nav>
+    </div>
+    <div class="hdr-right hdr-icons">
+      <span class="hdr-social hide-in-mobile">
+        
+
+<a href="https:&#x2F;&#x2F;github.com&#x2F;MathiasPius" target="_blank" rel="noopener me"
+   title="github">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+  
+</a>
+
+<a href="https:&#x2F;&#x2F;www.linkedin.com&#x2F;in&#x2F;mathias-pius&#x2F;" target="_blank" rel="noopener me"
+   title="linkedin">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+  
+</a>
+
+<a href="mailto:mathias@datavirke.dk" target="_blank" rel="noopener me"
+   title="email">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+  
+</a>
+
+<a href="https:&#x2F;&#x2F;fosstodon.org&#x2F;@MathiasPius" target="_blank" rel="noopener me"
+   title="twitter">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path></svg>
+  
+</a>
+
+
+      </span>
+      <button id="menu-btn" class="hdr-btn" title="Menu">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="feather feather-menu"
+        >
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>
+<div id="mobile-menu" class="animated fast">
+  <ul>
+    
+    <li><a href="https://datavirke.dk/about">About</a></li>
+    
+    <li><a href="https://datavirke.dk/experience">Experience</a></li>
+    
+    <li><a href="https://datavirke.dk/posts">Blog</a></li>
+    
+  </ul>
+</div>
+
+	
+	
+
+		
+<main class="site-main section-inner animated fadeIn faster">
+  <article class="thin">
+	<header class="post-header">
+	  <div class="post-meta">
+		
+		<span>Aug 01, 2023</span>
+		<small> - 
+<span class="reading-time" title="Estimated read time">
+  
+  8 min read
+  
+</span>
+</small>
+		
+            
+	  </div>
+	  <h1>Bare-metal Kubernetes: First Incident</h1>
+	</header>
+
+	<div class="content">
+        
+	  <p>I attempted to upgrade Talos from 1.4.6 to 1.4.7 and ended up completely breaking scheduling
+across my cluster!</p>
+<p>Here's how it happened:</p>
+<ol>
+<li>Attempted to run talosctl upgrade from 1.4.6 to 1.4.7 for single node.</li>
+<li>Forgot '--preserve' flag which I thought was required when upgrading clusters with rook<sup class="footnote-reference"><a href="#1">1</a></sup></li>
+<li>Aborted upgrade (CTRL+C). Node had not yet cordoned, but still went through with attempt.</li>
+<li>Booted into 1.4.7. Then rebooted and rolled back to 1.4.6.</li>
+</ol>
+<h2 id="indication-something-was-wrong"><a class="zola-anchor" href="#indication-something-was-wrong" aria-label="Anchor link for: indication-something-was-wrong">Indication something was wrong</a></h2>
+<p>Ceph mgr dashboard temporarily showed 33% of capacity down as expected, but recovered.</p>
+<p>After recovery cluster status still shows <code>HEALTH_ERR: MGR_MODULE_ERROR</code>, which claims 
+that the Rook manifest object is &quot;too old&quot;:</p>
+<pre data-lang="json" style="background-color:#2b303b;color:#c0c5ce;" class="language-json "><code class="language-json" data-lang="json"><span>{
+</span><span>    &quot;</span><span style="color:#a3be8c;">type</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">ERROR</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">raw_object</span><span>&quot;: {
+</span><span>        &quot;</span><span style="color:#a3be8c;">kind</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">Status</span><span>&quot;,
+</span><span>        &quot;</span><span style="color:#a3be8c;">apiVersion</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">v1</span><span>&quot;,
+</span><span>        &quot;</span><span style="color:#a3be8c;">metadata</span><span>&quot;: {},
+</span><span>        &quot;</span><span style="color:#a3be8c;">status</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">Failure</span><span>&quot;,
+</span><span>        &quot;</span><span style="color:#a3be8c;">message</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">too old resource version: 7122415 (7123371)</span><span>&quot;,
+</span><span>        &quot;</span><span style="color:#a3be8c;">reason</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">Expired</span><span>&quot;,
+</span><span>        &quot;</span><span style="color:#a3be8c;">code</span><span>&quot;: </span><span style="color:#d08770;">410
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<p><small>Some null fields omitted</small></p>
+<p>Listing pods in the <code>rook-ceph</code> namespace shows that some containers are failing to 
+fetch images, showing state <code>ImagePullBackOff</code>, crucially the operator is one of them:</p>
+<pre data-lang="txt" style="background-color:#2b303b;color:#c0c5ce;" class="language-txt "><code class="language-txt" data-lang="txt"><span>rook-ceph-operator-857f946667-qrhxm    0/1    ImagePullBackOff    0    96m
+</span></code></pre>
+<p>The image in question is <code>rook/ceph:v1.11.10</code>.</p>
+<h2 id="registry-down"><a class="zola-anchor" href="#registry-down" aria-label="Anchor link for: registry-down">Registry down</a></h2>
+<p>Checking on the Harbor registry, it seems that it is also failing to schedule for the
+same reason. I suspect at this point that key harbor registry pods were running on
+the node I had chosen to upgrade, which caused it to get rescheduled, but with the
+registry down, the other nodes in the cluster were unable to fetch images.</p>
+<p>I find this a bit curious, since I specifically configured fallback endpoints for just this contingency:</p>
+<pre data-lang="yaml" style="background-color:#2b303b;color:#c0c5ce;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#bf616a;">mirrors</span><span>:
+</span><span>  </span><span style="color:#bf616a;">docker.io</span><span>:
+</span><span>    </span><span style="color:#bf616a;">endpoints</span><span>:
+</span><span>      - </span><span style="color:#a3be8c;">https://registry.kronform.pius.dev/v2/docker.io
+</span><span>      - </span><span style="color:#a3be8c;">https://docker.io/v2
+</span><span>    </span><span style="color:#bf616a;">overridePath</span><span>: </span><span style="color:#d08770;">true
+</span></code></pre>
+<blockquote>
+<p>&quot;We'll also specify the actual endpoints in the mirror list, to act as a fallback
+in case Harbor fails or needs an upgrade. It can't hardly pull images through itself!&quot;
+-- Me, less than a month ago.</p>
+</blockquote>
+<p>The idea being that in case the registry goes down, talos/containerd would know to
+just circumvent it and go straight to the source.</p>
+<p>I can't seem to find any documentation covering this kind of fallback at the moment,
+but I am positive, that this was how it was meant to work<sup class="footnote-reference"><a href="#2">2</a></sup>.</p>
+<p>Of course, it could be the case that the docker pull is <em>also</em> failing, perhaps due
+to rate-limiting so I test it locally by pulling <code>rook/ceph:v1.11.10</code> directly from
+Docker on my local machine to see if the rate limit has been hit, but it hasn't.
+The image is pulled fine.</p>
+<h2 id="explicit-override"><a class="zola-anchor" href="#explicit-override" aria-label="Anchor link for: explicit-override">Explicit override</a></h2>
+<p>Suspecting now that I have misunderstood Talos' registry mirror (assumed) fallback,
+I edit the <code>MachineConfig</code> of the troubled node (so as to not disturb the now fragile
+Ceph or Etcd quorom), and remove the <code>docker.io</code> mirror config, since that should
+be enough to get Harbor running again, which should let us recover completely.</p>
+<p>Killing some of the Harbor registry pods until they get scheduled on our troubled node,
+does the trick... Sort of.</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> kubectl get pods</span><span style="color:#bf616a;"> -n</span><span> harbor-registry                        
+</span><span style="color:#bf616a;">NAME</span><span>                                  READY   STATUS                   RESTARTS   AGE
+</span><span style="color:#bf616a;">harbor-core-85fc4dbc9b-b8jb2</span><span>            0/1   CrashLoopBackOff         34         106m
+</span><span style="color:#bf616a;">harbor-core-85fc4dbc9b-zxnmv</span><span>            0/1   ContainerStatusUnknown   0          117m
+</span><span style="color:#bf616a;">harbor-jobservice-6f9df465-brc48</span><span>        0/1   ImagePullBackOff         0          24h
+</span><span style="color:#bf616a;">harbor-notary-server-6fb45c475d-gwpsb</span><span>   0/1   ContainerStatusUnknown   0          24h
+</span><span style="color:#bf616a;">harbor-notary-server-6fb45c475d-h7rbv</span><span>   0/1   ImagePullBackOff         0          111m
+</span><span style="color:#bf616a;">harbor-notary-signer-6f5ccb769-lclgh</span><span>    0/1   ContainerStatusUnknown   0          24h
+</span><span style="color:#bf616a;">harbor-notary-signer-6f5ccb769-wd259</span><span>    0/1   ImagePullBackOff         0          111m
+</span><span style="color:#bf616a;">harbor-portal-5db68c6dd4-5h2x4</span><span>          0/1   ImagePullBackOff         0          110m
+</span><span style="color:#bf616a;">harbor-portal-5db68c6dd4-dngb4</span><span>          0/1   Completed                0          28d
+</span><span style="color:#bf616a;">harbor-portal-9f987766d-q25vs</span><span>           0/1   ErrImagePull             0          3d15h
+</span><span style="color:#bf616a;">harbor-redis-master-0</span><span>                   1/1   Running                  0          93m
+</span><span style="color:#bf616a;">harbor-registry-6488fd9ddc-gh4rv</span><span>        2/2   Running                  0          105m
+</span><span style="color:#bf616a;">harbor-registry-6488fd9ddc-h8l59</span><span>        0/2   ContainerStatusUnknown   0          24h
+</span><span style="color:#bf616a;">harbor-trivy-0</span><span>                          0/1   ImagePullBackOff         0          24h
+</span></code></pre>
+<p><small>I've shortened the pod names to fit them on screen</small></p>
+<p>Ignoring the <code>ContainerStatusUnknown</code>, attributing them to the less than graceful
+shutdown of the node earlier, we see that <code>registry</code> and <code>redis</code> have
+recovered from the ordeal, but the <code>core</code> service is still broken.</p>
+<p>Checking the logs, reveals that it can't find the postgres database:</p>
+<pre data-lang="txt" style="background-color:#2b303b;color:#c0c5ce;" class="language-txt "><code class="language-txt" data-lang="txt"><span>2023-07-29T12:36:24Z [ERROR] [/common/utils/utils.go:108]:
+</span><span>  failed to connect to tcp://harbor-registry-postgresql:5432,
+</span><span>  retry after 2 seconds :dial tcp 10.110.80.47:5432: connect: operation not permitted
+</span></code></pre>
+<p>And indeed, there are no postgresql databases running in the pod listing above.
+Let's investigate.</p>
+<h2 id="harbor-s-postgres"><a class="zola-anchor" href="#harbor-s-postgres" aria-label="Anchor link for: harbor-s-postgres">Harbor's Postgres</a></h2>
+<p>With our harbor helm chart configuration, harbor should deploy its own postgres database
+as a <code>StatefulSet</code> and use it, so why isn't it running?</p>
+<p>Describing the <code>harbor-registry-postgresql</code> set reveals the following:</p>
+<pre data-lang="txt" style="background-color:#2b303b;color:#c0c5ce;" class="language-txt "><code class="language-txt" data-lang="txt"><span>Warning  FailedCreate  109s (x105 over 24h) statefulset-controller
+</span><span>  create Pod harbor-registry-postgresql-0 in StatefulSet harbor-registry-postgresql failed
+</span><span>  error: Pod &quot;harbor-registry-postgresql-0&quot; is invalid:
+</span><span>    spec.containers[0].env[4].valueFrom: Invalid value: &quot;&quot;:
+</span><span>    may not be specified when `value` is not empty
+</span></code></pre>
+<p>Checking the statefulset, the error makes a lot of sense:</p>
+<pre data-lang="yaml" style="background-color:#2b303b;color:#c0c5ce;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span>- </span><span style="color:#bf616a;">name</span><span>: </span><span style="color:#a3be8c;">POSTGRES_PASSWORD
+</span><span>  </span><span style="color:#bf616a;">value</span><span>: </span><span style="color:#a3be8c;">not-secure-database-password
+</span><span>  </span><span style="color:#bf616a;">valueFrom</span><span>:
+</span><span>    </span><span style="color:#bf616a;">secretKeyRef</span><span>:
+</span><span>      </span><span style="color:#bf616a;">key</span><span>: </span><span style="color:#a3be8c;">postgres-password
+</span><span>      </span><span style="color:#bf616a;">name</span><span>: </span><span style="color:#a3be8c;">harbor-registry-postgresql
+</span></code></pre>
+<p>The password is being set in two different ways, which could obviously conflict, so the
+statefulsets controller is blocking the pod creation.</p>
+<p>Digging into the bitnami Harbor helm chart, it seems that it in turn leans on the bitnami
+Postgres chart, which solved this <a href="https://github.com/bitnami/charts/commit/3bfcc0812171abc52f11edc32c2d31650a1bbc8c">issue</a>
+in <code>12.6.8</code> just a week ago, a bug which was introduced about
+<a href="https://github.com/bitnami/charts/commit/d6234d8b8921470066e567832660164d84192975">a month ago</a> in <code>12.6.2</code>.</p>
+<p>Curiously, flux has been attempting to upgrade harbor's postgres to version <code>12.6.9</code>
+and failing with that specific issue, which means the statefulset is still using the
+old definition. The fact that the statefulset itself is 31 days old, suggests to me
+that the statefulset is not actually getting upgraded. </p>
+<p>Editing environment variables in a StatefulSet is allowed, but it could be that the
+deployment is also attempting to modify other parts of it unsuccessfully. I elected
+to delete the statefulset at this point, hoping that our persistence settings will
+allow the database to survive the ordeal. If not, reconfiguring the database is not
+too big a task.</p>
+<p>Using flux to suspend/resume the helmrelease deployment unclogs the setup, the
+statefulset is recreated with the correct <code>POSTGRES_PASSWORD</code> secret, and the
+postgres pod is deployed. Soon after the <code>core</code> service comes up.</p>
+<p>With Harbor fully recovered, I change the troubled node's machineconfig back to the
+way it was, allowing it to pull images primarily via the registry again. Of course
+it takes a reboot to enact the change, and with Harbor still running on that node,
+this won't end well at all.</p>
+<h2 id="back-to-rook"><a class="zola-anchor" href="#back-to-rook" aria-label="Anchor link for: back-to-rook">Back to Rook</a></h2>
+<p>Let's turn our heads back to Rook for a second. The operator is back up, and most
+containers appear to be running, but our cluster health is still <code>HEALTH_ERR</code> because
+the rook module failed. The manager pod has been running for 28 days at this point,
+so the issue is probably because of the incident.</p>
+<p>Killing the manager pod quickly spawns a new one, and the cluster status recovers,
+at least according to Ceph. Rook is still complaining about the manager module crashing.</p>
+<p>Rook also appears to be attempting to determine the ceph version but failing,
+because it can't get a hold of the image <code>quay.io/ceph/ceph:v17.2.31</code>, and frankly
+I can't either. Looking at <a href="https://quay.io/repository/ceph/ceph?tab=tags">quay itself</a>
+it seems like the newest version of the image at time of writing is <code>17.2.6</code>.
+Is this a fluke?</p>
+<p>I opt to delete both the batch job which tries to spawn this unknown image verison
+and the operator itself, hoping this might somehow resolve the issue, but no luck.
+Checking out the source code for the rook operator, I can't find any hardcoded
+versions of this container, which means it must be coming from somewhere else.</p>
+<p>Checking the logs of the new operator pod, something catches my eye:</p>
+<pre data-lang="txt" style="background-color:#2b303b;color:#c0c5ce;" class="language-txt "><code class="language-txt" data-lang="txt"><span>2023-07-29 13:53:39.975016 E | ceph-nodedaemon-controller:
+</span><span>  ceph version not found for image &quot;quay.io/ceph/ceph:v17.2.31&quot;
+</span><span>  used by cluster &quot;rook-ceph&quot; in namespace &quot;rook-ceph&quot;.
+</span><span>  attempt to determine ceph version for the current cluster image timed out
+</span></code></pre>
+<p>The image version is configured per-cluster, which means this is something <em>I</em> have set!
+Sure enough, checking the kronform source code, I somehow managed to make a
+<a href="https://github.com/MathiasPius/kronform/commit/8d902a5a63571823c2148d3771a7b1d0c68ceecd">commit</a>
+a month ago which broke this version tag, and with a commit message that did not at
+all fit this particular commit too!</p>
+<p>Changing the version tag back and pushing the changes finally resolves the rook problem.
+Rook's operator is back in action and reconciling state like no tomorrow. So far so good!</p>
+<h2 id="root-causes"><a class="zola-anchor" href="#root-causes" aria-label="Anchor link for: root-causes">Root Causes</a></h2>
+<p>Let's go over what went wrong. Obviously I bodged the upgrade and my eagerness to abort
+instead of having it play out might not have been great, so it was all just human error!</p>
+<p>Well, if this was a 5-day outage in a production system run by a large international
+financial IT systems provider, acting as the primary authentication provider for the six
+million inhabitants of the small nation of Denmark for banking, pensions, health care and
+child care, then I could've just chalked it up to <a href="https://www-nets-eu.translate.goog/dk-da/nyheder/Pages/Menneskelig-fejl-%C3%A5rsag-til-NemID-driftsforstyrrelse-i-juni.aspx?_x_tr_sl=da&amp;_x_tr_tl=en&amp;_x_tr_hl=en&amp;_x_tr_pto=wapp">human error</a> and gone about my day!</p>
+<p>But this is a hobby Kubernetes cluster run for fun, so our standards are of course <em>way</em> higher.</p>
+<p>There are a number of measures which could have prevented this incident:</p>
+<ol>
+<li>
+<p><strong>Misconfiguration of the registry mirrors caused fallback to fail.</strong></p>
+<p>As it turns out, setting <code>docker.io</code> as its own fallback seems to have been the cause of this.
+containerd did fall back to trying this, but for some reason hit against a <code>404 Not Found</code> issue,
+which it naturally accepted as &quot;image does not exist&quot; and stopped trying.</p>
+<p>I believe this might have something to do with Docker.io actually being a front for multiple registries,
+which together with the explicit selection of the <code>v2</code> API, sent the request somewhere it shouldn't.</p>
+<p>Removing the explicit fallback options has proven to allow nodes to fetch images from
+the source directly, in tests where the Harbor registry was unavailable.</p>
+</li>
+<li>
+<p><strong>Harbor running in a standalone deployment mode, left no running registry when scheduling failed</strong>.</p>
+<p>If I had been running Harbor as a high-availability deployment, it <em>might</em> have prevented
+the incident.</p>
+<p>I say might because high-availability deployments of postgres, one of
+the critical components of Harbor required by the core service, which in turn
+authorizes the pull requests from the nodes, are not trivial. From what I can
+gather from the <a href="https://github.com/bitnami/charts/tree/main/bitnami/postgresql-ha/">README</a>,
+it requires a single point of failure (SPOF) in the form of a gateway/proxy service to handle failover.</p>
+<p>Under normal circumstances and in a lot of failure cases this is completely legitimate.
+The proxy no doubt handles failover fast and gracefully, but it being a single point of
+failure in itself, means that if the node running it fails, it will have to be reschedule
+and will in all likelihood end up on a node which doesn't have the image preloaded.</p>
+<p>If our containerd fallbacks don't work, we'll be back to square one, The proxy will disappear
+and Harbor will have no way of contacting its &quot;highly available&quot; postgres deployment, meaning
+no way to authenticate image pulls, and therefore the node will have no way to schedule
+the proxy.</p>
+<p>The reason this might still have helped is that in scenarios where the proxy is already
+running on different node, this could have allowed graceful shutdown of the node running
+half of the harbor deployment. Since I was planning on upgrading the entire cluster, it
+would have eventually resulted in failure regardless.</p>
+</li>
+<li>
+<p><strong>Lack of monitoring meant that the Rook version typo wasn't discovered earlier, making troubleshooting difficult</strong>.</p>
+<p>Setting up proper monitoring and logging is in the pipeline, but hasn't been done yet. If it had,
+I might have noticed the issue with the rook ceph version being non-existent sooner either
+through Flux or Rook, which would have saved me a lot of confusion during this incident,
+and a lot of time during recovery.</p>
+</li>
+</ol>
+<h2 id="corrective-measures"><a class="zola-anchor" href="#corrective-measures" aria-label="Anchor link for: corrective-measures">Corrective Measures</a></h2>
+<p>In the end, configuring the Talos/containerd fallbacks correctly gives me adequate confidence
+that a catastrophic failure like this is unlikely to occur again.</p>
+<p>With decent monitoring I hope to also limit the compounding complexity of attempting to sort through coincident issues.</p>
+<p>Switching to a high availability deployment of Harbor is not worth the complexity, especially
+not with the registry fallback now working as expected.</p>
+<div class="footnote-definition" id="1"><sup class="footnote-definition-label">1</sup>
+<p>As it turns out this is <a href="https://www.talos.dev/v1.5/kubernetes-guides/configuration/ceph-with-rook/#talos-linux-considerations">only strictly necessary when using only a single <code>mon</code> instance</a>
+and since we have three, letting the upgrade go ahead would have been inconsequential.</p>
+</div>
+<div class="footnote-definition" id="2"><sup class="footnote-definition-label">2</sup>
+<p>I have not been able to find any such documentation, as far as I can tell, <em>nobody</em>
+does it this way, and in fact removing the explicit fallback, ended up fixing the
+issue. Sure seems like I just pulled it out of thin air in retrospect..</p>
+</div>
+
+	</div>
+	<hr class="post-end">
+	<footer class="post-info">
+    
+	  <p>
+		<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-tag meta-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7" y2="7"></line></svg>
+		
+		
+		<span class="tag"><a href="https://datavirke.dk/tags/kubernetes/">kubernetes</a></span>
+		
+		<span class="tag"><a href="https://datavirke.dk/tags/talos/">talos</a></span>
+		
+		<span class="tag"><a href="https://datavirke.dk/tags/harbor/">harbor</a></span>
+		
+		<span class="tag"><a href="https://datavirke.dk/tags/incident/">incident</a></span>
+		
+		
+    </p>
+    
+    <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>2215 Words</p>
+    
+    <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>2023-08-01</p>
+    
+	</footer>
+  </article>
+    
+  
+  <div class="post-nav thin">
+	
+	
+  </div>
+
+  
+</main>
+
+	  </div>
+	  
+	  
+
+
+
+<footer id="site-footer" class="section-inner thin animated fadeIn faster">
+  <p>&copy; 2024 <a href="https:&#x2F;&#x2F;datavirke.dk">Mathias Pius</a> &mdash; CVR: 43033336</p>
+  <p>Made with <a href="https://www.getzola.org" target="_blank" rel="noopener">Zola</a> &#183; Theme <a href="https://github.com/VersBinarii/hermit_zola" target="_blank" rel="noopener">Hermit_Zola</a>
+	
+	&#183; <a href="https://datavirke.dk/atom.xml" target="_blank" title="rss"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-rss"><path d="M4 11a9 9 0 0 1 9 9"></path><path d="M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1"></circle></svg></a>
+	
+  </p>
+</footer>
+
+
+
+
+	</div>
+	
+	<script src="https://datavirke.dk/js/main.js"></script>
+
+	<!-- Math rendering -->
+	<link rel="stylesheet" href="/katex.min.css">
+    <script defer src="/katex.min.js"></script>
+    <script defer src="/auto-render.min.js" onload="renderMathInElement(document.body, { delimiters: [ {left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}, {left: '\\[', right: '\\]', display: true}, {left: '\\(', right: '\\)', display: false}]});"></script>
+
+    
+		<link href="/vs2015.css" rel="stylesheet">
+		<script src="/highlight.pack.js"></script>
+		<script src="/highlightjs-badge.min.js"></script>
+		<script>
+			var pres = document.querySelectorAll("pre>code");
+			for (var i = 0; i < pres.length; i++) {
+				hljs.highlightBlock(pres[i]);
+			}
+		</script>
+		
+			<script src="/clipboard.min.js"></script>
+			<script>
+				var options = {
+					copyIconClass: "gg-clipboard",
+					checkIconClass: "gg-check"
+				};
+				window.highlightJsBadge(options);
+			</script>
+		
+
+	
+
+	
+	<script src="https://datavirke.dk/js/main.js"></script>
+
+    
+    
+
+	
+  </body>
+</html>

@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <meta name="robots" content="max-snippet:0, max-image-preview:large">
+    <meta name="description" content="Freelance DevOps Engineer building reliable infrastructure using Kubernetes, Cloud &amp; Rust.">
+  
+    <!-- Google / Search Engine Tags -->
+
+	
+    <title>Bare-metal Kubernetes, Part III: Encrypted GitOps with FluxCD - Datavirke</title>
+	<meta itemprop="name" content="Bare-metal Kubernetes, Part III: Encrypted GitOps with FluxCD - Datavirke">
+	<meta property="og:title" content="Bare-metal Kubernetes, Part III: Encrypted GitOps with FluxCD - Datavirke">
+	<meta name="twitter:title" content="Bare-metal Kubernetes, Part III: Encrypted GitOps with FluxCD - Datavirke">
+    
+
+	
+	<meta itemprop="description" content="Freelance DevOps Engineer building reliable infrastructure using Kubernetes, Cloud &amp; Rust.">
+	<meta property="og:description" content="Freelance DevOps Engineer building reliable infrastructure using Kubernetes, Cloud &amp; Rust.">
+	<meta name="twitter:description" content="Freelance DevOps Engineer building reliable infrastructure using Kubernetes, Cloud &amp; Rust.">
+	
+
+	<meta name="twitter:card" content="summary_large_image">    
+    <meta name="twitter:image" content="https://datavirke.dk/logo.svg">
+	<meta itemprop="image" content="https://datavirke.dk/logo.svg">
+	<meta property="og:image" content="https://datavirke.dk/logo.svg">
+    <meta property="og:url" content="https:&#x2F;&#x2F;datavirke.dk">
+    <meta property="og:type" content="website">
+    
+    <link rel="apple-touch-icon" sizes="180x180" href="https://datavirke.dk/apple-touch-icon.png"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="https://datavirke.dk/favicon-32x32.png" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="https://datavirke.dk/favicon-16x16.png"
+    />
+    <link
+      rel="shortcut icon"
+      href="https://datavirke.dk/favicon.ico"
+    />
+    <link rel="stylesheet" href="https://datavirke.dk/style.css"/>
+    
+    
+    <link rel="alternate" type="application/rss+xml" title="RSS" href="https://datavirke.dk/atom.xml">
+    
+
+	<script src="https://datavirke.dk/mermaid.min.js"></script>
+	<script>
+		let config = { 
+			startOnLoad: true, 
+
+			darkMode: true
+		};
+		mermaid.initialize(config);
+	
+	</script>
+
+	<script type="application/ld+json">
+		{
+		"@context": "https://schema.org",
+		"@type": "Organization",
+		"url": "https://datavirke.dk",
+		"logo": "https://datavirke.dk/logo.svg"
+		}
+	</script>
+  </head>
+  <body id="page">
+
+	
+<header id="site-header" class="animated faster">
+  <div class="hdr-wrapper section-inner">
+    <div class="hdr-left">
+      <div class="site-branding">
+        <a href="https:&#x2F;&#x2F;datavirke.dk">Datavirke</a>
+      </div>
+      <nav class="site-nav hide-in-mobile">
+            
+        
+        <a href="https://datavirke.dk/about">About</a>
+        
+        <a href="https://datavirke.dk/experience">Experience</a>
+        
+        <a href="https://datavirke.dk/posts">Blog</a>
+        
+      </nav>
+    </div>
+    <div class="hdr-right hdr-icons">
+      <span class="hdr-social hide-in-mobile">
+        
+
+<a href="https:&#x2F;&#x2F;github.com&#x2F;MathiasPius" target="_blank" rel="noopener me"
+   title="github">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+  
+</a>
+
+<a href="https:&#x2F;&#x2F;www.linkedin.com&#x2F;in&#x2F;mathias-pius&#x2F;" target="_blank" rel="noopener me"
+   title="linkedin">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+  
+</a>
+
+<a href="mailto:mathias@datavirke.dk" target="_blank" rel="noopener me"
+   title="email">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+  
+</a>
+
+<a href="https:&#x2F;&#x2F;fosstodon.org&#x2F;@MathiasPius" target="_blank" rel="noopener me"
+   title="twitter">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path></svg>
+  
+</a>
+
+
+      </span>
+      <button id="menu-btn" class="hdr-btn" title="Menu">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="feather feather-menu"
+        >
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>
+<div id="mobile-menu" class="animated fast">
+  <ul>
+    
+    <li><a href="https://datavirke.dk/about">About</a></li>
+    
+    <li><a href="https://datavirke.dk/experience">Experience</a></li>
+    
+    <li><a href="https://datavirke.dk/posts">Blog</a></li>
+    
+  </ul>
+</div>
+
+	
+	
+
+		
+<main class="site-main section-inner animated fadeIn faster">
+  <article class="thin">
+	<header class="post-header">
+	  <div class="post-meta">
+		
+		<span>Jun 24, 2023</span>
+		<small> - 
+<span class="reading-time" title="Estimated read time">
+  
+  15 min read
+  
+</span>
+</small>
+		
+            
+	  </div>
+	  <h1>Bare-metal Kubernetes, Part III: Encrypted GitOps with FluxCD</h1>
+	</header>
+
+	<div class="content">
+        
+	  <p><i>Discussion on <a href="https://news.ycombinator.com/item?id=37443404">Hacker News</a></i></p>
+<p>We've got an actually working cluster now that is relatively secure, but rebuilding it and keeping it up to date is going to be a real chore.</p>
+<p>Storing things like machine configurations, Talos config files and network policies in a git repository would help with the rebuilding part, but not with keeping it up to date. For that, we'll need some kind of continuous deployment system like <a href="https://argo-cd.readthedocs.io/en/stable/">ArgoCD</a> or <a href="https://fluxcd.io/">FluxCD</a>.</p>
+<p><em>Series Index</em></p>
+<ul>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-1-talos-on-hetzner/">Part I: Talos on Hetzner</a></li>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-2-cilium-and-firewalls/">Part II: Cilium CNI &amp; Firewalls</a></li>
+<li><strong><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-3-encrypted-gitops-with-fluxcd/">Part III: Encrypted GitOps with FluxCD</a></strong></li>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-4-ingress-dns-certificates/">Part IV: Ingress, DNS and Certificates</a></li>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-5-scaling-out/">Part V: Scaling Out</a></li>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-6-persistent-storage-with-rook-ceph/">Part VI: Persistent Storage with Rook Ceph</a></li>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-7-private-registry-with-harbor/">Part VII: Private Registry with Harbor</a></li>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-8-containerizing-our-work-environment/">Part VIII: Containerizing our Work Environment</a></li>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-9-renovating-old-deployments/">Part IX: Renovating old Deployments</a></li>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-10-metrics-and-monitoring-with-openobserve/">Part X: Metrics and Monitoring with OpenObserve</a></li>
+</ul>
+<p>Complete source code for the live cluster is available <a href="https://github.com/MathiasPius/kronform">@github/MathiasPius/kronform</a></p>
+<h1 id="choosing-fluxcd"><a class="zola-anchor" href="#choosing-fluxcd" aria-label="Anchor link for: choosing-fluxcd">Choosing FluxCD</a></h1>
+<p>I've previously used ArgoCD for keeping helm releases up to date within a cluster, but they didn't support specifying helm values files in a separate directory from the chart, which effectively meant that if you needed to change <em>even a single value</em> of a chart, you had to basically create a new chart which had the original as a sub-chart and set the values that way.<sup class="footnote-reference"><a href="#1">1</a></sup></p>
+<p>FluxCD seems to solve this by having the helm values as part of the <code>spec</code> of their <a href="https://fluxcd.io/flux/components/helm/helmreleases/"><code>HelmRelease</code></a> resource, while also enabling some pretty cool integrations like <a href="https://fluxcd.io/flux/use-cases/gh-actions-helm-promotion/">release promotion</a> out of the box.</p>
+<p>Let's see how it fares compared to my experience with ArgoCD.</p>
+<h1 id="installing-fluxcd"><a class="zola-anchor" href="#installing-fluxcd" aria-label="Anchor link for: installing-fluxcd">Installing FluxCD</a></h1>
+<p>The <a href="https://fluxcd.io/flux/get-started/">Get Started with Flux</a> guide starts by declaring that you'll need GitHub credentials before continuing, but this is only because the guide targets GitHub, which is probably reasonable. Flux seems to work natively with the biggest <a href="https://fluxcd.io/flux/components/notification/provider/">git servers</a>, which is nice to know since we <em>might</em> want to move to a self-hosted forgejo|gitea|gitlab instance at some point.</p>
+<h2 id="repository-and-personal-access-token"><a class="zola-anchor" href="#repository-and-personal-access-token" aria-label="Anchor link for: repository-and-personal-access-token">Repository and Personal Access Token</a></h2>
+<p>I went ahead and created a repository <a href="https://github.com/MathiasPius/kronform">@github/MathiasPius/kronform</a>, and embarked to configure a personal access token, as the guide requires. </p>
+<p>Unfortunately the documentation is really vague about which permissions are necessary, and as far as I can tell it isn't explicitly mentioned anywhere. Not being entirely sure how Flux works internally, I went ahead and created a PAT with Read/Write access to most of the functionality on <em>just</em> the one repository:</p>
+<p>Read access to <code>kronform</code>: </p>
+<ul>
+<li>metadata</li>
+</ul>
+<p>Read <em>and</em> Write access to <code>kronform</code>:</p>
+<ul>
+<li>Dependabot alerts</li>
+<li>actions</li>
+<li>actions variables</li>
+<li>administration</li>
+<li>code</li>
+<li>commit statuses</li>
+<li>dependabot secrets</li>
+<li>deployments</li>
+<li>discussions</li>
+<li>environments</li>
+<li>issues</li>
+<li>merge queues</li>
+<li>pull requests</li>
+<li>repository advisories</li>
+<li>repository hooks</li>
+<li>secret scanning alerts</li>
+<li>secrets</li>
+<li>security events</li>
+<li>workflows </li>
+</ul>
+<h2 id="bootstrapping"><a class="zola-anchor" href="#bootstrapping" aria-label="Anchor link for: bootstrapping">Bootstrapping</a></h2>
+<p>The easiest, and apparently only, way of installing FluxCD is through the <code>flux</code> cli, so I installed it through my package manager. The latest available version was <code>2.0.0-rc.5</code></p>
+<p>Again, following the official guide I exported my credentials:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> export GITHUB_USER=MathiasPius
+</span><span style="color:#bf616a;">[mpd@ish]$</span><span> export GITHUB_TOKEN=github_pat_...
+</span></code></pre>
+<p>And ran the bootstrap command:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> flux bootstrap github \
+</span><span style="color:#bf616a;">  --owner</span><span>=$</span><span style="color:#bf616a;">GITHUB_USER           </span><span>\
+</span><span style="color:#bf616a;">  --repository</span><span>=kronform          \
+</span><span style="color:#bf616a;">  --branch</span><span>=main                  \
+</span><span style="color:#bf616a;">  --path</span><span>=./manifests             \
+</span><span style="color:#bf616a;">  --personal
+</span></code></pre>
+<p>Everything went along swimmingly, until it seemed to hang while waiting for some Kustomizations to reconcile:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">►</span><span> connecting to github.com
+</span><span style="color:#bf616a;">►</span><span> cloning branch &quot;</span><span style="color:#a3be8c;">main</span><span>&quot; from Git repository &quot;</span><span style="color:#a3be8c;">https://github.com/MathiasPius/kronform.git</span><span>&quot;
+</span><span style="color:#bf616a;">✔</span><span> cloned repository
+</span><span style="color:#bf616a;">►</span><span> generating component manifests
+</span><span style="color:#65737e;"># (...)
+</span><span style="color:#bf616a;">✔</span><span> committed sync manifests to &quot;</span><span style="color:#a3be8c;">main</span><span>&quot; (&quot;</span><span style="color:#a3be8c;">be94c9fb726fcab7eb0aff77a0668be41f6f4429</span><span>&quot;)
+</span><span style="color:#bf616a;">►</span><span> pushing sync manifests to &quot;</span><span style="color:#a3be8c;">https://github.com/MathiasPius/kronform.git</span><span>&quot;
+</span><span style="color:#bf616a;">►</span><span> applying sync manifests
+</span><span style="color:#bf616a;">✔</span><span> reconciled sync configuration
+</span><span style="color:#bf616a;">◎</span><span> waiting for Kustomization &quot;</span><span style="color:#a3be8c;">flux-system/flux-system</span><span>&quot; to be reconciled
+</span><span style="color:#65737e;"># Process hangs here, and then fails below.
+</span><span style="color:#bf616a;">✗</span><span> client rate limiter Wait returned an error: context deadline exceeded
+</span><span style="color:#bf616a;">►</span><span> confirming components are healthy
+</span><span style="color:#bf616a;">✔</span><span> helm-controller: deployment ready
+</span><span style="color:#bf616a;">✔</span><span> kustomize-controller: deployment ready
+</span><span style="color:#bf616a;">✔</span><span> notification-controller: deployment ready
+</span><span style="color:#bf616a;">✔</span><span> source-controller: deployment ready
+</span><span style="color:#bf616a;">✔</span><span> all components are healthy
+</span><span style="color:#bf616a;">✗</span><span> bootstrap failed with 1 health check failure(s)
+</span></code></pre>
+<p>Googling around I found some other people encountering the same issue, but the cause seemed to be specific to OpenShift.</p>
+<p>Using the <code>flux</code> cli to list the kustomizations explained exactly what went wrong though:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> flux get kustomizations
+</span><span style="color:#bf616a;">NAME</span><span>            REVISION        SUSPENDED       READY   MESSAGE
+</span><span style="color:#bf616a;">flux-system</span><span>                     False           False   failed to download archive: GET http://source-controller.flux-system.svc.cluster.local./gitrepository/flux-system/flux-system/be94c9fb.tar.gz giving up after 10 attempt(s)</span><span style="color:#96b5b4;">:</span><span> Get &quot;</span><span style="color:#a3be8c;">http://source-controller.flux-system.svc.cluster.local./gitrepository/flux-system/flux-system/be94c9fb.tar.gz</span><span>&quot;: dial tcp: lookup source-controller.flux-system.svc.cluster.local. on 10.96.0.10:53: no such host
+</span></code></pre>
+<p><code>.cluster.local</code>. That explains it. Flux assumes the dns domain of the cluster is <code>cluster.local</code> and requires us to override it in the bootstrap command. That decision is really just gonna keep coming back to bite me, isn't it?</p>
+<p>Let's try again, with the correct cluster domain this time</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> export CLUSTER_DOMAIN=local.kronform.pius.dev
+</span><span style="color:#bf616a;">[mpd@ish]$</span><span> flux bootstrap github      \
+</span><span style="color:#bf616a;">  --cluster-domain</span><span>=${</span><span style="color:#bf616a;">CLUSTER_DOMAIN</span><span>}  \
+</span><span style="color:#bf616a;">  --owner</span><span>=$</span><span style="color:#bf616a;">GITHUB_USER                </span><span>\
+</span><span style="color:#bf616a;">  --repository</span><span>=kronform               \
+</span><span style="color:#bf616a;">  --branch</span><span>=main                       \
+</span><span style="color:#bf616a;">  --path</span><span>=./manifests                  \
+</span><span style="color:#bf616a;">  --personal
+</span><span>
+</span><span style="color:#bf616a;">...
+</span><span style="color:#bf616a;">◎</span><span> waiting for Kustomization &quot;</span><span style="color:#a3be8c;">flux-system/flux-system</span><span>&quot; to be reconciled
+</span><span style="color:#bf616a;">✔</span><span> Kustomization reconciled successfully
+</span></code></pre>
+<p>Great, so far so good!</p>
+<h2 id="trying-it-out"><a class="zola-anchor" href="#trying-it-out" aria-label="Anchor link for: trying-it-out">Trying it out</a></h2>
+<p>The guide shows how to deploy <code>PodInfo</code> as an example project, so let's do that.</p>
+<p>It uses the flux cli to generate the configurations, but the presented output documents are very legible, so we'll use those directly.</p>
+<p>Let's just deploy the GitRepository and the Kustomization at the same time.</p>
+<pre data-lang="yaml" style="background-color:#2b303b;color:#c0c5ce;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#65737e;"># manifests/podinfo.yaml
+</span><span>---
+</span><span style="color:#bf616a;">apiVersion</span><span>: </span><span style="color:#a3be8c;">source.toolkit.fluxcd.io/v1
+</span><span style="color:#bf616a;">kind</span><span>: </span><span style="color:#a3be8c;">GitRepository
+</span><span style="color:#bf616a;">metadata</span><span>:
+</span><span>  </span><span style="color:#bf616a;">name</span><span>: </span><span style="color:#a3be8c;">podinfo
+</span><span>  </span><span style="color:#bf616a;">namespace</span><span>: </span><span style="color:#a3be8c;">flux-system
+</span><span style="color:#bf616a;">spec</span><span>:
+</span><span>  </span><span style="color:#bf616a;">interval</span><span>: </span><span style="color:#a3be8c;">30s
+</span><span>  </span><span style="color:#bf616a;">ref</span><span>:
+</span><span>    </span><span style="color:#bf616a;">branch</span><span>: </span><span style="color:#a3be8c;">master
+</span><span>  </span><span style="color:#bf616a;">url</span><span>: </span><span style="color:#a3be8c;">https://github.com/stefanprodan/podinfo
+</span><span>---
+</span><span style="color:#bf616a;">apiVersion</span><span>: </span><span style="color:#a3be8c;">kustomize.toolkit.fluxcd.io/v1
+</span><span style="color:#bf616a;">kind</span><span>: </span><span style="color:#a3be8c;">Kustomization
+</span><span style="color:#bf616a;">metadata</span><span>:
+</span><span>  </span><span style="color:#bf616a;">name</span><span>: </span><span style="color:#a3be8c;">podinfo
+</span><span>  </span><span style="color:#bf616a;">namespace</span><span>: </span><span style="color:#a3be8c;">flux-system
+</span><span style="color:#bf616a;">spec</span><span>:
+</span><span>  </span><span style="color:#bf616a;">interval</span><span>: </span><span style="color:#a3be8c;">5m0s
+</span><span>  </span><span style="color:#bf616a;">path</span><span>: </span><span style="color:#a3be8c;">./kustomize
+</span><span>  </span><span style="color:#bf616a;">prune</span><span>: </span><span style="color:#d08770;">true
+</span><span>  </span><span style="color:#bf616a;">sourceRef</span><span>:
+</span><span>    </span><span style="color:#bf616a;">kind</span><span>: </span><span style="color:#a3be8c;">GitRepository
+</span><span>    </span><span style="color:#bf616a;">name</span><span>: </span><span style="color:#a3be8c;">podinfo
+</span><span>  </span><span style="color:#bf616a;">targetNamespace</span><span>: </span><span style="color:#a3be8c;">default
+</span></code></pre>
+<p>We push the yaml file and watch flux work:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> flux get kustomizations</span><span style="color:#bf616a;"> --watch
+</span></code></pre>
+<p>After a short while, flux picks up our change and starts spamming updates, eventually ending with</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">NAME</span><span>         REVISION              SUSPENDED  READY  MESSAGE                              
+</span><span style="color:#bf616a;">flux-system</span><span>  main@sha1:d0bca4ce    False      True   Applied revision: main@sha1:d0bca4ce
+</span><span style="color:#bf616a;">podinfo</span><span>      master@sha1:e06a5517  False      True   Applied revision: master@sha1:e06a5517
+</span></code></pre>
+<p>Using <code>kubectl</code> to check our default namespace we can see the <code>podinfo</code> service up and running:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> kubectl</span><span style="color:#bf616a;"> -n</span><span> default get deployments,services
+</span><span style="color:#bf616a;">NAME</span><span>                      READY   UP-TO-DATE   AVAILABLE   AGE
+</span><span style="color:#bf616a;">deployment.apps/podinfo</span><span>   2/2     2            2           2m32s
+</span><span>
+</span><span style="color:#bf616a;">NAME</span><span>                 TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)             </span><span style="color:#bf616a;">AGE
+</span><span style="color:#bf616a;">service/kubernetes</span><span>   ClusterIP   10.96.0.1      &lt;none&gt;        </span><span style="color:#d08770;">443</span><span>/TCP             161m
+</span><span style="color:#bf616a;">service/podinfo</span><span>      ClusterIP   10.110.168.7   &lt;none&gt;        </span><span style="color:#d08770;">9898</span><span>/TCP,9999/TCP   2m32s
+</span></code></pre>
+<p>Since we don't have an ingress controller yet (that's in Part IV), we can't expose the service that way, so let's just proxy it from our local machine:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> kubectl port-forward svc/podinfo 8080:9898
+</span></code></pre>
+<p>Navigating to <code>http://localhost:8080</code> in our browser it looks like it's working!</p>
+<p><img src="https://datavirke.dk/posts/bare-metal-kubernetes-part-3-encrypted-gitops-with-fluxcd/podinfo.png" alt="PodInfo" /></p>
+<p>Curious to see how Flux handles destructive actions and to clean up our test, I'll delete the <code>podinfo.yaml</code> from the <code>kronform</code> repository.</p>
+<p>Sure enough, after a little while the deployment and service is yeeted out of the cluster, just as expected.</p>
+<p>10 points to FluxCD.</p>
+<h2 id="restructuring"><a class="zola-anchor" href="#restructuring" aria-label="Anchor link for: restructuring">Restructuring</a></h2>
+<p>Reading over the <a href="https://fluxcd.io/flux/guides/repository-structure/">documentation for repository structure</a>, it looks like I might have bungled the setup a bit by yoloing the bootstrapping. This isn't critical, but it'd be nice to follow best practices, and the structure they suggest makes a lot of sense. Since I'll only be using the one cluster though, I decide to be a little bad and axe the <code>clusters/</code> sub-directory, instead opting to have just the one folder.</p>
+<p>I couldn't find any documentation on how such a restructuring might happen, and the cli didn't provide any clues. Looking at the already deployed kustomizations generated during the bootstrap phase, the process seems pretty obvious. Here is <code>@kronform/manifests/flux-system/gotk-sync.yaml</code>:</p>
+<pre data-lang="yaml" style="background-color:#2b303b;color:#c0c5ce;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#65737e;"># This manifest was generated by flux. DO NOT EDIT.
+</span><span>---
+</span><span style="color:#bf616a;">apiVersion</span><span>: </span><span style="color:#a3be8c;">source.toolkit.fluxcd.io/v1
+</span><span style="color:#bf616a;">kind</span><span>: </span><span style="color:#a3be8c;">GitRepository
+</span><span style="color:#bf616a;">metadata</span><span>:
+</span><span>  </span><span style="color:#bf616a;">name</span><span>: </span><span style="color:#a3be8c;">flux-system
+</span><span>  </span><span style="color:#bf616a;">namespace</span><span>: </span><span style="color:#a3be8c;">flux-system
+</span><span style="color:#bf616a;">spec</span><span>:
+</span><span>  </span><span style="color:#bf616a;">interval</span><span>: </span><span style="color:#a3be8c;">1m0s
+</span><span>  </span><span style="color:#bf616a;">ref</span><span>:
+</span><span>    </span><span style="color:#bf616a;">branch</span><span>: </span><span style="color:#a3be8c;">main
+</span><span>  </span><span style="color:#bf616a;">secretRef</span><span>:
+</span><span>    </span><span style="color:#bf616a;">name</span><span>: </span><span style="color:#a3be8c;">flux-system
+</span><span>  </span><span style="color:#bf616a;">url</span><span>: </span><span style="color:#a3be8c;">ssh://git@github.com/MathiasPius/kronform
+</span><span>---
+</span><span style="color:#bf616a;">apiVersion</span><span>: </span><span style="color:#a3be8c;">kustomize.toolkit.fluxcd.io/v1
+</span><span style="color:#bf616a;">kind</span><span>: </span><span style="color:#a3be8c;">Kustomization
+</span><span style="color:#bf616a;">metadata</span><span>:
+</span><span>  </span><span style="color:#bf616a;">name</span><span>: </span><span style="color:#a3be8c;">flux-system
+</span><span>  </span><span style="color:#bf616a;">namespace</span><span>: </span><span style="color:#a3be8c;">flux-system
+</span><span style="color:#bf616a;">spec</span><span>:
+</span><span>  </span><span style="color:#bf616a;">interval</span><span>: </span><span style="color:#a3be8c;">10m0s
+</span><span>  </span><span style="color:#bf616a;">path</span><span>: </span><span style="color:#a3be8c;">./manifests
+</span><span>  </span><span style="color:#bf616a;">prune</span><span>: </span><span style="color:#d08770;">true
+</span><span>  </span><span style="color:#bf616a;">sourceRef</span><span>:
+</span><span>    </span><span style="color:#bf616a;">kind</span><span>: </span><span style="color:#a3be8c;">GitRepository
+</span><span>    </span><span style="color:#bf616a;">name</span><span>: </span><span style="color:#a3be8c;">flux-system
+</span></code></pre>
+<p>Theoretically, I should be able to just change that <code>path: ./manifests</code> line and move the entire directory, right?</p>
+<p>Replacing the path with <code>./manifests/cluster</code> and moving <code>./manifests/flux-system</code> to <code>./manifests/cluster/flux-system</code> and committing the changes caused flux to simply update the deployed resources and continue on as usual. Awesome!</p>
+<p>Another 10 points to FluxCD.</p>
+<h1 id="backporting-cilium"><a class="zola-anchor" href="#backporting-cilium" aria-label="Anchor link for: backporting-cilium">Backporting Cilium</a></h1>
+<p>Now that Flux is setup, let's get to work backporting our manually setup Cilium deployment from the previous post.</p>
+<p>We'll start by creating the directory <code>manifests/infrastructure/cilium</code> and putting a <code>repository.yaml</code> file in there, with the following contents:</p>
+<pre data-lang="yaml" style="background-color:#2b303b;color:#c0c5ce;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#65737e;"># manifests/infrastructure/cilium/repository.yaml
+</span><span>---
+</span><span style="color:#bf616a;">apiVersion</span><span>: </span><span style="color:#a3be8c;">source.toolkit.fluxcd.io/v1beta2
+</span><span style="color:#bf616a;">kind</span><span>: </span><span style="color:#a3be8c;">HelmRepository
+</span><span style="color:#bf616a;">metadata</span><span>:
+</span><span>  </span><span style="color:#bf616a;">name</span><span>: </span><span style="color:#a3be8c;">cilium
+</span><span>  </span><span style="color:#bf616a;">namespace</span><span>: </span><span style="color:#a3be8c;">kube-system
+</span><span style="color:#bf616a;">spec</span><span>:
+</span><span>  </span><span style="color:#bf616a;">interval</span><span>: </span><span style="color:#a3be8c;">5m0s
+</span><span>  </span><span style="color:#bf616a;">url</span><span>: </span><span style="color:#a3be8c;">https://helm.cilium.io/
+</span></code></pre>
+<p>And of course a <code>kustomization.yaml</code> file which references it:</p>
+<pre data-lang="yaml" style="background-color:#2b303b;color:#c0c5ce;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#65737e;"># manifests/infrastructure/cilium/kustomization.yaml
+</span><span>---
+</span><span style="color:#bf616a;">apiVersion</span><span>: </span><span style="color:#a3be8c;">kustomize.config.k8s.io/v1beta1
+</span><span style="color:#bf616a;">kind</span><span>: </span><span style="color:#a3be8c;">Kustomization
+</span><span style="color:#bf616a;">resources</span><span>:
+</span><span>- </span><span style="color:#a3be8c;">repository.yaml
+</span></code></pre>
+<p>This should configure a Helm Repository within the <code>kube-system</code> namespace, but of course flux is not yet configured to even look in the  <code>manifests/infrastructure</code> directory, so just committing this change alone won't do anything.</p>
+<p>We'll need to first create a <code>Kustomization</code> resource which instructs Flux to watch this sub-directory of our already-configured <code>GitRepository</code>:</p>
+<pre data-lang="yaml" style="background-color:#2b303b;color:#c0c5ce;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#65737e;"># manifests/cluster/infrastructure.yaml
+</span><span>---
+</span><span style="color:#bf616a;">apiVersion</span><span>: </span><span style="color:#a3be8c;">kustomize.toolkit.fluxcd.io/v1
+</span><span style="color:#bf616a;">kind</span><span>: </span><span style="color:#a3be8c;">Kustomization
+</span><span style="color:#bf616a;">metadata</span><span>:
+</span><span>  </span><span style="color:#bf616a;">name</span><span>: </span><span style="color:#a3be8c;">infrastructure
+</span><span>  </span><span style="color:#bf616a;">namespace</span><span>: </span><span style="color:#a3be8c;">flux-system
+</span><span style="color:#bf616a;">spec</span><span>:
+</span><span>  </span><span style="color:#bf616a;">interval</span><span>: </span><span style="color:#a3be8c;">10m0s
+</span><span>  </span><span style="color:#bf616a;">path</span><span>: </span><span style="color:#a3be8c;">./manifests/infrastructure
+</span><span>  </span><span style="color:#bf616a;">prune</span><span>: </span><span style="color:#d08770;">true
+</span><span>  </span><span style="color:#bf616a;">sourceRef</span><span>:
+</span><span>    </span><span style="color:#bf616a;">kind</span><span>: </span><span style="color:#a3be8c;">GitRepository
+</span><span>    </span><span style="color:#bf616a;">name</span><span>: </span><span style="color:#a3be8c;">flux-system
+</span></code></pre>
+<p>And of course add the reference to it in <code>manifests/cluster/kustomization.yaml</code></p>
+<p>At this point the pointer chasing is a little confusing, so let's summarize the file structure, from the <code>kronform</code> repository:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> tree manifests 
+</span><span style="color:#bf616a;">manifests
+</span><span style="color:#bf616a;">├──</span><span> cluster
+</span><span style="color:#bf616a;">│</span><span>   └── flux-system
+</span><span style="color:#bf616a;">│</span><span>       ├── gotk-components.yaml
+</span><span style="color:#bf616a;">│</span><span>       ├── gotk-sync.yaml
+</span><span style="color:#bf616a;">│</span><span>       ├── infrastructure.yaml
+</span><span style="color:#bf616a;">│</span><span>       └── kustomization.yaml
+</span><span style="color:#bf616a;">└──</span><span> infrastructure
+</span><span>    </span><span style="color:#bf616a;">└──</span><span> cilium
+</span><span>        </span><span style="color:#bf616a;">├──</span><span> kustomization.yaml
+</span><span>        </span><span style="color:#bf616a;">└──</span><span> repository.yaml
+</span></code></pre>
+<p>Let's commit all of this and see if it worked.</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> kubectl get helmrepository</span><span style="color:#bf616a;"> -n</span><span> kube-system
+</span><span style="color:#bf616a;">NAME</span><span>     URL                       AGE   READY   STATUS
+</span><span style="color:#bf616a;">cilium</span><span>   https://helm.cilium.io/   18m   True    stored artifact: revision &#39;</span><span style="color:#a3be8c;">sha256:4cc5a535ccd03271289373f39cc47eb94150679d37f5a9cd8cd3a2b71f93a668</span><span>&#39;
+</span></code></pre>
+<p>Sure enough, our <code>HelmRepository</code> resource has been created, which proves that the whole setup works end to end.</p>
+<p>Of course we haven't fully back-ported the Cilium deployment until we've subsumed the helm release using flux, so let's do that next by translating our helm install action from the previous post into a <code>HelmRelease</code> resource:</p>
+<pre data-lang="yaml" style="background-color:#2b303b;color:#c0c5ce;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#65737e;"># manifests/infrastructure/cilium/release.yaml
+</span><span>---
+</span><span style="color:#bf616a;">apiVersion</span><span>: </span><span style="color:#a3be8c;">helm.toolkit.fluxcd.io/v2beta1
+</span><span style="color:#bf616a;">kind</span><span>: </span><span style="color:#a3be8c;">HelmRelease
+</span><span style="color:#bf616a;">metadata</span><span>:
+</span><span>  </span><span style="color:#bf616a;">name</span><span>: </span><span style="color:#a3be8c;">cilium
+</span><span>  </span><span style="color:#bf616a;">namespace</span><span>: </span><span style="color:#a3be8c;">kube-system
+</span><span style="color:#bf616a;">spec</span><span>:
+</span><span>  </span><span style="color:#bf616a;">interval</span><span>: </span><span style="color:#a3be8c;">5m
+</span><span>  </span><span style="color:#bf616a;">chart</span><span>:
+</span><span>    </span><span style="color:#bf616a;">spec</span><span>:
+</span><span>      </span><span style="color:#bf616a;">chart</span><span>: </span><span style="color:#a3be8c;">cilium
+</span><span>      </span><span style="color:#bf616a;">version</span><span>: &quot;</span><span style="color:#a3be8c;">&gt;=1.13.0 &lt;1.14.0</span><span>&quot;
+</span><span>      </span><span style="color:#bf616a;">sourceRef</span><span>:
+</span><span>        </span><span style="color:#bf616a;">kind</span><span>: </span><span style="color:#a3be8c;">HelmRepository
+</span><span>        </span><span style="color:#bf616a;">name</span><span>: </span><span style="color:#a3be8c;">cilium
+</span><span>        </span><span style="color:#bf616a;">namespace</span><span>: </span><span style="color:#a3be8c;">kube-system
+</span><span>      </span><span style="color:#bf616a;">interval</span><span>: </span><span style="color:#a3be8c;">1m
+</span><span>  </span><span style="color:#bf616a;">values</span><span>:
+</span><span>    </span><span style="color:#bf616a;">ipam</span><span>:
+</span><span>      </span><span style="color:#bf616a;">mode</span><span>: </span><span style="color:#a3be8c;">kubernetes
+</span><span>    </span><span style="color:#bf616a;">hostFirewall</span><span>:
+</span><span>      </span><span style="color:#bf616a;">enabled</span><span>: </span><span style="color:#d08770;">true
+</span><span>    </span><span style="color:#bf616a;">hubble</span><span>:
+</span><span>      </span><span style="color:#bf616a;">relay</span><span>:
+</span><span>        </span><span style="color:#bf616a;">enabled</span><span>: </span><span style="color:#d08770;">true
+</span><span>      </span><span style="color:#bf616a;">ui</span><span>:
+</span><span>        </span><span style="color:#bf616a;">enabled</span><span>: </span><span style="color:#d08770;">true
+</span><span>      </span><span style="color:#bf616a;">peerService</span><span>:
+</span><span>        </span><span style="color:#bf616a;">clusterDomain</span><span>: </span><span style="color:#a3be8c;">local.kronform.pius.dev
+</span><span>    </span><span style="color:#bf616a;">etcd</span><span>:
+</span><span>      </span><span style="color:#bf616a;">clusterDomain</span><span>: </span><span style="color:#a3be8c;">local.kronform.pius.dev
+</span><span>    </span><span style="color:#bf616a;">kubeProxyReplacement</span><span>: </span><span style="color:#a3be8c;">strict
+</span><span>    </span><span style="color:#bf616a;">securityContext</span><span>:
+</span><span>      </span><span style="color:#bf616a;">capabilities</span><span>:
+</span><span>        </span><span style="color:#bf616a;">ciliumAgent</span><span>:
+</span><span>        - </span><span style="color:#a3be8c;">CHOWN
+</span><span>        - </span><span style="color:#a3be8c;">KILL
+</span><span>        - </span><span style="color:#a3be8c;">NET_ADMIN
+</span><span>        - </span><span style="color:#a3be8c;">NET_RAW
+</span><span>        - </span><span style="color:#a3be8c;">IPC_LOCK
+</span><span>        - </span><span style="color:#a3be8c;">SYS_ADMIN
+</span><span>        - </span><span style="color:#a3be8c;">SYS_RESOURCE
+</span><span>        - </span><span style="color:#a3be8c;">DAC_OVERRIDE
+</span><span>        - </span><span style="color:#a3be8c;">FOWNER
+</span><span>        - </span><span style="color:#a3be8c;">SETGID
+</span><span>        - </span><span style="color:#a3be8c;">SETUID
+</span><span>        </span><span style="color:#bf616a;">cleanCiliumState</span><span>:
+</span><span>        - </span><span style="color:#a3be8c;">NET_ADMIN
+</span><span>        - </span><span style="color:#a3be8c;">SYS_ADMIN
+</span><span>        - </span><span style="color:#a3be8c;">SYS_RESOURCE
+</span><span>    </span><span style="color:#bf616a;">cgroup</span><span>:
+</span><span>      </span><span style="color:#bf616a;">autoMount</span><span>:
+</span><span>        </span><span style="color:#bf616a;">enabled</span><span>: </span><span style="color:#d08770;">true
+</span><span>      </span><span style="color:#bf616a;">hostRoot</span><span>: </span><span style="color:#a3be8c;">/sys/fs/cgroup
+</span><span>    </span><span style="color:#bf616a;">k8sServiceHost</span><span>: </span><span style="color:#a3be8c;">api.kronform.pius.dev
+</span><span>    </span><span style="color:#bf616a;">k8sServicePort</span><span>: &quot;</span><span style="color:#a3be8c;">6443</span><span>&quot;
+</span></code></pre>
+<p>Once again committing and pushing, we can shortly after see that the helm release timestamp has been updated:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> helm ls</span><span style="color:#bf616a;"> -n</span><span> kube-system
+</span><span style="color:#bf616a;">NAME</span><span>    NAMESPACE       REVISION        UPDATED                                 STATUS          CHART           APP VERSION
+</span><span style="color:#bf616a;">cilium</span><span>  kube-system     12              2023-06-23 12:06:05.983931976 +0000 UTC deployed        cilium-1.13.4   1.13.4
+</span></code></pre>
+<h2 id="restructuring-again"><a class="zola-anchor" href="#restructuring-again" aria-label="Anchor link for: restructuring-again">Restructuring... Again</a></h2>
+<p>Next natural step would be to backport the <code>CiliumClusterWideNetworkPolicy</code> we set up to protect our node(s), but this presents a slight problem.</p>
+<p>We're treating the entirety of <code>manifests/infrastructure</code> as one big &quot;kustomization&quot;, which means we can't define dependencies within it. We can work around this problem by creating independent <code>Kustomizations</code> for each subdirectory of <code>manifests/infrastructure</code> instead. This means a bit more configuration, but since it's infrastructure it will likely not change a lot.</p>
+<p>The fix is pretty simple, just replace <code>manifests/cluster/flux-system/infrastructure.yaml</code> with <code>cilium.yaml</code>:</p>
+<pre data-lang="yaml" style="background-color:#2b303b;color:#c0c5ce;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#65737e;"># manifests/cluster/flux-system/cilium.yaml
+</span><span style="color:#bf616a;">apiVersion</span><span>: </span><span style="color:#a3be8c;">kustomize.toolkit.fluxcd.io/v1
+</span><span style="color:#bf616a;">kind</span><span>: </span><span style="color:#a3be8c;">Kustomization
+</span><span style="color:#bf616a;">metadata</span><span>:
+</span><span>  </span><span style="color:#bf616a;">name</span><span>: </span><span style="color:#a3be8c;">cilium
+</span><span>  </span><span style="color:#bf616a;">namespace</span><span>: </span><span style="color:#a3be8c;">flux-system
+</span><span style="color:#bf616a;">spec</span><span>:
+</span><span>  </span><span style="color:#bf616a;">interval</span><span>: </span><span style="color:#a3be8c;">10m0s
+</span><span>  </span><span style="color:#bf616a;">path</span><span>: </span><span style="color:#a3be8c;">./manifests/infrastructure/cilium
+</span><span>  </span><span style="color:#bf616a;">prune</span><span>: </span><span style="color:#d08770;">true
+</span><span>  </span><span style="color:#bf616a;">sourceRef</span><span>:
+</span><span>    </span><span style="color:#bf616a;">kind</span><span>: </span><span style="color:#a3be8c;">GitRepository
+</span><span>    </span><span style="color:#bf616a;">name</span><span>: </span><span style="color:#a3be8c;">flux-system
+</span></code></pre>
+<p>And replace the reference in <code>manifests/cluster/flux-system/kustomization.yaml</code>.</p>
+<p>Committing and pushing the changes unfortunately yeets Cilium completely from the cluster. Using <code>flux events</code> shows pretty clearly why:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> $ flux events                        
+</span><span style="color:#bf616a;">REASON</span><span>       OBJECT                        MESSAGE                                                                                                     
+</span><span style="color:#bf616a;">Progressing</span><span>  Kustomization/flux-system     Kustomization/flux-system/cilium created
+</span><span style="color:#bf616a;">Progressing</span><span>  Kustomization/flux-system     Kustomization/flux-system/infrastructure deleted
+</span><span style="color:#bf616a;">Progressing</span><span>  Kustomization/cilium          HelmRelease/kube-system/cilium configured
+</span><span>                                           </span><span style="color:#bf616a;">HelmRepository/kube-system/cilium</span><span> created
+</span><span style="color:#bf616a;">Succeeded</span><span>    Kustomization/infrastructure  HelmRepository/kube-system/cilium deleted
+</span><span>                                           </span><span style="color:#bf616a;">HelmRelease/kube-system/cilium</span><span> deleted
+</span></code></pre>
+<p>The new <code>cilium</code> Kustomization is applied first, resulting in effectively a no-op for the <code>HelmRelease</code>, after which the old <code>infrastructure</code> kustomization is garbage collected, destroying the <code>HelmRelease</code> resource for both of them.</p>
+<p>The problem is quickly fixed (and likely would have been automatically in time) by issuing:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> flux reconcile kustomization cilium
+</span></code></pre>
+<p>In retrospect, it would have been smart to mark the <code>infrastructure</code> kustomization with <code>prune: false</code> to avoid garbage collection, but things turned out alright in the end anyway.</p>
+<h2 id="backporting-our-node-policy"><a class="zola-anchor" href="#backporting-our-node-policy" aria-label="Anchor link for: backporting-our-node-policy">Backporting our node policy</a></h2>
+<p>Somehow our <code>CiliumClusterWideNetworkPolicy</code> by the name <code>host-fw-control-plane</code> survived this whole ordeal, I suspect because Cilium doesn't necessarily clean up its CRDs when it gets removed.</p>
+<p>Whatever the case, the policy is still not managed by flux, so let's do that now. The policy obviously depends on us having already deployed Cilium, or the resource type will be unknown to Kubernetes.</p>
+<p>Fortunately, the <a href="https://fluxcd.io/flux/components/kustomize/kustomization/#dependencies">Kustomization</a> resource has a <a href="https://fluxcd.io/flux/components/kustomize/kustomization/#dependencies">dependency tracking field</a>.</p>
+<p>Unfortunately the field doesn't work across flux-managed resource types, meaning we can't define our policy as part of a <code>Kustomization</code> and tell it to wait on a <code>HelmRelease</code></p>
+<p>FORTUNATELY we can work around this limitation using a kustomization <a href="https://fluxcd.io/flux/components/kustomize/kustomization/#health-checks">healthcheck</a> instead.</p>
+<p>We start by writing <code>manifests/cluster/flux-system/cluster-policies.yaml</code>, with a health check on our Cilium <code>HelmRelease</code> in the <code>kube-system</code> namespace:</p>
+<pre data-lang="yaml" style="background-color:#2b303b;color:#c0c5ce;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#65737e;"># manifests/cluster/flux-system/cluster-policies.yaml
+</span><span style="color:#bf616a;">apiVersion</span><span>: </span><span style="color:#a3be8c;">kustomize.toolkit.fluxcd.io/v1
+</span><span style="color:#bf616a;">kind</span><span>: </span><span style="color:#a3be8c;">Kustomization
+</span><span style="color:#bf616a;">metadata</span><span>:
+</span><span>  </span><span style="color:#bf616a;">name</span><span>: </span><span style="color:#a3be8c;">cluster-policies
+</span><span>  </span><span style="color:#bf616a;">namespace</span><span>: </span><span style="color:#a3be8c;">flux-system
+</span><span style="color:#bf616a;">spec</span><span>:
+</span><span>  </span><span style="color:#bf616a;">interval</span><span>: </span><span style="color:#a3be8c;">10m0s
+</span><span>  </span><span style="color:#bf616a;">path</span><span>: </span><span style="color:#a3be8c;">./manifests/infrastructure/cluster-policies
+</span><span>  </span><span style="color:#bf616a;">prune</span><span>: </span><span style="color:#d08770;">true
+</span><span>  </span><span style="color:#bf616a;">sourceRef</span><span>:
+</span><span>    </span><span style="color:#bf616a;">kind</span><span>: </span><span style="color:#a3be8c;">GitRepository
+</span><span>    </span><span style="color:#bf616a;">name</span><span>: </span><span style="color:#a3be8c;">flux-system
+</span><span>  </span><span style="color:#bf616a;">healthChecks</span><span>:
+</span><span>    - </span><span style="color:#bf616a;">apiVersion</span><span>: </span><span style="color:#a3be8c;">helm.toolkit.fluxcd.io/v2beta1
+</span><span>      </span><span style="color:#bf616a;">kind</span><span>: </span><span style="color:#a3be8c;">HelmRelease
+</span><span>      </span><span style="color:#bf616a;">name</span><span>: </span><span style="color:#a3be8c;">cilium
+</span><span>      </span><span style="color:#bf616a;">namespace</span><span>: </span><span style="color:#a3be8c;">kube-system
+</span><span>
+</span></code></pre>
+<p>And add it to the cluster kustomization. This will ensure that our cluster-policies Kustomization won't be applied until the Cilium <code>HelmRelease</code> is in the <code>Ready</code> state.</p>
+<p>Next, we create a new infrastructure sub-directory called <code>cluster-policies</code> and put our <code>host-fw-control-plane.yaml</code> file in there, unmodified, and add the following <code>kustomization.yaml</code> file in the same directory:</p>
+<pre data-lang="yaml" style="background-color:#2b303b;color:#c0c5ce;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#bf616a;">apiVersion</span><span>: </span><span style="color:#a3be8c;">kustomize.config.k8s.io/v1beta1
+</span><span style="color:#bf616a;">kind</span><span>: </span><span style="color:#a3be8c;">Kustomization
+</span><span style="color:#bf616a;">resources</span><span>:
+</span><span>- </span><span style="color:#a3be8c;">host-fw-control-plane.yaml
+</span></code></pre>
+<p>As a precaution, before committing and pushing the change, I enable `PolicyAuditMode' once more on the node:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> kubectl exec</span><span style="color:#bf616a;"> -n</span><span> kube-system cilium-6zv78 \
+</span><span>  -- cilium endpoint config 555 PolicyAuditMode=Enabled
+</span><span style="color:#bf616a;">Endpoint</span><span> 555 configuration updated successfully
+</span></code></pre>
+<p>Now let's push!</p>
+<p>With Cilium re-deployed several <em>minutes</em> ago, the health check passes instantly:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> flux events
+</span><span style="color:#bf616a;">LAST</span><span> SEEN   REASON        OBJECT                          MESSAGE
+</span><span style="color:#bf616a;">48s</span><span> Progressing   Kustomization/cluster-policies  Health check passed in 24.818222ms
+</span><span style="color:#bf616a;">8s</span><span>  Progressing   Kustomization/cluster-policies  CiliumClusterwideNetworkPolicy/host-fw-control-plane configured
+</span></code></pre>
+<p>If we never had the need to store secrets in our cluster, we'd practically be done by now, but that's not the case.</p>
+<p>As in the previous post we use <code>cilium monitor</code> and run some <code>kubetcl</code> commands to ensure that we have access, as evidenced by <code>action allow</code> appearing in the verdict log. Once satisfied, remember to disable the policy audit mode:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> kubectl exec</span><span style="color:#bf616a;"> -n</span><span> kube-system cilium-6zv78 \
+</span><span>  -- cilium endpoint config 555 PolicyAuditMode=Disabled
+</span><span style="color:#bf616a;">Endpoint</span><span> 555 configuration updated successfully
+</span></code></pre>
+<p>Let's take a look at integrating FluxCD with <a href="https://fluxcd.io/flux/guides/mozilla-sops/">Mozilla SOPS</a></p>
+<h1 id="in-repository-encryption-with-sops"><a class="zola-anchor" href="#in-repository-encryption-with-sops" aria-label="Anchor link for: in-repository-encryption-with-sops">In-repository encryption with SOPS</a></h1>
+<p>Encrypting files in git repositories is nothing new and can be done manually or with projects like <a href="https://github.com/AGWA/git-crypt">git-crypt</a>.</p>
+<p>The problem with this approach is that it works on entire files, meaning you completely lose the ability to diff changes, and when your project is often defined in one long multi-document yaml file, this becomes super inconvenient, not to mention wasteful, as the entire file is changed whenever a small part of it changes.</p>
+<p>Tools like <a href="https://github.com/mozilla/sops">Mozilla SOPS</a> instead natively supports and works with yaml files, the files that make up most of our infrastructure. This allows it to encrypt individual values instead of entire files, enabling diffs and redacted sharing of infrastructure documents, without the risk of exposure, while simultaneously removing the need for secrets management infrastructure which is notoriously hard to self-host.</p>
+<h2 id="setting-up"><a class="zola-anchor" href="#setting-up" aria-label="Anchor link for: setting-up">Setting up</a></h2>
+<p>Using <a href="https://fluxcd.io/flux/guides/mozilla-sops/">Flux's own guide</a>, we create a gpg key which will be owned by our flux installation, however since we're cool guys we'll generate an ed25519 key instead of RSA4096.</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> gpg</span><span style="color:#bf616a;"> --expert --full-generate-key
+</span><span style="color:#bf616a;">Please</span><span> select what kind of key you want:
+</span><span>   (</span><span style="color:#bf616a;">...</span><span>)
+</span><span>   (</span><span style="color:#bf616a;">8</span><span>) RSA (set your own capabilities)
+</span><span>   (</span><span style="color:#bf616a;">9</span><span>) ECC and ECC
+</span><span>  (</span><span style="color:#bf616a;">10</span><span>) ECC (sign only)
+</span><span>   (</span><span style="color:#bf616a;">...</span><span>)
+</span><span style="color:#bf616a;">Your</span><span> selection? 9
+</span><span style="color:#bf616a;">Please</span><span> select which elliptic curve you want:
+</span><span>   (</span><span style="color:#bf616a;">1</span><span>) Curve 25519
+</span><span>   (</span><span style="color:#bf616a;">3</span><span>) NIST P-256
+</span><span>   (</span><span style="color:#bf616a;">...</span><span>)
+</span><span style="color:#bf616a;">Your</span><span> selection? 1
+</span><span style="color:#bf616a;">Please</span><span> specify how long the key should be valid.
+</span><span>
+</span><span style="color:#bf616a;">Key</span><span> is valid for? (0) 
+</span><span style="color:#bf616a;">Key</span><span> does not expire at all
+</span><span>
+</span><span style="color:#bf616a;">Is</span><span> this correct? (y/N) </span><span style="color:#bf616a;">y
+</span><span>
+</span><span style="color:#bf616a;">GnuPG</span><span> needs to construct a user ID to identify your key.
+</span><span>
+</span><span style="color:#bf616a;">Real</span><span> name: flux.kronform.pius.dev
+</span><span style="color:#bf616a;">Email</span><span> address: 
+</span><span style="color:#bf616a;">Comment: 
+</span><span style="color:#bf616a;">You</span><span> selected this USER-ID:
+</span><span>    &quot;</span><span style="color:#a3be8c;">flux.kronform.pius.dev</span><span>&quot;
+</span></code></pre>
+<p>When asked to password protect the key, decline. Flux won't be able to enter a password for it anyway, so it needs to be unprotected.</p>
+<p>Finally, our key is generated:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">pub</span><span>   ed25519 2023-06-23 </span><span style="color:#b48ead;">[</span><span>SC</span><span style="color:#b48ead;">]
+</span><span>      </span><span style="color:#bf616a;">BD995FEE3775172B56BF652CF10FF7F3F7265919
+</span><span style="color:#bf616a;">uid</span><span>                      flux.kronform.pius.dev
+</span></code></pre>
+<p>The string that starts with <code>BD99..</code> is the key's fingerprint.</p>
+<p>Next, as per the guide we export the secret part of this key and put it directly into a Kubernetes secret in the <code>flux-system</code> namespace, using the fingerprint to identify the key:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> gpg</span><span style="color:#bf616a;"> --export-secret-keys --armor </span><span>&quot;</span><span style="color:#a3be8c;">BD995FEE3775172B56BF652CF10FF7F3F7265919</span><span>&quot; |
+</span><span>  </span><span style="color:#bf616a;">kubectl</span><span> create secret generic sops-gpg \
+</span><span style="color:#bf616a;">  --namespace</span><span>=flux-system \
+</span><span style="color:#bf616a;">  --from-file</span><span>=sops.asc=/dev/stdin
+</span><span style="color:#bf616a;">secret/sops-gpg</span><span> created
+</span></code></pre>
+<h2 id="configuring-flux-to-use-the-key"><a class="zola-anchor" href="#configuring-flux-to-use-the-key" aria-label="Anchor link for: configuring-flux-to-use-the-key">Configuring Flux to use the key</a></h2>
+<p>The guide assumes that you're configuring a new repository and therefore wants you to create a new source, but what we want is to allow our existing repository to support decryption.</p>
+<p>Decryption is a feature of Flux Kustomizations, so we'll have to specify the decryption secret as part of that resource. In the meantime we can ensure that secrets created with <code>sops</code> in our flux repository are automatically encrypted in a way that both flux and I/we/the team can decrypt it. For this purpose we'll add a <code>.sops.yaml</code> file to the root of the repository:</p>
+<pre data-lang="yaml" style="background-color:#2b303b;color:#c0c5ce;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#65737e;"># .sops.yaml
+</span><span>---
+</span><span style="color:#bf616a;">creation_rules</span><span>:
+</span><span>  - </span><span style="color:#bf616a;">path_regex</span><span>: </span><span style="color:#a3be8c;">manifests/*.yaml
+</span><span>    </span><span style="color:#bf616a;">encrypted_regex</span><span>: </span><span style="color:#a3be8c;">^(data|stringData)$
+</span><span>    </span><span style="color:#bf616a;">pgp</span><span>: </span><span style="color:#b48ead;">&gt;-
+</span><span style="color:#a3be8c;">      BD995FEE3775172B56BF652CF10FF7F3F7265919,
+</span><span style="color:#a3be8c;">      7668061D49BB2B7BA19118B4031734BEBE51F818
+</span></code></pre>
+<p>Where <code>BD99..</code> is Flux's public key and <code>7668..</code> is my own public key. This ensures that any yaml files created with sops in our git repository will be encrypted in a way that both Flux and I can decrypt them.</p>
+<p>For convenience, we'll also export flux's public key into the repository as <code>.flux.pub.asc</code>:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> gpg</span><span style="color:#bf616a;"> --export --armor </span><span>&quot;</span><span style="color:#a3be8c;">BD995FEE3775172B56BF652CF10FF7F3F7265919</span><span>&quot; &gt; .flux.pub.asc
+</span></code></pre>
+<p>This is completely optional, but would allow others to safely encrypt data for use by flux in the future.</p>
+<p>With both of those files committed, let's go ahead and preserve some of the sensitive files we produced when setting up the cluster, like the Talos <code>secrets.yaml</code>, the <code>talosconfig</code> as well as the administrator <code>kubeconfig</code>.</p>
+<h2 id="encrypting-all-the-things"><a class="zola-anchor" href="#encrypting-all-the-things" aria-label="Anchor link for: encrypting-all-the-things">Encrypting all the things</a></h2>
+<p>We'll add a few <code>creation_rules</code> to our sops config, ensuring that <code>talosconfig</code>, <code>kubeconfig</code> and <code>secrets.yaml</code> all get encrypted using <em>only</em> our own public key, since we don't need nor want Flux to be able to decrypt them:</p>
+<pre data-lang="yaml" style="background-color:#2b303b;color:#c0c5ce;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#65737e;"># .sops.yaml
+</span><span>---
+</span><span style="color:#bf616a;">creation_rules</span><span>:
+</span><span>  - </span><span style="color:#bf616a;">path_regex</span><span>: </span><span style="color:#a3be8c;">manifests/*.yaml
+</span><span>    </span><span style="color:#bf616a;">encrypted_regex</span><span>: </span><span style="color:#a3be8c;">^(data|stringData)$
+</span><span>    </span><span style="color:#bf616a;">pgp</span><span>: </span><span style="color:#b48ead;">&gt;-
+</span><span style="color:#a3be8c;">      BD995FEE3775172B56BF652CF10FF7F3F7265919,
+</span><span style="color:#a3be8c;">      7668061D49BB2B7BA19118B4031734BEBE51F818
+</span><span style="color:#a3be8c;">
+</span><span>  - </span><span style="color:#bf616a;">path_regex</span><span>: </span><span style="color:#a3be8c;">talosconfig
+</span><span>    </span><span style="color:#bf616a;">encrypted_regex</span><span>: </span><span style="color:#a3be8c;">^key$
+</span><span>    </span><span style="color:#bf616a;">pgp</span><span>: </span><span style="color:#a3be8c;">7668061D49BB2B7BA19118B4031734BEBE51F818
+</span><span>
+</span><span>  - </span><span style="color:#bf616a;">path_regex</span><span>: </span><span style="color:#a3be8c;">kubeconfig
+</span><span>    </span><span style="color:#bf616a;">encrypted_regex</span><span>: </span><span style="color:#a3be8c;">^client-key-data$
+</span><span>    </span><span style="color:#bf616a;">pgp</span><span>: </span><span style="color:#a3be8c;">7668061D49BB2B7BA19118B4031734BEBE51F818
+</span><span>
+</span><span>  - </span><span style="color:#bf616a;">path_regex</span><span>: </span><span style="color:#a3be8c;">secrets.yaml
+</span><span>    </span><span style="color:#bf616a;">encrypted_regex</span><span>: </span><span style="color:#a3be8c;">^(secret|bootstraptoken|secretboxencryptionsecret|token|key)$
+</span><span>    </span><span style="color:#bf616a;">pgp</span><span>: </span><span style="color:#a3be8c;">7668061D49BB2B7BA19118B4031734BEBE51F818
+</span><span>
+</span></code></pre>
+<p>Now encrypt (<code>-e</code>) the files in-place (<code>-i</code>):</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> sops</span><span style="color:#bf616a;"> -e -i</span><span> secrets.yaml
+</span><span>
+</span><span style="color:#65737e;"># For talosconfig and kubeconfig, we need to specify that we&#39;re working with yaml.
+</span><span style="color:#bf616a;">[mpd@ish]$</span><span> sops</span><span style="color:#bf616a;"> -e -i --input-type</span><span> yaml</span><span style="color:#bf616a;"> --output-type</span><span> yaml talosconfig
+</span><span>
+</span><span style="color:#bf616a;">[mpd@ish]$</span><span> talosctl</span><span style="color:#bf616a;"> -n</span><span> 159.69.60.182 kubeconfig kubeconfig
+</span><span style="color:#bf616a;">[mpd@ish]$</span><span> sops</span><span style="color:#bf616a;"> -e -i --input-type</span><span> yaml</span><span style="color:#bf616a;"> --output-type</span><span> yaml kubeconfig
+</span></code></pre>
+<p>And there we go. <u><strong>After going over all the now-encrypted files to ensure no sensitive data is included</strong></u>, we can go ahead and commit it to git.</p>
+<h1 id="encrypted-test"><a class="zola-anchor" href="#encrypted-test" aria-label="Anchor link for: encrypted-test">Encrypted Test</a></h1>
+<p>Let's see if this all works, by creating a Kustomization which makes use of this key.</p>
+<p>We'll need it eventually so why not create a Docker Hub pull secret in the <code>default</code> namespace.</p>
+<p>First, add the kustomization reference in <code>manifests/cluster/flux-system/pull-secrets.yaml</code>:</p>
+<pre data-lang="yaml" style="background-color:#2b303b;color:#c0c5ce;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#65737e;"># manifests/cluster/flux-system/pull-secrets.yaml
+</span><span>---
+</span><span style="color:#bf616a;">apiVersion</span><span>: </span><span style="color:#a3be8c;">kustomize.toolkit.fluxcd.io/v1
+</span><span style="color:#bf616a;">kind</span><span>: </span><span style="color:#a3be8c;">Kustomization
+</span><span style="color:#bf616a;">metadata</span><span>:
+</span><span>  </span><span style="color:#bf616a;">name</span><span>: </span><span style="color:#a3be8c;">pull-secrets
+</span><span>  </span><span style="color:#bf616a;">namespace</span><span>: </span><span style="color:#a3be8c;">flux-system
+</span><span style="color:#bf616a;">spec</span><span>:
+</span><span>  </span><span style="color:#bf616a;">interval</span><span>: </span><span style="color:#a3be8c;">10m0s
+</span><span>  </span><span style="color:#bf616a;">path</span><span>: </span><span style="color:#a3be8c;">./manifests/infrastructure/pull-secrets
+</span><span>  </span><span style="color:#bf616a;">prune</span><span>: </span><span style="color:#d08770;">true
+</span><span>  </span><span style="color:#bf616a;">sourceRef</span><span>:
+</span><span>    </span><span style="color:#bf616a;">kind</span><span>: </span><span style="color:#a3be8c;">GitRepository
+</span><span>    </span><span style="color:#bf616a;">name</span><span>: </span><span style="color:#a3be8c;">flux-system
+</span><span>  </span><span style="color:#bf616a;">decryption</span><span>:
+</span><span>    </span><span style="color:#bf616a;">provider</span><span>: </span><span style="color:#a3be8c;">sops
+</span><span>    </span><span style="color:#bf616a;">secretRef</span><span>:
+</span><span>      </span><span style="color:#bf616a;">name</span><span>: </span><span style="color:#a3be8c;">sops-gpg
+</span></code></pre>
+<p>Note the <code>decryption</code> field pointing to our flux GPG secret we exported and created earlier, and don't forget to add it to the cluster's <code>kustomization.yaml</code>.</p>
+<p>Next, we need to create a yaml representation of our secret. Docker pull secrets are annoying to build by hand, they're base64-encoded json embedded in yaml. It's awful.</p>
+<p>Let's utilize kubectl to build it, without actually applying it to the cluster. We'll need some variables defined first:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> export SECRET_NAME=docker-hub-pull-secret
+</span><span style="color:#bf616a;">[mpd@ish]$</span><span> export DOCKER_REGISTRY_SERVER=https://index.docker.io/v1/
+</span><span style="color:#bf616a;">[mpd@ish]$</span><span> export DOCKER_USERNAME=MathiasPius
+</span><span style="color:#bf616a;">[mpd@ish]$</span><span> export DOCKER_PASSWORD=9LqBVN0QPqw0jO7lhAJrsXLvom9xv4CB
+</span></code></pre>
+<p>Then create the secret in <code>--dry-run=client</code> mode so as to not create it in the cluster directly, and then dump the contents into a <code>docker-hub.yaml</code> file.</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> kubectl create secret docker-registry  \
+</span><span style="color:#bf616a;">  --dry-run</span><span>=client                                \
+</span><span style="color:#bf616a;">  --namespace</span><span>=default                             \
+</span><span style="color:#bf616a;">  --docker-server</span><span>=$</span><span style="color:#bf616a;">DOCKER_REGISTRY_SERVER         </span><span>\
+</span><span style="color:#bf616a;">  --docker-username</span><span>=$</span><span style="color:#bf616a;">DOCKER_USERNAME              </span><span>\
+</span><span style="color:#bf616a;">  --docker-password</span><span>=$</span><span style="color:#bf616a;">DOCKER_PASSWORD              </span><span>\
+</span><span>   $</span><span style="color:#bf616a;">SECRET_NAME                                   </span><span>\
+</span><span style="color:#bf616a;">   -o</span><span> yaml &gt; manifests/infrastructure/pull-secrets/docker-hub.yaml
+</span></code></pre>
+<p>Now encrypt the secret before someone sees!</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> sops</span><span style="color:#bf616a;"> -e -i</span><span> manifests/infrastructure/pull-secrets/docker-hub.yaml
+</span></code></pre>
+<p>Verify that the <code>.dockerconfigjson</code> value starts with <code>ENC[</code> to ensure that the secret has been encrypted.</p>
+<p>Finally, in <code>manifests/infrastructure/pull-secrets/</code>, create the <code>kustomization.yaml</code> file which just lists <code>docker-hub.yaml</code> in the same directory as its only resource.</p>
+<p>Commit and push all the changes and wait for the secret to hopefully appear un-encrypted in the default namespace:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> kubectl get secrets</span><span style="color:#bf616a;"> -n</span><span> default
+</span><span style="color:#bf616a;">NAME</span><span>                     TYPE                             DATA   AGE
+</span><span style="color:#bf616a;">docker-hub-pull-secret</span><span>   kubernetes.io/dockerconfigjson   1      10s
+</span></code></pre>
+<p>ALL the points to FluxCD and SOPS!</p>
+<h1 id="conclusion"><a class="zola-anchor" href="#conclusion" aria-label="Anchor link for: conclusion">Conclusion</a></h1>
+<p>That concludes this rather lengthy expedition into the world of continuous deployment and in-repository secret-keeping with SOPS.</p>
+<p>In <strong>Part IV: Ingress, DNS and Certificates</strong>, we'll get some of the basic necessities of a cluster up and running, like an ingress controller, automatic dns record creation with <a href="https://github.com/kubernetes-sigs/external-dns">external-dns</a> and of course certificate retrieval using <a href="https://cert-manager.io/">cert-manager</a>, so we can expose entire TLS-encrypted websites without ever leaving our cluster!</p>
+<h2 id="epilogue"><a class="zola-anchor" href="#epilogue" aria-label="Anchor link for: epilogue">Epilogue</a></h2>
+<p>We restructured the entire repository a couple of times so for reference, here's the final directory layout as of the end of this post:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> tree
+</span><span style="color:#96b5b4;">.
+</span><span style="color:#bf616a;">├──</span><span> kubeconfig
+</span><span style="color:#bf616a;">├──</span><span> manifests
+</span><span style="color:#bf616a;">│</span><span>   ├── cluster
+</span><span style="color:#bf616a;">│</span><span>   │   └── flux-system
+</span><span style="color:#bf616a;">│</span><span>   │       ├── cilium.yaml
+</span><span style="color:#bf616a;">│</span><span>   │       ├── gotk-components.yaml
+</span><span style="color:#bf616a;">│</span><span>   │       ├── gotk-sync.yaml
+</span><span style="color:#bf616a;">│</span><span>   │       ├── kustomization.yaml
+</span><span style="color:#bf616a;">│</span><span>   │       ├── policies.yaml
+</span><span style="color:#bf616a;">│</span><span>   │       └── pull-secrets.yaml
+</span><span style="color:#bf616a;">│</span><span>   └── infrastructure
+</span><span style="color:#bf616a;">│</span><span>       ├── cilium
+</span><span style="color:#bf616a;">│</span><span>       │   ├── kustomization.yaml
+</span><span style="color:#bf616a;">│</span><span>       │   ├── release.yaml
+</span><span style="color:#bf616a;">│</span><span>       │   └── repository.yaml
+</span><span style="color:#bf616a;">│</span><span>       ├── cluster-policies
+</span><span style="color:#bf616a;">│</span><span>       │   ├── host-fw-control-plane.yaml
+</span><span style="color:#bf616a;">│</span><span>       │   └── kustomization.yaml
+</span><span style="color:#bf616a;">│</span><span>       └── pull-secrets
+</span><span style="color:#bf616a;">│</span><span>           ├── docker-hub.yaml
+</span><span style="color:#bf616a;">│</span><span>           └── kustomization.yaml
+</span><span style="color:#bf616a;">├──</span><span> README.md
+</span><span style="color:#bf616a;">├──</span><span> secrets.yaml
+</span><span style="color:#bf616a;">└──</span><span> talosconfig
+</span></code></pre>
+<div class="footnote-definition" id="1"><sup class="footnote-definition-label">1</sup>
+<p>It looks like this has been fixed, at least as a beta-test <a href="https://argo-cd.readthedocs.io/en/stable/user-guide/multiple_sources/#helm-value-files-from-external-git-repository">since 2.6</a>.</p>
+</div>
+
+	</div>
+	<hr class="post-end">
+	<footer class="post-info">
+    
+	  <p>
+		<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-tag meta-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7" y2="7"></line></svg>
+		
+		
+		<span class="tag"><a href="https://datavirke.dk/tags/kubernetes/">kubernetes</a></span>
+		
+		<span class="tag"><a href="https://datavirke.dk/tags/fluxcd/">fluxcd</a></span>
+		
+		<span class="tag"><a href="https://datavirke.dk/tags/sops/">sops</a></span>
+		
+		<span class="tag"><a href="https://datavirke.dk/tags/gitops/">gitops</a></span>
+		
+		
+    </p>
+    
+    <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>4054 Words</p>
+    
+    <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>2023-06-24</p>
+    
+	</footer>
+  </article>
+    
+  
+  <div class="post-nav thin">
+	
+	
+  </div>
+
+  
+</main>
+
+	  </div>
+	  
+	  
+
+
+
+<footer id="site-footer" class="section-inner thin animated fadeIn faster">
+  <p>&copy; 2024 <a href="https:&#x2F;&#x2F;datavirke.dk">Mathias Pius</a> &mdash; CVR: 43033336</p>
+  <p>Made with <a href="https://www.getzola.org" target="_blank" rel="noopener">Zola</a> &#183; Theme <a href="https://github.com/VersBinarii/hermit_zola" target="_blank" rel="noopener">Hermit_Zola</a>
+	
+	&#183; <a href="https://datavirke.dk/atom.xml" target="_blank" title="rss"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-rss"><path d="M4 11a9 9 0 0 1 9 9"></path><path d="M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1"></circle></svg></a>
+	
+  </p>
+</footer>
+
+
+
+
+	</div>
+	
+	<script src="https://datavirke.dk/js/main.js"></script>
+
+	<!-- Math rendering -->
+	<link rel="stylesheet" href="/katex.min.css">
+    <script defer src="/katex.min.js"></script>
+    <script defer src="/auto-render.min.js" onload="renderMathInElement(document.body, { delimiters: [ {left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}, {left: '\\[', right: '\\]', display: true}, {left: '\\(', right: '\\)', display: false}]});"></script>
+
+    
+		<link href="/vs2015.css" rel="stylesheet">
+		<script src="/highlight.pack.js"></script>
+		<script src="/highlightjs-badge.min.js"></script>
+		<script>
+			var pres = document.querySelectorAll("pre>code");
+			for (var i = 0; i < pres.length; i++) {
+				hljs.highlightBlock(pres[i]);
+			}
+		</script>
+		
+			<script src="/clipboard.min.js"></script>
+			<script>
+				var options = {
+					copyIconClass: "gg-clipboard",
+					checkIconClass: "gg-check"
+				};
+				window.highlightJsBadge(options);
+			</script>
+		
+
+	
+
+	
+	<script src="https://datavirke.dk/js/main.js"></script>
+
+    
+    
+
+	
+  </body>
+</html>
