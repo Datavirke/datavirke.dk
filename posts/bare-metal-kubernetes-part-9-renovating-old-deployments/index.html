@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <meta name="robots" content="max-image-preview:large">
+    <meta name="description" content="Freelance DevOps Engineer building reliable infrastructure using Kubernetes, Cloud &amp; Rust.">
+  
+    <!-- Google / Search Engine Tags -->
+
+	
+    <title>Bare-metal Kubernetes, Part IX: Renovating old Deployments - Datavirke</title>
+	<meta itemprop="name" content="Bare-metal Kubernetes, Part IX: Renovating old Deployments - Datavirke">
+	<meta property="og:title" content="Bare-metal Kubernetes, Part IX: Renovating old Deployments - Datavirke">
+	<meta name="twitter:title" content="Bare-metal Kubernetes, Part IX: Renovating old Deployments - Datavirke">
+    
+
+	
+	<meta itemprop="description" content="Freelance DevOps Engineer building reliable infrastructure using Kubernetes, Cloud &amp; Rust.">
+	<meta property="og:description" content="Freelance DevOps Engineer building reliable infrastructure using Kubernetes, Cloud &amp; Rust.">
+	<meta name="twitter:description" content="Freelance DevOps Engineer building reliable infrastructure using Kubernetes, Cloud &amp; Rust.">
+	
+
+	<meta name="twitter:card" content="summary_large_image">    
+    <meta name="twitter:image" content="https://datavirke.dk/logo.svg">
+	<meta itemprop="image" content="https://datavirke.dk/logo.svg">
+	<meta property="og:image" content="https://datavirke.dk/logo.svg">
+    <meta property="og:url" content="https:&#x2F;&#x2F;datavirke.dk">
+    <meta property="og:type" content="website">
+    
+    <link rel="apple-touch-icon" sizes="180x180" href="https://datavirke.dk/apple-touch-icon.png"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="https://datavirke.dk/favicon-32x32.png" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="https://datavirke.dk/favicon-16x16.png"
+    />
+    <link
+      rel="shortcut icon"
+      href="https://datavirke.dk/favicon.ico"
+    />
+    <link rel="stylesheet" href="https://datavirke.dk/style.css"/>
+    
+    
+    <link rel="alternate" type="application/rss+xml" title="RSS" href="https://datavirke.dk/atom.xml">
+    
+
+	<script src="https://datavirke.dk/mermaid.min.js"></script>
+	<script>
+		let config = { 
+			startOnLoad: true, 
+
+			darkMode: true
+		};
+		mermaid.initialize(config);
+	
+	</script>
+
+	<script type="application/ld+json">
+		{
+		"@context": "https://schema.org",
+		"@type": "Organization",
+		"url": "https://datavirke.dk",
+		"logo": "https://datavirke.dk/logo.svg"
+		}
+	</script>
+  </head>
+  <body id="page">
+
+	
+<header id="site-header" class="animated faster">
+  <div class="hdr-wrapper section-inner">
+    <div class="hdr-left">
+      <div class="site-branding">
+        <a href="https:&#x2F;&#x2F;datavirke.dk">Datavirke</a>
+      </div>
+      <nav class="site-nav hide-in-mobile">
+            
+        
+        <a href="https://datavirke.dk/about">About</a>
+        
+        <a href="https://datavirke.dk/experience">Experience</a>
+        
+        <a href="https://datavirke.dk/posts">Blog</a>
+        
+      </nav>
+    </div>
+    <div class="hdr-right hdr-icons">
+      <span class="hdr-social hide-in-mobile">
+        
+
+<a href="https:&#x2F;&#x2F;github.com&#x2F;MathiasPius" target="_blank" rel="noopener me"
+   title="github">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+  
+</a>
+
+<a href="https:&#x2F;&#x2F;www.linkedin.com&#x2F;in&#x2F;mathias-pius&#x2F;" target="_blank" rel="noopener me"
+   title="linkedin">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+  
+</a>
+
+<a href="mailto:mathias@datavirke.dk" target="_blank" rel="noopener me"
+   title="email">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+  
+</a>
+
+<a href="https:&#x2F;&#x2F;fosstodon.org&#x2F;@MathiasPius" target="_blank" rel="noopener me"
+   title="twitter">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path></svg>
+  
+</a>
+
+
+      </span>
+      <button id="menu-btn" class="hdr-btn" title="Menu">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="feather feather-menu"
+        >
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>
+<div id="mobile-menu" class="animated fast">
+  <ul>
+    
+    <li><a href="https://datavirke.dk/about">About</a></li>
+    
+    <li><a href="https://datavirke.dk/experience">Experience</a></li>
+    
+    <li><a href="https://datavirke.dk/posts">Blog</a></li>
+    
+  </ul>
+</div>
+
+	
+	
+
+		
+<main class="site-main section-inner animated fadeIn faster">
+  <article class="thin">
+	<header class="post-header">
+	  <div class="post-meta">
+		
+		<span>Apr 24, 2024</span>
+		<small> - 
+<span class="reading-time" title="Estimated read time">
+  
+  5 min read
+  
+</span>
+</small>
+		
+            
+	  </div>
+	  <h1>Bare-metal Kubernetes, Part IX: Renovating old Deployments</h1>
+	</header>
+
+	<div class="content">
+        
+	  <p>As of writing this, my cluster has been up and running <a href="https://datavirke.dk/posts/bare-metal-kubernetes-first-incident/">mostly</a> as expected for 300 days!</p>
+<p>During this time I've made an effort to keep Talos and Kubernetes somewhat up to date, as well all the different helm charts and kustomizations running within it, whenever I stumbled on an out of date version. This has worked reasonably well, primarily because of the small scope of the project, but it'd be real nice to <em>automate</em> this process. That way I get to stay up to date with all the developments, and don't accidentally leave a piece of critical infrastructure to fester in some corner, collecting CVEs.</p>
+<p>The easiest way to go about this, as far as I am aware, is with <a href="https://docs.renovatebot.com/">Renovate Bot</a>. In short, it looks at all your dependencies (or deployments in this case) and compares each of their versions to what the latest one is, opening issues and pull requests with versions bumps to make upgrading as easy as possible.</p>
+<p>The helm chart we'll be using is available <a href="https://github.com/renovatebot/helm-charts/tree/main/charts/renovate">here</a>.</p>
+<p><em>Series Index</em></p>
+<ul>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-1-talos-on-hetzner/">Part I: Talos on Hetzner</a></li>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-2-cilium-and-firewalls/">Part II: Cilium CNI &amp; Firewalls</a></li>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-3-encrypted-gitops-with-fluxcd/">Part III: Encrypted GitOps with FluxCD</a></li>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-4-ingress-dns-certificates/">Part IV: Ingress, DNS and Certificates</a></li>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-5-scaling-out/">Part V: Scaling Out</a></li>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-6-persistent-storage-with-rook-ceph/">Part VI: Persistent Storage with Rook Ceph</a></li>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-7-private-registry-with-harbor/">Part VII: Private Registry with Harbor</a></li>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-8-containerizing-our-work-environment/">Part VIII: Containerizing our Work Environment</a></li>
+<li><strong><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-9-renovating-old-deployments/">Part IX: Renovating old Deployments</a></strong></li>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-10-metrics-and-monitoring-with-openobserve/">Part X: Metrics and Monitoring with OpenObserve</a></li>
+</ul>
+<p>Complete source code for the live cluster is available <a href="https://github.com/MathiasPius/kronform">@github/MathiasPius/kronform</a></p>
+<h2 id="personal-access-token"><a class="zola-anchor" href="#personal-access-token" aria-label="Anchor link for: personal-access-token">Personal Access Token</a></h2>
+<p>First thing we need is a personal access token which can access our repository. The required permissions for a token are listed <a href="https://docs.renovatebot.com/modules/platform/github/#running-as-a-github-app">here</a>, but since <code>Members</code> and <code>Checks</code> don't appear to be available, and I don't actually want it to create any workflows, I ended up with the following list:</p>
+<table><thead><tr><th>Permission</th><th>Scope</th></tr></thead><tbody>
+<tr><td><del>Checks</del></td><td><del>read</del></td></tr>
+<tr><td>Commit statuses</td><td>read + write</td></tr>
+<tr><td>Contents</td><td>read + write</td></tr>
+<tr><td>Issues</td><td>read + write</td></tr>
+<tr><td>Pull requests</td><td>read + write</td></tr>
+<tr><td>Workflows</td><td>read + <del>write</del></td></tr>
+<tr><td>Administration</td><td>read</td></tr>
+<tr><td>Dependabot alerts</td><td>read</td></tr>
+<tr><td><del>Members</del></td><td><del>read</del></td></tr>
+<tr><td>Metadata</td><td>read</td></tr>
+</tbody></table>
+<p>Take the granted token and shove it in a secret:</p>
+<pre data-lang="yaml" style="background-color:#2b303b;color:#c0c5ce;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#65737e;"># manifests/infrastructure/renovate/secret.yaml
+</span><span style="color:#bf616a;">apiVersion</span><span>: </span><span style="color:#a3be8c;">v1
+</span><span style="color:#bf616a;">kind</span><span>: </span><span style="color:#a3be8c;">Secret
+</span><span style="color:#bf616a;">metadata</span><span>:
+</span><span>  </span><span style="color:#bf616a;">name</span><span>: </span><span style="color:#a3be8c;">renovate-env
+</span><span>  </span><span style="color:#bf616a;">namespace</span><span>: </span><span style="color:#a3be8c;">renovate
+</span><span style="color:#bf616a;">type</span><span>: </span><span style="color:#a3be8c;">Opaque
+</span><span style="color:#bf616a;">stringData</span><span>:
+</span><span>  </span><span style="color:#bf616a;">RENOVATE_TOKEN</span><span>: &quot;</span><span style="color:#a3be8c;">github_pat_ABABABABABABBABABABABABABABABBABABABABABABABABBABABABABABABABABBABAB</span><span>&quot;
+</span></code></pre>
+<p>We <em>could</em> throw the rest of our configuration into this secret as well, but since the rest of the options aren't actually, you know, secret, then I'll specify those in the renovate.config in the helm release below.</p>
+<p>Don't forget to encrypt the secret!</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">sops -e -i</span><span> manifests/infrastructure/renovate/secret.yaml
+</span></code></pre>
+<h2 id="deployment"><a class="zola-anchor" href="#deployment" aria-label="Anchor link for: deployment">Deployment</a></h2>
+<p>Configuring the <code>HelmRepository</code> and <code>HelmRelease</code> is exactly as easy as all the other times we did it, the only interesting parts here are the <code>renovate.config</code> fields, and specifying that we want the Renovate job to pull in our <code>renovate-env</code> secret.</p>
+<pre data-lang="yaml" style="background-color:#2b303b;color:#c0c5ce;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#65737e;"># manifests/infrastructure/renovate/renovate.yaml
+</span><span>---
+</span><span style="color:#bf616a;">apiVersion</span><span>: </span><span style="color:#a3be8c;">source.toolkit.fluxcd.io/v1beta2
+</span><span style="color:#bf616a;">kind</span><span>: </span><span style="color:#a3be8c;">HelmRepository
+</span><span style="color:#bf616a;">metadata</span><span>:
+</span><span>  </span><span style="color:#bf616a;">name</span><span>: </span><span style="color:#a3be8c;">renovate
+</span><span>  </span><span style="color:#bf616a;">namespace</span><span>: </span><span style="color:#a3be8c;">renovate
+</span><span style="color:#bf616a;">spec</span><span>:
+</span><span>  </span><span style="color:#bf616a;">interval</span><span>: </span><span style="color:#a3be8c;">5m0s
+</span><span>  </span><span style="color:#bf616a;">url</span><span>: </span><span style="color:#a3be8c;">https://docs.renovatebot.com/helm-charts
+</span><span>---
+</span><span style="color:#bf616a;">apiVersion</span><span>: </span><span style="color:#a3be8c;">helm.toolkit.fluxcd.io/v2beta2
+</span><span style="color:#bf616a;">kind</span><span>: </span><span style="color:#a3be8c;">HelmRelease
+</span><span style="color:#bf616a;">metadata</span><span>:
+</span><span>  </span><span style="color:#bf616a;">name</span><span>: </span><span style="color:#a3be8c;">renovate
+</span><span>  </span><span style="color:#bf616a;">namespace</span><span>: </span><span style="color:#a3be8c;">renovate
+</span><span style="color:#bf616a;">spec</span><span>:
+</span><span>  </span><span style="color:#bf616a;">interval</span><span>: </span><span style="color:#a3be8c;">5m
+</span><span>  </span><span style="color:#bf616a;">chart</span><span>:
+</span><span>    </span><span style="color:#bf616a;">spec</span><span>:
+</span><span>      </span><span style="color:#bf616a;">chart</span><span>: </span><span style="color:#a3be8c;">renovate
+</span><span>      </span><span style="color:#bf616a;">version</span><span>: &quot;</span><span style="color:#a3be8c;">&gt;=37.0.0 &lt;38.0.0</span><span>&quot;
+</span><span>      </span><span style="color:#bf616a;">sourceRef</span><span>:
+</span><span>        </span><span style="color:#bf616a;">kind</span><span>: </span><span style="color:#a3be8c;">HelmRepository
+</span><span>        </span><span style="color:#bf616a;">name</span><span>: </span><span style="color:#a3be8c;">renovate
+</span><span>        </span><span style="color:#bf616a;">namespace</span><span>: </span><span style="color:#a3be8c;">renovate
+</span><span>      </span><span style="color:#bf616a;">interval</span><span>: </span><span style="color:#a3be8c;">1m
+</span><span>  </span><span style="color:#bf616a;">values</span><span>:
+</span><span>    </span><span style="color:#bf616a;">renovate</span><span>:
+</span><span>      </span><span style="color:#bf616a;">config</span><span>: </span><span style="color:#b48ead;">|-
+</span><span style="color:#a3be8c;">        {
+</span><span style="color:#a3be8c;">          &quot;extends&quot;: [&quot;config:recommended&quot;],
+</span><span style="color:#a3be8c;">          &quot;labels&quot;: [&quot;renovate&quot;, &quot;dependencies&quot;],
+</span><span style="color:#a3be8c;">          &quot;platform&quot;: &quot;github&quot;,
+</span><span style="color:#a3be8c;">          &quot;repositories&quot;: [&quot;MathiasPius/kronform&quot;]
+</span><span style="color:#a3be8c;">        }
+</span><span>    </span><span style="color:#bf616a;">envFrom</span><span>:
+</span><span>      - </span><span style="color:#bf616a;">secretRef</span><span>:
+</span><span>          </span><span style="color:#bf616a;">name</span><span>: </span><span style="color:#a3be8c;">renovate-env
+</span></code></pre>
+<h2 id="making-it-go"><a class="zola-anchor" href="#making-it-go" aria-label="Anchor link for: making-it-go">Making it Go</a></h2>
+<p>With all that committed and deployed by Flux, we can trigger the Renovate cronjob just to get things going, instead of waiting till 01:00 in the morning.</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">$</span><span> kubectl create job</span><span style="color:#bf616a;"> --from</span><span> cronjob/renovate renovate-1</span><span style="color:#bf616a;"> -n</span><span> renovate
+</span></code></pre>
+<p>And very soon after we receive a <a href="https://github.com/MathiasPius/kronform/pull/4">Pull Request</a> from the Renovate bot. LGTM!</p>
+<h2 id="the-curse-of-being-built-different"><a class="zola-anchor" href="#the-curse-of-being-built-different" aria-label="Anchor link for: the-curse-of-being-built-different">The Curse of Being Built Different</a></h2>
+<p>One of the choices I made with this cluster which has been a perpetual pain in the ass, was overriding
+the <code>cluster.local</code> default dns domain. As it turns out, a <strong>LOT</strong> of Kubernetes-packaged services assume this to be standard, and will cause them to fail in weird and
+incomprehensible ways.</p>
+<p>Luckily for us, the way it fails in Renovate's case is very comprehensible and even listed in their documentation: It simply pretends nobody would ever do anything as stupid as that, and doesn't take it into account when upgrading Flux.</p>
+<p>The issue is covered by <a href="https://github.com/renovatebot/renovate/issues/13952">this github issue</a>, but that doesn't really help us, and looking at our very first (real) <a href="https://github.com/MathiasPius/kronform/pull/5">Renovate PR</a>, this would break our Flux deployment if merged!</p>
+<p>Although this <em>kinda</em> feels like a loss, it actually just let us know that there's a new version of Flux available, so it's not too big of a chore to just deploy it manually. Let's not make this a habit though!</p>
+<p>First thing we need to do is update our <code>tools</code> container with Flux 2.2.3:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#65737e;"># tools/Dockerfile
+</span><span style="color:#bf616a;">...
+</span><span style="color:#bf616a;">ARG</span><span> FLUX_VERSION=&quot;</span><span style="color:#a3be8c;">2.2.3</span><span>&quot;
+</span><span style="color:#bf616a;">...
+</span></code></pre>
+<p>Then enter the container and re-generate the <code>gotk-components.yaml</code> file:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">$</span><span> just tools
+</span><span style="color:#bf616a;">$</span><span> flux install</span><span style="color:#bf616a;"> --export                                                     </span><span>\
+</span><span style="color:#bf616a;">  --cluster-domain</span><span>=local.kronform.pius.dev                                  \
+</span><span style="color:#bf616a;">  --components-extra</span><span> image-reflector-controller,image-automation-controller \
+</span><span>  &gt; manifests/cluster/flux-system/gotk-components.yaml
+</span></code></pre>
+<p>This way our cluster domain is kept just the way we intended.. But oh so deeply regret.</p>
+<h2 id="expanding-scope"><a class="zola-anchor" href="#expanding-scope" aria-label="Anchor link for: expanding-scope">Expanding Scope</a></h2>
+<p>With that out of the way, let's expand the scope of Renovate a little, so it checks all our manifests for updates by adding the following to the config:</p>
+<pre data-lang="json" style="background-color:#2b303b;color:#c0c5ce;" class="language-json "><code class="language-json" data-lang="json"><span>&quot;</span><span style="color:#a3be8c;">kubernetes</span><span>&quot;: {
+</span><span>  &quot;</span><span style="color:#a3be8c;">fileMatch</span><span>&quot;: [&quot;</span><span style="color:#a3be8c;">^manifests/.+</span><span style="color:#96b5b4;">\\</span><span style="color:#a3be8c;">.yaml$</span><span>&quot;]
+</span><span>},
+</span><span>&quot;</span><span style="color:#a3be8c;">flux</span><span>&quot;: {
+</span><span>  &quot;</span><span style="color:#a3be8c;">fileMatch</span><span>&quot;: [&quot;</span><span style="color:#a3be8c;">^manifests/.+</span><span style="color:#96b5b4;">\\</span><span style="color:#a3be8c;">.yaml$</span><span>&quot;]
+</span><span>}
+</span></code></pre>
+<p>This way all yaml files in our <code>manifests/</code> directory are evaluated as possible flux/kubernetes and therefore tracked by Renovate.</p>
+<p>I'm also tired of manually executing cronjobs, every time I make a change so let's bump the cronjob schedule to once every 5 minutes<sup class="footnote-reference"><a href="#1">1</a></sup>,
+and configure some decent security contexts for the job-pod while we're at it, giving us the final helm values as follows:</p>
+<pre data-lang="yaml" style="background-color:#2b303b;color:#c0c5ce;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#bf616a;">values</span><span>:
+</span><span>  </span><span style="color:#bf616a;">cronjob</span><span>:
+</span><span>    </span><span style="color:#bf616a;">schedule</span><span>: &quot;</span><span style="color:#a3be8c;">*/5 * * * *</span><span>&quot;
+</span><span>  </span><span style="color:#bf616a;">renovate</span><span>:
+</span><span>    </span><span style="color:#bf616a;">config</span><span>: </span><span style="color:#b48ead;">|-
+</span><span style="color:#a3be8c;">      {
+</span><span style="color:#a3be8c;">        &quot;extends&quot;: [&quot;config:recommended&quot;],
+</span><span style="color:#a3be8c;">        &quot;labels&quot;: [&quot;renovate&quot;, &quot;dependencies&quot;],
+</span><span style="color:#a3be8c;">        &quot;platform&quot;: &quot;github&quot;,
+</span><span style="color:#a3be8c;">        &quot;repositories&quot;: [&quot;MathiasPius/kronform&quot;],
+</span><span style="color:#a3be8c;">        &quot;kubernetes&quot;: {
+</span><span style="color:#a3be8c;">          &quot;fileMatch&quot;: [&quot;^manifests/.+\\.yaml$&quot;]
+</span><span style="color:#a3be8c;">        },
+</span><span style="color:#a3be8c;">        &quot;flux&quot;: {
+</span><span style="color:#a3be8c;">          &quot;fileMatch&quot;: [&quot;^manifests/.+\\.yaml$&quot;]
+</span><span style="color:#a3be8c;">        }
+</span><span style="color:#a3be8c;">      }
+</span><span>    </span><span style="color:#bf616a;">securityContext</span><span>:
+</span><span>      </span><span style="color:#bf616a;">runAsNonRoot</span><span>: </span><span style="color:#d08770;">true
+</span><span>      </span><span style="color:#bf616a;">allowPrivilegeEscalation</span><span>: </span><span style="color:#d08770;">false
+</span><span>      </span><span style="color:#bf616a;">seccompProfile</span><span>:
+</span><span>        </span><span style="color:#bf616a;">type</span><span>: </span><span style="color:#a3be8c;">RuntimeDefault
+</span><span>      </span><span style="color:#bf616a;">capabilities</span><span>:
+</span><span>        </span><span style="color:#bf616a;">drop</span><span>:
+</span><span>          - </span><span style="color:#a3be8c;">ALL
+</span><span>  </span><span style="color:#bf616a;">envFrom</span><span>:
+</span><span>    - </span><span style="color:#bf616a;">secretRef</span><span>:
+</span><span>        </span><span style="color:#bf616a;">name</span><span>: </span><span style="color:#a3be8c;">renovate-env
+</span><span>  </span><span style="color:#bf616a;">securityContext</span><span>:
+</span><span>    </span><span style="color:#bf616a;">runAsUser</span><span>: </span><span style="color:#d08770;">1000
+</span><span>    </span><span style="color:#bf616a;">runAsGroup</span><span>: </span><span style="color:#d08770;">1000
+</span><span>    </span><span style="color:#bf616a;">fsGroup</span><span>: </span><span style="color:#d08770;">1000
+</span></code></pre>
+<p>With all that configured, our renovate all of a sudden has a lot more work to do!</p>
+<p><img src="https://datavirke.dk/posts/bare-metal-kubernetes-part-9-renovating-old-deployments/dependency-dashboard.png" alt="Dependency Dashboard" /></p>
+<p>Staying on top of updates is now as easy as keeping track of the periodically updated Dependency Dashboard issue and shooting off and merging PRs whenever a new version rolls around.</p>
+<h2 id="conclusion"><a class="zola-anchor" href="#conclusion" aria-label="Anchor link for: conclusion">Conclusion</a></h2>
+<p>Renovate let's you stop worrying about how much of your cluster is dangerously out of date, because it will literally tell you!</p>
+<p>The fact that it makes it extremely convenient to do something about it too is just icing on the cake.</p>
+<hr />
+<div class="footnote-definition" id="1"><sup class="footnote-definition-label">1</sup>
+<p>I looked into setting up as well to make it super responsive, but the only tools for this I could find was <a href="https://github.com/stack11/renovate-server">stack11/renovate-server</a>, which doesn't appear to be actively maintained and therefore kinda flies in the face of the reasons why we're setting up Renovate in the first place. Also didn't appear to have any simple deployment options or pre-built container images.</p>
+</div>
+
+	</div>
+	<hr class="post-end">
+	<footer class="post-info">
+    
+	  <p>
+		<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-tag meta-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7" y2="7"></line></svg>
+		
+		
+		<span class="tag"><a href="https://datavirke.dk/tags/kubernetes/">kubernetes</a></span>
+		
+		<span class="tag"><a href="https://datavirke.dk/tags/talos/">talos</a></span>
+		
+		<span class="tag"><a href="https://datavirke.dk/tags/renovate/">renovate</a></span>
+		
+		<span class="tag"><a href="https://datavirke.dk/tags/day-2/">day-2</a></span>
+		
+		
+    </p>
+    
+    <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>1292 Words</p>
+    
+    <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>2024-04-24</p>
+    
+	</footer>
+  </article>
+    
+  
+  <div class="post-nav thin">
+	
+	
+  </div>
+
+  
+</main>
+
+	  </div>
+	  
+	  
+
+
+
+<footer id="site-footer" class="section-inner thin animated fadeIn faster">
+  <p>&copy; 2024 <a href="https:&#x2F;&#x2F;datavirke.dk">Mathias Pius</a> &mdash; CVR: 43033336</p>
+  <p>Made with <a href="https://www.getzola.org" target="_blank" rel="noopener">Zola</a> &#183; Theme <a href="https://github.com/VersBinarii/hermit_zola" target="_blank" rel="noopener">Hermit_Zola</a>
+	
+	&#183; <a href="https://datavirke.dk/atom.xml" target="_blank" title="rss"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-rss"><path d="M4 11a9 9 0 0 1 9 9"></path><path d="M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1"></circle></svg></a>
+	
+  </p>
+</footer>
+
+
+
+
+	</div>
+	
+	<script src="https://datavirke.dk/js/main.js"></script>
+
+	<!-- Math rendering -->
+	<link rel="stylesheet" href="/katex.min.css">
+    <script defer src="/katex.min.js"></script>
+    <script defer src="/auto-render.min.js" onload="renderMathInElement(document.body, { delimiters: [ {left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}, {left: '\\[', right: '\\]', display: true}, {left: '\\(', right: '\\)', display: false}]});"></script>
+
+    
+		<link href="/vs2015.css" rel="stylesheet">
+		<script src="/highlight.pack.js"></script>
+		<script src="/highlightjs-badge.min.js"></script>
+		<script>
+			var pres = document.querySelectorAll("pre>code");
+			for (var i = 0; i < pres.length; i++) {
+				hljs.highlightBlock(pres[i]);
+			}
+		</script>
+		
+			<script src="/clipboard.min.js"></script>
+			<script>
+				var options = {
+					copyIconClass: "gg-clipboard",
+					checkIconClass: "gg-check"
+				};
+				window.highlightJsBadge(options);
+			</script>
+		
+
+	
+
+	
+	<script src="https://datavirke.dk/js/main.js"></script>
+
+    
+    
+
+	
+  </body>
+</html>

@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <meta name="robots" content="max-image-preview:large">
+    <meta name="description" content="Freelance DevOps Engineer building reliable infrastructure using Kubernetes, Cloud &amp; Rust.">
+  
+    <!-- Google / Search Engine Tags -->
+
+	
+    <title>Bare-metal Kubernetes, Part V: Scaling Out - Datavirke</title>
+	<meta itemprop="name" content="Bare-metal Kubernetes, Part V: Scaling Out - Datavirke">
+	<meta property="og:title" content="Bare-metal Kubernetes, Part V: Scaling Out - Datavirke">
+	<meta name="twitter:title" content="Bare-metal Kubernetes, Part V: Scaling Out - Datavirke">
+    
+
+	
+	<meta itemprop="description" content="Freelance DevOps Engineer building reliable infrastructure using Kubernetes, Cloud &amp; Rust.">
+	<meta property="og:description" content="Freelance DevOps Engineer building reliable infrastructure using Kubernetes, Cloud &amp; Rust.">
+	<meta name="twitter:description" content="Freelance DevOps Engineer building reliable infrastructure using Kubernetes, Cloud &amp; Rust.">
+	
+
+	<meta name="twitter:card" content="summary_large_image">    
+    <meta name="twitter:image" content="https://datavirke.dk/logo.svg">
+	<meta itemprop="image" content="https://datavirke.dk/logo.svg">
+	<meta property="og:image" content="https://datavirke.dk/logo.svg">
+    <meta property="og:url" content="https:&#x2F;&#x2F;datavirke.dk">
+    <meta property="og:type" content="website">
+    
+    <link rel="apple-touch-icon" sizes="180x180" href="https://datavirke.dk/apple-touch-icon.png"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="https://datavirke.dk/favicon-32x32.png" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="https://datavirke.dk/favicon-16x16.png"
+    />
+    <link
+      rel="shortcut icon"
+      href="https://datavirke.dk/favicon.ico"
+    />
+    <link rel="stylesheet" href="https://datavirke.dk/style.css"/>
+    
+    
+    <link rel="alternate" type="application/rss+xml" title="RSS" href="https://datavirke.dk/atom.xml">
+    
+
+	<script src="https://datavirke.dk/mermaid.min.js"></script>
+	<script>
+		let config = { 
+			startOnLoad: true, 
+
+			darkMode: true
+		};
+		mermaid.initialize(config);
+	
+	</script>
+
+	<script type="application/ld+json">
+		{
+		"@context": "https://schema.org",
+		"@type": "Organization",
+		"url": "https://datavirke.dk",
+		"logo": "https://datavirke.dk/logo.svg"
+		}
+	</script>
+  </head>
+  <body id="page">
+
+	
+<header id="site-header" class="animated faster">
+  <div class="hdr-wrapper section-inner">
+    <div class="hdr-left">
+      <div class="site-branding">
+        <a href="https:&#x2F;&#x2F;datavirke.dk">Datavirke</a>
+      </div>
+      <nav class="site-nav hide-in-mobile">
+            
+        
+        <a href="https://datavirke.dk/about">About</a>
+        
+        <a href="https://datavirke.dk/experience">Experience</a>
+        
+        <a href="https://datavirke.dk/posts">Blog</a>
+        
+      </nav>
+    </div>
+    <div class="hdr-right hdr-icons">
+      <span class="hdr-social hide-in-mobile">
+        
+
+<a href="https:&#x2F;&#x2F;github.com&#x2F;MathiasPius" target="_blank" rel="noopener me"
+   title="github">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+  
+</a>
+
+<a href="https:&#x2F;&#x2F;www.linkedin.com&#x2F;in&#x2F;mathias-pius&#x2F;" target="_blank" rel="noopener me"
+   title="linkedin">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+  
+</a>
+
+<a href="mailto:mathias@datavirke.dk" target="_blank" rel="noopener me"
+   title="email">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+  
+</a>
+
+<a href="https:&#x2F;&#x2F;fosstodon.org&#x2F;@MathiasPius" target="_blank" rel="noopener me"
+   title="twitter">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path></svg>
+  
+</a>
+
+
+      </span>
+      <button id="menu-btn" class="hdr-btn" title="Menu">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="feather feather-menu"
+        >
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>
+<div id="mobile-menu" class="animated fast">
+  <ul>
+    
+    <li><a href="https://datavirke.dk/about">About</a></li>
+    
+    <li><a href="https://datavirke.dk/experience">Experience</a></li>
+    
+    <li><a href="https://datavirke.dk/posts">Blog</a></li>
+    
+  </ul>
+</div>
+
+	
+	
+
+		
+<main class="site-main section-inner animated fadeIn faster">
+  <article class="thin">
+	<header class="post-header">
+	  <div class="post-meta">
+		
+		<span>Jun 26, 2023</span>
+		<small> - 
+<span class="reading-time" title="Estimated read time">
+  
+  6 min read
+  
+</span>
+</small>
+		
+            
+	  </div>
+	  <h1>Bare-metal Kubernetes, Part V: Scaling Out</h1>
+	</header>
+
+	<div class="content">
+        
+	  <p><i>Discussion on <a href="https://news.ycombinator.com/item?id=37443404">Hacker News</a></i></p>
+<p>It's time to get serious about this whole <em>clustering</em> thing, so let's add some nodes!</p>
+<p><em>Series Index</em></p>
+<ul>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-1-talos-on-hetzner/">Part I: Talos on Hetzner</a></li>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-2-cilium-and-firewalls/">Part II: Cilium CNI &amp; Firewalls</a></li>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-3-encrypted-gitops-with-fluxcd/">Part III: Encrypted GitOps with FluxCD</a></li>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-4-ingress-dns-certificates/">Part IV: Ingress, DNS and Certificates</a></li>
+<li><strong><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-5-scaling-out/">Part V: Scaling Out</a></strong></li>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-6-persistent-storage-with-rook-ceph/">Part VI: Persistent Storage with Rook Ceph</a></li>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-7-private-registry-with-harbor/">Part VII: Private Registry with Harbor</a></li>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-8-containerizing-our-work-environment/">Part VIII: Containerizing our Work Environment</a></li>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-9-renovating-old-deployments/">Part IX: Renovating old Deployments</a></li>
+<li><a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-10-metrics-and-monitoring-with-openobserve/">Part X: Metrics and Monitoring with OpenObserve</a></li>
+</ul>
+<p>Complete source code for the live cluster is available <a href="https://github.com/MathiasPius/kronform">@github/MathiasPius/kronform</a></p>
+<h1 id="rethinking-machine-configs"><a class="zola-anchor" href="#rethinking-machine-configs" aria-label="Anchor link for: rethinking-machine-configs">Rethinking Machine Configs</a></h1>
+<p>In <a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-1-talos-on-hetzner/">Part I: Talos on Hetzner</a> I spent a while defining patches to apply both for nodes and across the whole cluster.</p>
+<p>After thinking about what I'm actually trying to achieve with these configs, I realized that defining them declaratively in git and then applying them doesn't make a lot of sense - except when bootstrapping.</p>
+<p><code>talosctl</code> has great utilities for upgrading Kubernetes, but this will naturally override the machineconfig of upgraded machines, causing drift. If we treat the git version of the machineconfig as the source of truth, this drift means we might accidentally rollback a Kubernetes version if we naïvely apply an old machineconfig, for example.</p>
+<p>For this reason, I think it makes a lot more sense to consider machineconfigs as living documents that can change, and instead keep the git versions for reference and disaster recovery.</p>
+<p>For backup and scaling out, I'll get talos to spit out the config for our one node <code>n1</code>:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> mkdir machineconfigs
+</span><span style="color:#bf616a;">[mpd@ish]$</span><span> talosctl</span><span style="color:#bf616a;"> -n</span><span> n1 get machineconfig</span><span style="color:#bf616a;"> -o</span><span> yaml | </span><span style="color:#bf616a;">yq -y -S </span><span>&#39;</span><span style="color:#a3be8c;">.spec</span><span>&#39; - &gt; machineconfigs/n1.yaml
+</span></code></pre>
+<p>This command retrieves the actual configuration from the node right now and feeds it through <code>yq</code> to make sure filter out comments so we can diff it later.</p>
+<p>We'll override the node-specific values with the ones we want for our second <code>n2</code> node using a patch<sup class="footnote-reference"><a href="#1">1</a></sup>.</p>
+<pre data-lang="yaml" style="background-color:#2b303b;color:#c0c5ce;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#65737e;"># temp-n2-patch.yaml
+</span><span>- </span><span style="color:#bf616a;">op</span><span>: </span><span style="color:#a3be8c;">replace
+</span><span>  </span><span style="color:#bf616a;">path</span><span>: </span><span style="color:#a3be8c;">/machine/network/hostname
+</span><span>  </span><span style="color:#bf616a;">value</span><span>: </span><span style="color:#a3be8c;">n2
+</span></code></pre>
+<p><small>JSON Patching is a little overkill for this use case of course, but you might want to also change the <code>diskSelector</code>.</small></p>
+<p>We'll apply the patch to our just-fetched <code>n1.yaml</code> config and pipe the output through <code>yq</code> before writing it to our new <code>n2.yaml</code> machineconfig</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> talosctl machineconfig patch \
+</span><span style="color:#bf616a;">    --patch</span><span> @temp-n2-patch.yaml         \
+</span><span>    machineconfigs/n1.yaml | </span><span style="color:#bf616a;">yq -y -S</span><span> . &gt; machineconfigs/n2.yaml
+</span></code></pre>
+<p>Our machine configs contain sensitive information, and have to be encrypted, so let's add a new section to <code>.sops.yaml</code> which match our <code>secrets.yaml</code> encryption scheme:</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>- path_regex: machineconfigs/.*.yaml
+</span><span>    encrypted_regex: ^(secret|bootstraptoken|secretboxEncryptionSecret|token|key)$
+</span><span>    pgp: &gt;-
+</span><span>      7668061D49BB2B7BA19118B4031734BEBE51F818
+</span></code></pre>
+<p><strong>Beware!</strong> Although machineconfigs contain similar sensitive data to <code>secrets.yaml</code> at least one field is capitalized differently: <code>secretboxEncryptionSecret</code>. If we just reused the <code>encrypted_regex</code> from our <code>secrets.yaml</code> entry, the machineconfigs' <code>secretboxEncryptionSecret</code> would not have been encrypted. This is why you should <em>always</em> check any committed file which might contain secrets, even if you think you've already encrypted it. This is one of the risks with using in-repository secret-keeping.</p>
+<p>Since we won't need it right now anyway, let's go ahead and encrypt <code>n1.yaml</code> immediately:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> sops</span><span style="color:#bf616a;"> -e -i</span><span> machineconfigs/n1.yaml
+</span></code></pre>
+<p>We now have the config for our second node, but of course nowhere to put it. Let's setup the new server.</p>
+<h1 id="installing-talos-on-a-dedicated-server-again"><a class="zola-anchor" href="#installing-talos-on-a-dedicated-server-again" aria-label="Anchor link for: installing-talos-on-a-dedicated-server-again">Installing Talos on a Dedicated Server, again.</a></h1>
+<p>This installation procedure is exactly the same as in <a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-1-talos-on-hetzner/#installing-talos-on-a-dedicated-server">Part I</a>. Boot into rescue mode, download talos, write it to our intended disk, then reboot.</p>
+<p>Waiting a bit for the node to come up, we use the <code>talosctl disks</code> command to see if we did it right:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> talosctl</span><span style="color:#bf616a;"> -n</span><span> 88.99.105.56 disks</span><span style="color:#bf616a;"> --insecure
+</span><span style="color:#bf616a;">DEV</span><span>        MODEL              TYPE  MODALIAS      NAME   SIZE     BUS_PATH       SYSTEM_DISK
+</span><span style="color:#bf616a;">/dev/sda</span><span>   SAMSUNG MZ7LM480   SSD   scsi:t-0x00   -      480 GB   .../1:0:0:0/   *
+</span><span style="color:#bf616a;">/dev/sdb</span><span>   ST4000NM0024-1HT   HDD   scsi:t-0x00   -      4.0 TB   .../2:0:0:0/   
+</span><span style="color:#bf616a;">/dev/sdc</span><span>   ST4000NM0024-1HT   HDD   scsi:t-0x00   -      4.0 TB   .../3:0:0:0/
+</span></code></pre>
+<p>Looks like we're all set!</p>
+<p>Since we already did the configuration bit, <em>and</em> have bootstrapped the cluster, the only thing left to do is to apply the config. Theoretically, talos should take care of the rest for us.</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> talosctl                 \
+</span><span style="color:#bf616a;">    --nodes</span><span> 88.99.105.56            \
+</span><span>    apply-config                    \
+</span><span style="color:#bf616a;">    --file</span><span> machineconfigs/n2.yaml   \
+</span><span style="color:#bf616a;">    --insecure
+</span></code></pre>
+<h1 id="connectivity"><a class="zola-anchor" href="#connectivity" aria-label="Anchor link for: connectivity">Connectivity</a></h1>
+<p>Well.. If we had anticipated this when setting up the Hetzner Firewall of course. <code>n2</code> needs access to talos and Kubernetes on <code>n1</code> in order to join our cluster and vice-versa, so let's modify our controller template to allow all traffic between our nodes, and then re-apply it:</p>
+<p><img src="https://datavirke.dk/posts/bare-metal-kubernetes-part-5-scaling-out/firewall-template.png" alt="Updated Firewall Template" /></p>
+<p>.. Except it's still not working! The dashboard on our new <code>n2</code> is just repeating the same messages ad nauseum, and <code>n1</code> has no knowledge of what's going on at all!</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">user:</span><span> warning: </span><span style="color:#b48ead;">[</span><span>2023-06-26T14:08:13.703605886Z</span><span style="color:#b48ead;">]</span><span>: </span><span style="color:#b48ead;">[</span><span>talos</span><span style="color:#b48ead;">]</span><span> task startAllServices (1/1)</span><span style="color:#96b5b4;">:</span><span> service &quot;</span><span style="color:#a3be8c;">etcd</span><span>&quot; to be &quot;</span><span style="color:#a3be8c;">up</span><span>&quot;
+</span><span style="color:#bf616a;">user:</span><span> warning: </span><span style="color:#b48ead;">[</span><span>2023-06-26T14:08:28.416950886Z</span><span style="color:#b48ead;">]</span><span>: </span><span style="color:#b48ead;">[</span><span>talos</span><span style="color:#b48ead;">]</span><span> controller failed {&quot;</span><span style="color:#a3be8c;">component</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">controller-runtime</span><span>&quot;, &quot;</span><span style="color:#a3be8c;">controller</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">k8s.KubeletStaticPodController</span><span>&quot;, &quot;</span><span style="color:#a3be8c;">error</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">error refreshing pod status: error fetching pod status: an error on the server (\x5c</span><span>&quot;Authorization error (user=apiserver-kubelet-client, verb=get, resource=nodes, subresource=proxy)</span><span style="color:#96b5b4;">\x</span><span>5c&quot;</span><span style="color:#a3be8c;">) has prevented the request from succeeding</span><span>&quot;}
+</span><span style="color:#bf616a;">user:</span><span> warning: </span><span style="color:#b48ead;">[</span><span>2023-06-26T14:08:28.704688886Z</span><span style="color:#b48ead;">]</span><span>: </span><span style="color:#b48ead;">[</span><span>talos</span><span style="color:#b48ead;">]</span><span> task startAllServices (1/1)</span><span style="color:#96b5b4;">:</span><span> service &quot;</span><span style="color:#a3be8c;">etcd</span><span>&quot; to be &quot;</span><span style="color:#a3be8c;">up</span><span>&quot;
+</span><span style="color:#bf616a;">user:</span><span> warning: </span><span style="color:#b48ead;">[</span><span>2023-06-26T14:08:37.055525886Z</span><span style="color:#b48ead;">]</span><span>: </span><span style="color:#b48ead;">[</span><span>talos</span><span style="color:#b48ead;">]</span><span> etcd is waiting to join the cluster, if this node is the first node in the cluster, please run `</span><span style="color:#bf616a;">talosctl</span><span> bootstrap` against one of the following IPs:
+</span><span style="color:#bf616a;">user:</span><span> warning: </span><span style="color:#b48ead;">[</span><span>2023-06-26T14:08:37.056472886Z</span><span style="color:#b48ead;">]</span><span>: </span><span style="color:#b48ead;">[</span><span>talos</span><span style="color:#b48ead;">] [</span><span>88.99.105.56</span><span style="color:#b48ead;">]
+</span></code></pre>
+<p>With the Hetzner Firewall out of the way (which was still a necessary step), the problem must be elsewhere.</p>
+<p>If <code>etcd</code> is waiting to join the cluster, there must be something preventing it from doing os. Checking the service status and logs doesn't reveal anything, so I'm starting to suspect our node-policy might be a little too strict.</p>
+<pre data-lang="yaml" style="background-color:#2b303b;color:#c0c5ce;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span>  </span><span style="color:#65737e;"># Allow access to etcd and api from other nodes.
+</span><span>  - </span><span style="color:#bf616a;">fromEntities</span><span>:
+</span><span>    - </span><span style="color:#a3be8c;">remote-node
+</span><span>    </span><span style="color:#bf616a;">toPorts</span><span>:
+</span><span>    - </span><span style="color:#bf616a;">ports</span><span>:
+</span><span>      - </span><span style="color:#bf616a;">port</span><span>: &quot;</span><span style="color:#a3be8c;">2379</span><span>&quot;
+</span><span>        </span><span style="color:#bf616a;">protocol</span><span>: &quot;</span><span style="color:#a3be8c;">TCP</span><span>&quot;
+</span><span>      - </span><span style="color:#bf616a;">port</span><span>: &quot;</span><span style="color:#a3be8c;">2380</span><span>&quot;
+</span><span>        </span><span style="color:#bf616a;">protocol</span><span>: &quot;</span><span style="color:#a3be8c;">TCP</span><span>&quot;
+</span></code></pre>
+<p>The node should be perfectly capable of reaching <code>etcd</code> on <code>n1</code>, <em>except</em> <code>n2</code> is not a <code>remote-node</code> <em>yet</em>. It hasn't joined!</p>
+<p>Let's remedy this by adding a special policy which allows <code>etcd</code> traffic between our servers. The policy will only be relevant before the node is joined, after which the above rule will cover it just fine:</p>
+<pre data-lang="yaml" style="background-color:#2b303b;color:#c0c5ce;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span>  </span><span style="color:#65737e;"># Allow access to etcd and api from unconfigured nodes
+</span><span>  - </span><span style="color:#bf616a;">fromCIDR</span><span>:
+</span><span>    - </span><span style="color:#a3be8c;">159.69.60.182/32
+</span><span>    - </span><span style="color:#a3be8c;">88.99.105.56/32
+</span><span>    - </span><span style="color:#a3be8c;">46.4.77.66/32
+</span><span>    </span><span style="color:#bf616a;">toPorts</span><span>:
+</span><span>    - </span><span style="color:#bf616a;">ports</span><span>:
+</span><span>      - </span><span style="color:#bf616a;">port</span><span>: &quot;</span><span style="color:#a3be8c;">2379</span><span>&quot;
+</span><span>        </span><span style="color:#bf616a;">protocol</span><span>: &quot;</span><span style="color:#a3be8c;">TCP</span><span>&quot;
+</span><span>      - </span><span style="color:#bf616a;">port</span><span>: &quot;</span><span style="color:#a3be8c;">2380</span><span>&quot;
+</span><span>        </span><span style="color:#bf616a;">protocol</span><span>: &quot;</span><span style="color:#a3be8c;">TCP</span><span>&quot;
+</span></code></pre>
+<p><em>Et voilà!</em></p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> kubectl get nodes
+</span><span style="color:#bf616a;">NAME</span><span>   STATUS   ROLES           AGE    VERSION
+</span><span style="color:#bf616a;">n1</span><span>     Ready    control-plane   3d6h   v1.27.2
+</span><span style="color:#bf616a;">n2</span><span>     Ready    control-plane   15m    v1.27.2
+</span></code></pre>
+<p>Who said setting up a bare-metal Kubernetes cluster was hard?</p>
+<p>Repeating the procedure for the last server makes three:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">[mpd@ish]$</span><span> kubectl get nodes
+</span><span style="color:#bf616a;">NAME</span><span>   STATUS   ROLES           AGE    VERSION
+</span><span style="color:#bf616a;">n1</span><span>     Ready    control-plane   3d7h   v1.27.2
+</span><span style="color:#bf616a;">n2</span><span>     Ready    control-plane   27m    v1.27.2
+</span><span style="color:#bf616a;">n3</span><span>     Ready    control-plane   65s    v1.27.2
+</span></code></pre>
+<h1 id="finishing-up"><a class="zola-anchor" href="#finishing-up" aria-label="Anchor link for: finishing-up">Finishing up</a></h1>
+<p>With all the nodes up and running, we have some minor janitorial duties to perform.</p>
+<p>First, we should add our new Talos endpoints to our <code>talosconfig</code>:</p>
+<pre data-lang="yaml" style="background-color:#2b303b;color:#c0c5ce;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#bf616a;">contexts</span><span>:
+</span><span>  </span><span style="color:#bf616a;">kronform</span><span>:
+</span><span>    </span><span style="color:#bf616a;">endpoints</span><span>:
+</span><span>    - </span><span style="color:#d08770;">159.69.60.182
+</span><span>    - </span><span style="color:#d08770;">88.99.105.56
+</span><span>    - </span><span style="color:#d08770;">46.4.77.66
+</span></code></pre>
+<p>Next, we should add the new nodes to our Kubernetes API endpoint DNS record:
+<img src="https://datavirke.dk/posts/bare-metal-kubernetes-part-5-scaling-out/dns-records.png" alt="DNS Records" /></p>
+<p>Finally, make sure all the machineconfigs are encrypted and push them to git. That way we'll have them.</p>
+<p>In * <a href="https://datavirke.dk/posts/bare-metal-kubernetes-part-6-persistent-storage-with-rook-ceph/">Part VI: Persistent Storage with Rook Ceph</a> I'll install <a href="https://rook.io/">Rook</a>, which will act as a replication layer on top of our non-talos hard drives and provide replicated <a href="https://kubernetes.io/docs/concepts/storage/persistent-volumes/">Persistent Volumes</a> which won't disappear if a node dies.</p>
+<h1 id="epilogue"><a class="zola-anchor" href="#epilogue" aria-label="Anchor link for: epilogue">Epilogue</a></h1>
+<p>The fact that this is the shortest post of the whole series so far tells me Talos was probably the right choice.</p>
+<div class="footnote-definition" id="1"><sup class="footnote-definition-label">1</sup>
+<p>I'm using RFC6902 JSON Patches this sime, since I hit some merge error when trying to use the same style patch as when creating the <code>n1</code> config originally.</p>
+</div>
+
+	</div>
+	<hr class="post-end">
+	<footer class="post-info">
+    
+	  <p>
+		<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-tag meta-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7" y2="7"></line></svg>
+		
+		
+		<span class="tag"><a href="https://datavirke.dk/tags/kubernetes/">kubernetes</a></span>
+		
+		<span class="tag"><a href="https://datavirke.dk/tags/talos/">talos</a></span>
+		
+		<span class="tag"><a href="https://datavirke.dk/tags/hetzner/">hetzner</a></span>
+		
+		<span class="tag"><a href="https://datavirke.dk/tags/cilium/">cilium</a></span>
+		
+		<span class="tag"><a href="https://datavirke.dk/tags/etcd/">etcd</a></span>
+		
+		
+    </p>
+    
+    <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>1493 Words</p>
+    
+    <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>2023-06-26</p>
+    
+	</footer>
+  </article>
+    
+  
+  <div class="post-nav thin">
+	
+	
+  </div>
+
+  
+</main>
+
+	  </div>
+	  
+	  
+
+
+
+<footer id="site-footer" class="section-inner thin animated fadeIn faster">
+  <p>&copy; 2024 <a href="https:&#x2F;&#x2F;datavirke.dk">Mathias Pius</a> &mdash; CVR: 43033336</p>
+  <p>Made with <a href="https://www.getzola.org" target="_blank" rel="noopener">Zola</a> &#183; Theme <a href="https://github.com/VersBinarii/hermit_zola" target="_blank" rel="noopener">Hermit_Zola</a>
+	
+	&#183; <a href="https://datavirke.dk/atom.xml" target="_blank" title="rss"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-rss"><path d="M4 11a9 9 0 0 1 9 9"></path><path d="M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1"></circle></svg></a>
+	
+  </p>
+</footer>
+
+
+
+
+	</div>
+	
+	<script src="https://datavirke.dk/js/main.js"></script>
+
+	<!-- Math rendering -->
+	<link rel="stylesheet" href="/katex.min.css">
+    <script defer src="/katex.min.js"></script>
+    <script defer src="/auto-render.min.js" onload="renderMathInElement(document.body, { delimiters: [ {left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}, {left: '\\[', right: '\\]', display: true}, {left: '\\(', right: '\\)', display: false}]});"></script>
+
+    
+		<link href="/vs2015.css" rel="stylesheet">
+		<script src="/highlight.pack.js"></script>
+		<script src="/highlightjs-badge.min.js"></script>
+		<script>
+			var pres = document.querySelectorAll("pre>code");
+			for (var i = 0; i < pres.length; i++) {
+				hljs.highlightBlock(pres[i]);
+			}
+		</script>
+		
+			<script src="/clipboard.min.js"></script>
+			<script>
+				var options = {
+					copyIconClass: "gg-clipboard",
+					checkIconClass: "gg-check"
+				};
+				window.highlightJsBadge(options);
+			</script>
+		
+
+	
+
+	
+	<script src="https://datavirke.dk/js/main.js"></script>
+
+    
+    
+
+	
+  </body>
+</html>
