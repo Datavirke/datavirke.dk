@@ -17,7 +17,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            ghcr.io/kubi-zone/kubizone
+            ghcr.io/Datavirke/datavirke.dk
           tags: |
             type=schedule
             type=ref,event=branch
