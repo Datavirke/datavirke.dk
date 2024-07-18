@@ -75,11 +75,12 @@
 		var _paq = window._paq = window._paq || [];
 		/* tracker methods like "setCustomDimension" should be called before "trackPageView" */
 		_paq.push(["setDoNotTrack", true]);
+		_paq.push(["disableCampaignParameters"]);
 		_paq.push(["disableCookies"]);
 		_paq.push(['trackPageView']);
 		_paq.push(['enableLinkTracking']);
 		(function () {
-			var u = "https://dashboard.datavirke.dk/";
+			var u = "//dashboard.datavirke.dk/";
 			_paq.push(['setTrackerUrl', u + 'matomo.php']);
 			_paq.push(['setSiteId', '2']);
 			var d = document, g = d.createElement('script'), s = d.getElementsByTagName('script')[0];
