@@ -1,26 +1,27 @@
 {% import "macros.html" as macros %}
 <!DOCTYPE html>
 <html lang="en-us">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <meta name="robots" content="max-image-preview:large">
-    <meta name="description" content="{{config.description}}">
-  
-    <!-- Google / Search Engine Tags -->
+
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<meta http-equiv="X-UA-Compatible" content="ie=edge" />
+	<meta name="robots" content="max-image-preview:large">
+	<meta name="description" content="{{config.description}}">
+
+	<!-- Google / Search Engine Tags -->
 
 	{% if page.title %}
-    <title>{{page.title}} - {{config.title}}</title>
+	<title>{{page.title}} - {{config.title}}</title>
 	<meta itemprop="name" content="{{page.title}} - {{config.title}}">
 	<meta property="og:title" content="{{page.title}} - {{config.title}}">
 	<meta name="twitter:title" content="{{page.title}} - {{config.title}}">
-    {% else %}
-    <title>{{config.title}}</title>
+	{% else %}
+	<title>{{config.title}}</title>
 	<meta itemprop="name" content="{{config.title}}">
 	<meta property="og:title" content="{{config.title}}">
 	<meta name="twitter:title" content="{{config.title}}">
-    {% endif %}
+	{% endif %}
 
 	{% if page.description %}
 	<meta itemprop="description" content="{{page.description}}">
@@ -32,40 +33,33 @@
 	<meta name="twitter:description" content="{{config.description}}">
 	{% endif %}
 
-	<meta name="twitter:card" content="summary_large_image">    
-    <meta name="twitter:image" content="{{get_url(path=config.extra.logo)}}">
+	<meta name="twitter:card" content="summary_large_image">
+	<meta name="twitter:image" content="{{get_url(path=config.extra.logo)}}">
 	<meta itemprop="image" content="{{get_url(path=config.extra.logo)}}">
 	<meta property="og:image" content="{{get_url(path=config.extra.logo)}}">
-    <meta property="og:url" content="{{config.base_url}}">
-    <meta property="og:type" content="website">
-    
-    <link rel="apple-touch-icon" sizes="180x180" href="{{get_url(path="apple-touch-icon.png")}}"/>
-    <link rel="icon" type="image/png" sizes="32x32" href="{{get_url(path="favicon-32x32.png")}}" />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="16x16"
-      href="{{get_url(path="favicon-16x16.png")}}"
-    />
-    <link
-      rel="shortcut icon"
-      href="{{get_url(path="favicon.ico")}}"
-    />
-    <link rel="stylesheet" href="{{get_url(path="style.css")}}"/>
-    
-    {% if config.generate_feed %}
-    <link rel="alternate" type="application/rss+xml" title="RSS" href="{{ get_url(path=config.feed_filename, trailing_slash=false) }}">
-    {% endif %}
+	<meta property="og:url" content="{{config.base_url}}">
+	<meta property="og:type" content="website">
 
-	<script src="{{ get_url(path="mermaid.min.js") }}"></script>
+	<link rel="apple-touch-icon" sizes="180x180" href="{{get_url(path=" apple-touch-icon.png")}}" />
+	<link rel="icon" type="image/png" sizes="32x32" href="{{get_url(path=" favicon-32x32.png")}}" />
+	<link rel="icon" type="image/png" sizes="16x16" href="{{get_url(path=" favicon-16x16.png")}}" />
+	<link rel="shortcut icon" href="{{get_url(path=" favicon.ico")}}" />
+	<link rel="stylesheet" href="{{get_url(path=" style.css")}}" />
+
+	{% if config.generate_feed %}
+	<link rel="alternate" type="application/rss+xml" title="RSS"
+		href="{{ get_url(path=config.feed_filename, trailing_slash=false) }}">
+	{% endif %}
+
+	<script src="{{ get_url(path=" mermaid.min.js") }}"></script>
 	<script>
-		let config = { 
-			startOnLoad: true, 
+		let config = {
+			startOnLoad: true,
 
 			darkMode: true
 		};
 		mermaid.initialize(config);
-	
+
 	</script>
 
 	<script type="application/ld+json">
@@ -76,94 +70,125 @@
 		"logo": "https://datavirke.dk/logo.svg"
 		}
 	</script>
-  </head>
-  <body id="page">
+	<!-- Matomo -->
+	<script>
+		var _paq = window._paq = window._paq || [];
+		/* tracker methods like "setCustomDimension" should be called before "trackPageView" */
+		_paq.push(["setDoNotTrack", true]);
+		_paq.push(["disableCookies"]);
+		_paq.push(['trackPageView']);
+		_paq.push(['enableLinkTracking']);
+		(function () {
+			var u = "https://dashboard.datavirke.dk/";
+			_paq.push(['setTrackerUrl', u + 'matomo.php']);
+			_paq.push(['setSiteId', '2']);
+			var d = document, g = d.createElement('script'), s = d.getElementsByTagName('script')[0];
+			g.async = true; g.src = u + 'matomo.js'; s.parentNode.insertBefore(g, s);
+		})();
+	</script>
+	<noscript>
+		<p><img referrerpolicy="no-referrer-when-downgrade" src="//dashboard.datavirke.dk/matomo.php?idsite=2&amp;rec=1"
+				style="border:0;" alt="" /></p>
+	</noscript>
+	<!-- End Matomo Code -->
+</head>
+
+<body id="page">
 
 	{% block header %}
 	{% endblock header %}
-	
+
 	{% block title %}
 	<div id="spotlight" class="animated fadeIn">
-	  <div id="home-center">
-		{% if config.extra.logo is defined %}
-		<img src="{{ config.extra.logo }}" style="padding: 10%;" alt="Datavirke Logo" />
-		{% endif %}
-		<h1 id="home-title">{{config.title}}</h1>
-		<p id="home-subtitle">{{config.extra.home_subtitle}}</p>
-		<div id="home-social">
-		  {{macros::render_social_icons()}}
+		<div id="home-center">
+			{% if config.extra.logo is defined %}
+			<img src="{{ config.extra.logo }}" style="padding: 10%;" alt="Datavirke Logo" />
+			{% endif %}
+			<h1 id="home-title">{{config.title}}</h1>
+			<p id="home-subtitle">{{config.extra.home_subtitle}}</p>
+			<div id="home-social">
+				{{macros::render_social_icons()}}
+			</div>
+			{% endblock title %}
+			{% block main %}
+			<nav id="home-nav" class="site-nav">
+				{% for s in config.extra.hermit_menu %}
+				<a href="{{config.base_url ~ s.link}}">{{s.name}}</a>
+				{% endfor %}
+			</nav>
+			{% endblock main %}
 		</div>
-		{% endblock title %}
-		{% block main %}
-		<nav id="home-nav" class="site-nav">
-		  {% for s in config.extra.hermit_menu %}
-		  <a href="{{config.base_url ~ s.link}}">{{s.name}}</a>
-		  {% endfor %}
-		</nav>
-		{% endblock main %}
-	  </div>
-	  
-	  {% block footer %}
-	  <div id="home-footer">
-		<p>&copy; {{ now() | date(format="%Y")}}
-      <a href="{{config.base_url}}">{{config.extra.author.name}}</a>
-      {% if config.generate_feed %}
-		  &#183; <a href="{{ get_url(path=config.feed_filename, trailing_slash=false) }}" target="_blank" title="rss">
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-rss"><path d="M4 11a9 9 0 0 1 9 9"></path><path d="M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1"></circle></svg>
-      {% endif %}
-		  </a>
-		</p>
-	  </div>
-	  {% endblock footer %}
+
+		{% block footer %}
+		<div id="home-footer">
+			<p>&copy; {{ now() | date(format="%Y")}}
+				<a href="{{config.base_url}}">{{config.extra.author.name}}</a>
+				{% if config.generate_feed %}
+				&#183; <a href="{{ get_url(path=config.feed_filename, trailing_slash=false) }}" target="_blank"
+					title="rss">
+					<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+						stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+						class="feather feather-rss">
+						<path d="M4 11a9 9 0 0 1 9 9"></path>
+						<path d="M4 4a16 16 0 0 1 16 16"></path>
+						<circle cx="5" cy="19" r="1"></circle>
+					</svg>
+					{% endif %}
+				</a>
+			</p>
+		</div>
+		{% endblock footer %}
 	</div>
-	
-	<script src="{{get_url(path="js/main.js")}}"></script>
+
+	<script src="{{get_url(path=" js/main.js")}}"></script>
 
 	<!-- Math rendering -->
 	<link rel="stylesheet" href="/katex.min.css">
-    <script defer src="/katex.min.js"></script>
-    <script defer src="/auto-render.min.js" onload="renderMathInElement(document.body, { delimiters: [ {left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}, {left: '\\[', right: '\\]', display: true}, {left: '\\(', right: '\\)', display: false}]});"></script>
+	<script defer src="/katex.min.js"></script>
+	<script defer src="/auto-render.min.js"
+		onload="renderMathInElement(document.body, { delimiters: [ {left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}, {left: '\\[', right: '\\]', display: true}, {left: '\\(', right: '\\)', display: false}]});"></script>
 
-    {% if config.extra.highlightjs.enable %}
-		<link href="/vs2015.css" rel="stylesheet">
-		<script src="/highlight.pack.js"></script>
-		<script src="/highlightjs-badge.min.js"></script>
-		<script>
-			var pres = document.querySelectorAll("pre>code");
-			for (var i = 0; i < pres.length; i++) {
-				hljs.highlightBlock(pres[i]);
-			}
-		</script>
-		{% if config.extra.highlightjs.clipboard %}
-			<script src="/clipboard.min.js"></script>
-			<script>
-				var options = {
-					copyIconClass: "gg-clipboard",
-					checkIconClass: "gg-check"
-				};
-				window.highlightJsBadge(options);
-			</script>
-		{% endif %}
+	{% if config.extra.highlightjs.enable %}
+	<link href="/vs2015.css" rel="stylesheet">
+	<script src="/highlight.pack.js"></script>
+	<script src="/highlightjs-badge.min.js"></script>
+	<script>
+		var pres = document.querySelectorAll("pre>code");
+		for (var i = 0; i < pres.length; i++) {
+			hljs.highlightBlock(pres[i]);
+		}
+	</script>
+	{% if config.extra.highlightjs.clipboard %}
+	<script src="/clipboard.min.js"></script>
+	<script>
+		var options = {
+			copyIconClass: "gg-clipboard",
+			checkIconClass: "gg-check"
+		};
+		window.highlightJsBadge(options);
+	</script>
+	{% endif %}
 
 	{% endif %}
 
 	{% if not config.extra.highlightjs.enable %}
-	<script src="{{get_url(path="js/copy.js")}}"></script>
+	<script src="{{get_url(path=" js/copy.js")}}"></script>
 	{% endif %}
-	<script src="{{get_url(path="js/main.js")}}"></script>
+	<script src="{{get_url(path=" js/main.js")}}"></script>
 
-    {% block js_footer %}
-    {% endblock js_footer %}
+	{% block js_footer %}
+	{% endblock js_footer %}
 
 	{% if config.extra.google_analytics.enable %}
-    <!-- Global Site Tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id={{ config.extra.google_analytics.id }}"></script>
-    <script>
-     window.dataLayer = window.dataLayer || [];
-     function gtag(){dataLayer.push(arguments);}
-     gtag('js', new Date());
-     gtag('config', '{{ config.extra.google_analytics.id }}');
-    </script>
-    {% endif %}
-  </body>
+	<!-- Global Site Tag (gtag.js) - Google Analytics -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id={{ config.extra.google_analytics.id }}"></script>
+	<script>
+		window.dataLayer = window.dataLayer || [];
+		function gtag() { dataLayer.push(arguments); }
+		gtag('js', new Date());
+		gtag('config', '{{ config.extra.google_analytics.id }}');
+	</script>
+	{% endif %}
+</body>
+
 </html>
