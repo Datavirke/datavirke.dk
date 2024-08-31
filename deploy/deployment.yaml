@@ -15,6 +15,10 @@ spec:
       labels:
         app.kubernetes.io/name: datavirke
     spec:
+      securityContext:
+        runAsUser: 1252
+        runAsGroup: 1252
+        fsGroup: 1252
       containers:
         - name: web
           image: registry.kronform.pius.dev/datavirke.dk/datavirke.dk:main
@@ -26,7 +30,7 @@ spec:
             allowPrivilegeEscalation: false
             capabilities:
               drop: ["ALL"]
-            runAsNonRoot: false
+            runAsNonRoot: true
             seccompProfile:
               type: RuntimeDefault
 ---
