@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: web
-          image: registry.kronform.pius.dev/datavirke.dk/datavirke.dk:latest
+          image: registry.kronform.pius.dev/datavirke.dk/datavirke.dk:main
           imagePullPolicy: Always
           ports:
             - name: http
