@@ -21,7 +21,7 @@ attention needle just a little bit in the right direction.
 *Object-Oriented Programming* (OOP) is, and since most people are familiar with OOP, comparing the two might be
 the easiest way to explain it.
 
-Where OOP models the world as various *Objects*, encapsulating properties and behavior, ECS divorces the idea of some
+Where OOP models the world as various *Objects* encapsulating properties and behavior, ECS divorces the idea of some
 concrete *object* from its properties, and the methods that act on them.
 
 ### Modeling Reality
@@ -249,7 +249,7 @@ impl Store {
 
 Enough re-boarding, let's get to work.
 
-### First day on the Job, again.
+### Second first day on the Job, again.
 
 How might we achieve the our goals in this setup? Let's start with sanctions first:
 
@@ -292,9 +292,9 @@ fn landian_union_privacy_act(
     store: Store
 ) {
     // An iterator over all entities that satisfy the constraints:
-    //   1. Is a LandianUnionMember
-    //   2. Account is marked for closure
-    //   3. Has a personal name
+    //   1. Has a personal name
+    //   2. Is a LandianUnionMember
+    //   3. Account is marked for closure
     let subjects = store.list<
         PersonalName,
         LandianUnionMember,
@@ -303,7 +303,12 @@ fn landian_union_privacy_act(
 
     // the LandianUnionMember and Terminated components are
     // simply ignored, since it is only their presence we care about.
-    for (entity, personal_name, _, _) = subjects {
+    for (
+        entity,
+        personal_name,
+        _member, 
+        _terminated
+    ) = subjects {
         store.remove<PersonalName>();
     }
 }
@@ -335,14 +340,6 @@ Like before, we add a new *Marker* trait, and apply it to all concerned parties
 ```rust
 struct ObservesCelebratemas;
 
-fn celebrate_southland_holiday(
-    store: Store,
-) {
-    for (name, email) in store.list<PersonalName, Email>() {
-        send_celebratory_email(name, email);
-    }
-}
-
 fn tag_celebratemas(
     store: Store
 ) {
@@ -350,6 +347,14 @@ fn tag_celebratemas(
         if country == "Southland" {
             store.insert(entity, ObservesCelebratemas);
         }
+    }
+}
+
+fn celebrate_southland_holiday(
+    store: Store,
+) {
+    for (name, email, _celebrates) in store.list<PersonalName, Email, ObservedCelebratemas>() {
+        send_celebratory_email(name, email);
     }
 }
 ```
@@ -366,11 +371,11 @@ Simple enough. Let's get it reviewed, and compare it to the feedback from last t
 
 2. The sanctions worked and **Aggressiland** released **Independistan**. which has joined the **Landian Union**.
 
-    Solution: add **Independistan** to our `tag_landian_members` system.
+    Solution: just tag **Independistan** with `LandianUnionMember`.
 
 3. In recognition of kinship with its liberators, **Independistan** also observes *Celebratemas* next week.
 
-    Solution: add **Independistan** to our `tag_celebratemas` system.
+    Solution: just tag **Independistan** with `ObservesCelebratemas`.
 
 4. ~~You forgot about the third type of relationship: `Clients`, which are other companies, who purchase from us in bulk.~~
 
@@ -391,13 +396,56 @@ When you set out to design your `Supplier` type, you must engage in dialectic wi
 
 This Supplier object has now become a binding *contract* with unbounded scope, which your entire organization has to uphold for all eternity. When the domain shifts (and it *will* shift!), you've maximized the effort required to enact change, and every assumption every department ever made about what a Supplier is has to be challenged.
 
-With ECS, you essentially get exactly what Microservices proclaims to give you: Narrow scope and distributed responsibility. When the domain shifts, you don't have to rethink the world from scratch, or bring in representative greybeards with tacit knowledge from every department: The effort of discovering how each component involved is used is necessarily much smaller than that of the entities they represent.
+With ECS, you essentially get exactly what Microservices proclaims to give you, but falls short of delivering: Narrow scope and distributed responsibility. When the domain shifts, you don't have to rethink the world from scratch, or bring in representative greybeards with tacit knowledge from every department: The effort of discovering how each component involved is used is necessarily much smaller than that of the entities they represent.
 
 These domain shifts are still going to be painful, but by reducing both the scope of the assumptions that need to be challenged, you've made the work a lot easier for yourself, and those that come after you.
+
+## Archetypes
+
+Passing around whole bag of Components in your code gets a bit tiresome after you've written your third function which acts on a what everyone in your codebase agrees is a *Customer*, but in ECS-world is shaped like a tuple of `(PersonalName, PaymentMethod, ShippingAddress, Membership, Age, EmailAdddress)`.
+
+Instead we can introduce a short-hand for this particular group of components, an archetype or *view* of the entity if you will. This way billing, shipping, and technical support can each have their own `Customer` archetype made up of some subset of components from the same entity, without having to coordinate anything!
+
+```rust
+// Shipping
+struct Customer {
+    personal_name: PersonalName,
+    shipping_address: ShippingAddress
+}
+
+// Billing
+struct Customer {
+    personal_name: PersonalName,
+    payment_method: PaymentMethod,
+    membership: Membership
+}
+
+// Technical Support
+struct Customer {
+    personal_name: PersonalName,
+    email_address: Email
+}
+```
+
+Assembling these archetypes is just a matter of joining the component tables on the entity id and assembling them from each row.
+
+Once again this seems like a complete regression to OOP, but it isn't for the simple reason that Archetypes are secondary derived constructs made up of components, not the other way around! They're simply windows of convenience into an entity, they do not dictate the structure of the underlying entity at all.
 
 ## Keeping Score
 
 I hope to at this point have convinced you that the idea at the very least has merit, and if you're itching to apply this pattern in your own project, or just play around with it elsewhere, I don't think you're going to learn much more about it from me, but I would like to just sketch out some of the strengths and weaknesses of this approach that I've discovered while using it.
+
+### Weakness: Fluid Objects
+
+One of the key benefits of ECS is that we don't have to define exactly what an entity *is*, but this comes with a few downsides as well. As a huge fan of [algebraic data types](https://en.wikipedia.org/wiki/Algebraic_data_type) as implemented in Rust for example, I really appreciate being able to use pattern matching to know *exactly* what kind of object I'm dealing with, and to get hit with compiler errors when a new variant is introduced. With the ECS approach, emergent behavior becomes possible, for better or [worse](https://www.bay12games.com/dwarves/mantisbt/view.php?id=9195).
+
+What this means in practice is that you need to be very precise when designing your components. Imagine you work for a Winery where you decide to delete customers younger than 18 by targeting all entities with the components `Name` and `Age`, you might inadverdently be mangling half your inventory because the stock-keeping department decided to use `Age` for a slightly different purpose.
+
+I would still argue that this is *better* than OOP, since the boundaries of what needs to be agreed upon are that much smaller, but it is a potential foot-gun.
+
+One way to guard against this is to either store data which absolutely does not belong to the same domain (inventory and people for example) in separate data-stores entirely, or the simpler option which allows some interoperability in the future (personalized bottles?): adding *Markers* to differentiate between entities.
+
+The latter solution might sound like a regressing to an OOP-worldview, but the difference here is that these markers are composable. An entity could simultaneously be `ECommerceCustomer` and an `Employee`, without causing a schism.
 
 ### Strength: Table Storage
 
@@ -405,7 +453,7 @@ ECS lends itself extremely well to the good old-fashioned way of storing data: t
 
 Components should generally be kept small, so as to minimize the contract it implies and usually only contains a handful of properties, so storing your components in whatever database software you prefer is pretty easy.
 
-The following components map effortlessly to SQL:
+The following components:
 
 ```rust
 struct Todo {
@@ -493,7 +541,7 @@ where
 
 But this query is not complicated and easy to express in most ORMs.
 
-Another way of going about this, is to have the component itself by multi-dimensional:
+Another way of going about this, is to have the component itself be multi-dimensional:
 
 ```rust
 struct ContactEmails(
@@ -503,7 +551,7 @@ struct ContactEmails(
 
 As long as your system of record supports it, this doesn't violate the principles of ECS in any way. I would caution against storing *large* amounts of data in this fashion.
 
-The problem exacerbated by Many-to-Many relationships. These relationships are hard to express succintly in any format, and in ECS they require a third entity to express, just as they would in SQL.
+The problem is exacerbated by Many-to-Many relationships. These relationships are hard to express succinctly in any format, and in ECS they require a third entity to express, just as they would in SQL.
 
 Building on our above example, we could theorize that a person might be the contact for multiple companies, necessitating an external mapping:
 
@@ -514,15 +562,15 @@ struct CompanyContact {
 }
 ```
 
-These `CompanyContact` components would be belong to entirely separate entities, most likely never containing any other components and existing merely as "glue" entities.
+These `CompanyContact` components would belong to entirely separate entities, most likely never containing any other components and existing merely as "glue" entities.
 
 ### Strength: Extensibility
 
-Shifting gears a bit, I'd like to talk a bit about Kubernetes.
+Going off on a bit of a tangent, I'd like to talk about Kubernetes.
 
 I'm a big fan of Kubernetes, and especially it's extensible API-model and Controller/Operator patterns. One thing I *don't* like about Kubernetes, is having to sprinkle annotations all over the place in order to get things to interoperate properly.
 
-As a brief introduction, Kubernetes models the world internally as *Objects*: Services, Pods, Deployments, and so on. An example:
+As a brief introduction, Kubernetes models the world internally as *Objects*: Services, Pods, Deployments and so on are all Objects with a strict schema. Here's a `Pod` object as an example:
 
 ```yaml
 ---
@@ -557,7 +605,7 @@ The problem with this approach is that these objects are very much not extensibl
 
 Annotations are simple key-value fields which can contain arbitrary (string) data, and is used by developers and Controllers (*systems*) to communicate with each other.
 
-For example, you might configure an [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/) object (which is used to route traffic from outside the cluster) with an annotations telling the [Certificate Manager](https://cert-manager.io/) to procure som Let's Encrypt certificates matching the hostname for the ingress:
+For example, you might configure an [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/) object (which is used to route traffic from outside the cluster) with an annotation telling the [Certificate Manager](https://cert-manager.io/) to procure som Let's Encrypt certificates matching the hostname for the ingress:
 
 ```
 apiVersion: networking.k8s.io/v1
@@ -580,41 +628,25 @@ spec:
               number: 80
 ```
 
-As a Kubernetes administrator you get used to this type of thing, but it's such an ugly *hack*. These these fields are not at all validated, and stringly typed, and if you misspell the key or value, whatever you're trying to accomplish just won't work and you'll need to troubleshoot it somehow.
+As a Kubernetes administrator you get used to this type of thing, but it's such an ugly *hack*. These fields are not at all validated, and stringly typed, and if you misspell the key or value, whatever you're trying to accomplish just won't work and you'll need to troubleshoot it somehow.
 
-But it didn't have to be this way! Annotations were never meant to be critical to the functioning of cluster resources, they're just *metadata*, but nonetheless this approach is everywhere in Kubernetes today, simply because it is the easiest way of augmenting existing resources.
+But it didn't have to be this way! Annotations were never meant to be critical to the functioning of cluster resources, they're just *metadata*. Nonetheless this approach is everywhere in Kubernetes today, simply because it is the easiest way of augmenting existing resources.
 
 If Kubernetes instead was built in an Entity-Component fashion, you could have represented these things in a *much* more extensible way!
 
-Instead of Pods and Containers, you could simply have `Pod` entities defining a context in which to run containers. Containers would exist as independent entities with `Image`, `SecurityContext` and `RunInContext` components pointing to a pod.
+Instead of Pods and Containers, you could simply have `Pod` entities defining a context in which to run containers. Containers would exist as independent entities with `Image`, `SecurityContext` and `RunInPod` components pointing to a pod.
 
-When you want to expose a port from one of your containers, you could just attach an `Endpoint` component to your pods *or* containers and model each exposed port as its own entity (with reference to the *Container* entity), allowing `HttpRoutes` and `Certificate` components to be assigned to each of them.
+When you want to expose a port from one of your containers, you could just attach an `Endpoint` component to your pods *or* containers and model each exposed port as its own entity (with reference to the *Container* entity), allowing `HttpRoutes` and `Certificate` components to be assigned to each of them directly.
 
-And why stop there? Instead of having distinct `DaemonSet`, `StatefulSet` and `Deplyoment` objects, wherein you duplicate the entire specification for a Pod, you could just create distinct deployment strategy components for each use case, or even express the statefulness of your deployment as yet another component, instead of having to build this information directly into your object definition.
+And why stop there? Instead of having distinct `DaemonSet`, `StatefulSet` and `Deployment` objects, wherein you duplicate the entire specification for a Pod, you could just create distinct deployment strategy components for each use case, or even express the statefulness of your deployment as yet another component, instead of having to build this information directly into your object definition.
 
-Of course this approach can lead to slightly confusing scenarios... Like what if you end up with an entity consisting only of `Image` and `Certificate`?
+## Conclusion
 
-### Weakness: Fluid Objects
+In conclusion, modelling the world using the Entity Component System pattern removes a ton of pain-points I've encountered while writing code:
 
-As a huge fan of [sum types](https://en.wikipedia.org/wiki/Tagged_union) as implemented in Rust for example, I really appreciate being able to use pattern matching to know *exactly* what kind of object I'm dealing with. With the ECS approach, emergent behavior becomes possible, for better or [worse](https://www.bay12games.com/dwarves/mantisbt/view.php?id=9195).
+1. Endless philosophical discussions about the exact contract of each Object.
+2. Mapping runtime objects to persistent data storage, and writing fragile migrations when they change.
+3. Lack of flexibility in APIs for picking and choosing data without opening the can of worms that is GraphQL, or writing thousands of lines of boilerplate to cover all permutations.
+4. Duplication of functionality and ambiguous source-of-truth when dealing with objects that are ostensibly just different aspects of the same "thing", like for example Orders/Invoice/Payment/Receipt.
 
-What this means in practice is that you need to be very precise when designing your components. Imagine you work for a Winery where you decide to delete customers younger than 18 by targeting all entities with the components `Name` and `Age`, you might inadverdently be mangling half your inventory because the stock-keeping department decided to use `Age` for a slightly different purpose.
-
-I would still argue that this is *better* than OOP, since the boundaries of what needs to be agreed upon are that much smaller, but it is a potential foot-gun.
-
-One way to guard against this is to either store data which absolutely does not belong to the same domain (inventory and people for example) in separate databases entirely, or the simpler option which allows some interoperability in the future (personalized bottles?): adding *Markers* to differentiate between entities.
-
-The latter solution might sound like a regressing to an OOP-worldview, but the difference here is that these markers are composable. An entity could simultaneously be `ECommerceCustomer` and an `Employee`, without causing a schism.
-
-
-
-
-
-## Archetypes
-
-
-## See Also
-
-[David Komer creates an ECS-based ToDo app](https://github.com/dakom/todo-shipyard-lit-dominator/blob/master/rust/src/components.rs)
-
-[Michael F. Bryan explores how you might write a Computer-Aided Design library using an ECS architecture](https://adventures.michaelfbryan.com/posts/ecs-outside-of-games/)
+This article took a long time to write and I'm extremely curious to hear any and all feedback, especially if you've applied the pattern outside of games develeopment for better or worse!
