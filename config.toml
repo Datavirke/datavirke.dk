@@ -17,7 +17,9 @@ theme = "hermit_zola"
 
 taxonomies = [{ name = "tags", rss = true }]
 
-generate_feed = true
+generate_feeds = true
+generate_sitemap = true
+generate_robots_txt = true
 
 [markdown]
 # Whether to do syntax highlighting

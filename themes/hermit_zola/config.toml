@@ -20,7 +20,7 @@ highlight_theme = "agola-dark"
 
 # Whether to generate a RSS feed automatically
 generate_feed = true
-feed_filename = "rss.xml"
+feed_filenames = "rss.xml"
 
 # The number of articles to include in the RSS feed. Will include all items if
 # not set (the default).
@@ -34,9 +34,7 @@ feed_filename = "rss.xml"
 #       {name = "authors"}, # Basic definition: no RSS or pagination
 #     ]
 #
-taxonomies = [
-           {name = "tags", rss = true}
-]
+taxonomies = [{ name = "tags", rss = true }]
 
 # Whether to compile the Sass files found in the `sass` directory
 compile_sass = true
@@ -68,13 +66,13 @@ footer_copyright = ' &#183; <a href="https://creativecommons.org/licenses/by-nc/
 
 hermit_menu = [
     { link = "/posts", name = "Posts" },
-    { link = "/about", name = "About" }
+    { link = "/about", name = "About" },
 ]
 
 hermit_social = [
     { name = "twitter", link = "https://twitter.com" },
     { name = "github", link = "https://github.com" },
-    { name = "email", link = "mailto:author@domain.com" }
+    { name = "email", link = "mailto:author@domain.com" },
 ]
 
 
