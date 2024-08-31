@@ -1,9 +1,9 @@
 +++
 title = "Contemplating Entity Component Architecture"
-date = 2024-05-22
-draft = true
+date = 2024-08-31
+draft = false
 [taxonomies]
-tags = ["ecs", "programming", "rust", "correctness"]
+tags = ["ecs", "programming", "rust", "correctness", "entity", "component", "system", "oop"]
 [extra]
 toc = true
 +++
