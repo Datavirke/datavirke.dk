@@ -127,13 +127,13 @@ FROM debian:bookworm-slim AS workspace
 
 Running as root is of course considered haram. Perhaps more importantly, our repository will be cloned
 onto our workstation itself and then mounted into the running container, which means that the files will,
-nine times out of ten, be owned by our the default UID 1000. If we used a root container, any files we
+nine times out of ten, be owned by our default UID `1000`. If we used a root container, any files we
 created inside the container would automatically be owned by root, meaning if we exported a yaml manifest
 or [kubectl cp (copied)](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#cp) a 
-file from a container onto disk while inside our container, we would have to elevate privileged to access
+file from a container onto disk while inside our container, we would have to elevate privileges to access
 it *outside* of the container. Apart from the the security implications, this is just plain tedious!
 
-We'll configure a user with the clever name *user* inside the container with UID and GID 1000. That way
+We'll configure a user with the clever name *user* inside the container with UID and GID `1000`. That way
 the owner id will be identical inside and outside of the container, and we can transition ourselves and
 files seamlessly between them.
 
@@ -210,7 +210,7 @@ the container, and then less intuitively, mounting `/run/user/$UID` as well. Thi
 unix sockets available to the sops/gpg inside the container, effectively exposing the gpg environment from our
 workstation.
 
-Of course `/run/user/$UID` contains a lot more than just GPG sockets, so it would of course be to be
+Of course `/run/user/$UID` contains a lot more than just GPG sockets, so it would of course be nice to be
 able to just mount `/run/user/$UID/gnupg` and limit the exposure, but quite frankly... I can't figure out how to
 make this work.
 
@@ -270,7 +270,7 @@ bash
 
 In all its simplicity, the script just decrypts and installs our configs, then hands over the reigns to bash.
 Sops can work with arbitrary data, so the `--input-type` and `--output-type` options are necessary, to let it
-now that the passed in files aren't fully encrypted, but actually just contain partially encrypted yaml. Usually
+know that the passed in files aren't fully encrypted, but actually just contain partially encrypted yaml. Usually
 sops is smart enough to figure this out on its own, but since there's no `yaml` extension on either of the files
 it needs a little  help.
 
