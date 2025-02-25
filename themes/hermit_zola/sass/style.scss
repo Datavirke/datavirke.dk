@@ -1,3 +1,4 @@
+@import "fonts.scss";
 @import "predefined.scss";
 @import "normalize.scss";
 @import "syntax.scss";
@@ -234,7 +235,7 @@ table {
   display: inline-block;
   margin-left: 0.6em;
 
-  & > a {
+  &>a {
     margin-left: 0.4em;
   }
 }
@@ -538,7 +539,7 @@ hr.post-end {
   }
 }
 
-.footnote-definition + .footnote-definition {
+.footnote-definition+.footnote-definition {
   margin-top: 10px;
 }
 
@@ -562,6 +563,7 @@ hr.post-end {
   ol {
     line-height: 1.8;
   }
+
   p {
     display: inline;
   }
@@ -624,7 +626,7 @@ hr.post-end {
     margin: 0;
   }
 
-  & > ul {
+  &>ul {
     list-style-type: none;
 
     ul ul {
@@ -653,6 +655,7 @@ hr.post-end {
     text-align: left;
     padding-right: 5px;
   }
+
   .prev-post {
     text-align: right;
     padding-left: 5px;
@@ -699,6 +702,7 @@ hr.post-end {
 
   figure.left {
     margin-left: -240px;
+
     p {
       text-align: left;
     }
@@ -706,6 +710,7 @@ hr.post-end {
 
   figure.right {
     margin-right: -240px;
+
     p {
       text-align: right;
     }
@@ -767,6 +772,7 @@ hr.post-end {
 }
 
 @media (max-width: 760px) {
+
   .hide-in-mobile,
   .site-nav.hide-in-mobile {
     display: none;
@@ -795,6 +801,7 @@ hr.post-end {
 }
 
 @media (max-width: 520px) {
+
   .content figure.left,
   .content figure.right {
     float: unset;
@@ -828,4 +835,21 @@ hr.post-end {
   opacity: 0.6;
   min-width: 55px;
   text-align: center;
+}
+
+a#home-meeting {
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 1rem;
+  border-radius: 0.5rem;
+  background-color: #e6e6e6;
+  color: #464646;
+  padding: 0.3rem 1rem 0.2rem 1rem;
+}
+
+a#home-meeting:hover {
+  background-color: #c6cddb;
+  transition-property: background-color;
+  transition-duration: .4s;
+  transition-timing-function: ease-out;
 }

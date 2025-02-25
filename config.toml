@@ -28,7 +28,8 @@ highlight_code = true
 render_emoji = true
 
 [extra]
-home_subtitle = "Building reliable infrastructure."
+home_subtitle = 'Building reliable infrastructure.'
+cal_link = "https://cal.com/mathiaspius"
 logo = "logo.svg"
 footer_copyright = ' &mdash; CVR: 43033336'
 

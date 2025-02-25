@@ -44,7 +44,7 @@
 	<link rel="icon" type="image/png" sizes="32x32" href="{{get_url(path="favicon-32x32.png")}}" />
 	<link rel="icon" type="image/png" sizes="16x16" href="{{get_url(path="favicon-16x16.png")}}" />
 	<link rel="shortcut icon" href="{{get_url(path="favicon.ico")}}" />
-	<link rel="stylesheet" href="{{get_url(path="style.css")}}" />
+	<link rel="stylesheet" href="{{get_url(path="style.css")}}?1" />
 
 	{% if config.generate_feed %}
 	<link rel="alternate" type="application/rss+xml" title="RSS"
@@ -107,6 +107,10 @@
 			{% endif %}
 			<h1 id="home-title">{{config.title}}</h1>
 			<p id="home-subtitle">{{config.extra.home_subtitle}}</p>
+			<a id="home-meeting" href="{{config.extra.cal_link}}">
+				<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+				 Book me
+			</a>
 			<div id="home-social">
 				{{macros::render_social_icons()}}
 			</div>
