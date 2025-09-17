@@ -17,6 +17,6 @@ If you're looking for something in particular, it's probably one of these:
 
 * [Ask me anything, or inquire about consulting.](https://cal.com/mathiaspius)
 
-* [Professional achievements.](/about)
+* [Professional achievements.]({% link _tabs/about.md %})
 
-* [My musings on Kubernetes, Hetzner and software development.](/posts)
+* [My musings on Kubernetes, Hetzner and software development.]({% link _tabs/blog.md %})
