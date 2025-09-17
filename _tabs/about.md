@@ -5,7 +5,7 @@ icon: fas fa-info-circle
 order: 1
 ---
 
-<div class="d-flex justify-content-around align-items-center">
+<div class="d-flex align-items-center" style="justify-content: space-around !important;">
   <figure class="figure">
     <img src="/assets/img/mathias-circle.png" width="100" alt="Portrait of Mathias Pius" />
     <figcaption class="figure-caption text-center">Me!</figcaption>

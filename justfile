@@ -19,6 +19,7 @@ create:
         --workdir=/app          \
         --name datavirke        \
         --entrypoint /bin/bash  \
+        -e JEKYLL_ENV=production \
          mcr.microsoft.com/devcontainers/jekyll:2-bullseye -c 'sleep 3600'
 
     just enter "git config --global --add safe.directory /app"
